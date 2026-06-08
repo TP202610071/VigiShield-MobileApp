@@ -25,6 +25,10 @@ class CameraProvider extends ChangeNotifier {
   /// HLS URL for the currently selected camera.
   String? get hlsViewUrl => selectedCamera?.hlsViewUrl;
 
+  /// HLS URL for streaming — works on all platforms including over the internet.
+  /// The AI backend keeps the MediaMTX HLS muxer warm so cold-start is instant.
+  String? get streamViewUrl => selectedCamera?.hlsViewUrl;
+
   bool get hasMultipleCameras => _cameras.length > 1;
 
   /// Switch to a camera by its list index.
@@ -129,5 +133,26 @@ class CameraProvider extends ChangeNotifier {
   void clearError() {
     _error = null;
     notifyListeners();
+  }
+
+  // ── Live camera image/video controls (hi3510 CGI via backend) ───────────────
+
+  Future<Map<String, String>?> loadCameraControls(String id) async {
+    try {
+      return await _service.getCameraControls(id);
+    } catch (e) {
+      _error = e.toString();
+      return null;
+    }
+  }
+
+  Future<bool> applyCameraControls(String id, Map<String, String> settings) async {
+    try {
+      await _service.updateCameraControls(id, settings);
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      return false;
+    }
   }
 }

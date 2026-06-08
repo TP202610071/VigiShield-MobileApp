@@ -29,4 +29,15 @@ class CameraDataService {
   Future<void> deleteCamera(String id) async {
     await _api.delete('/api/stream/cameras/$id');
   }
+
+  /// Read live image/video settings from the camera (hi3510 CGI via backend).
+  Future<Map<String, String>> getCameraControls(String id) async {
+    final data = await _api.get<Map<String, dynamic>>('/api/stream/cameras/$id/control');
+    return data.map((k, v) => MapEntry(k, '$v'));
+  }
+
+  /// Apply image/video settings to the camera.
+  Future<void> updateCameraControls(String id, Map<String, String> settings) async {
+    await _api.put('/api/stream/cameras/$id/control', body: settings);
+  }
 }

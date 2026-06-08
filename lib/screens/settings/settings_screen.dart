@@ -132,6 +132,12 @@ class SettingsScreen extends StatelessWidget {
                   label: 'Mis cámaras',
                   onTap: () => context.push('/settings/cameras'),
                 ),
+                const SizedBox(height: 16),
+                _SettingsTile(
+                  icon: Icons.face_outlined,
+                  label: 'Caras autorizadas',
+                  onTap: () => context.push('/settings/faces'),
+                ),
                 const SizedBox(height: 24),
               ],
 

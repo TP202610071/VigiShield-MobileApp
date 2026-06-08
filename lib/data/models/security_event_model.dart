@@ -1,6 +1,8 @@
 class SecurityEventModel {
   final String id;
   final String householdId;
+  final String? cameraId;
+  final String? cameraName;
   final String eventType;
   final double? confidenceScore;
   final String? imageCapturePath;
@@ -13,6 +15,8 @@ class SecurityEventModel {
   const SecurityEventModel({
     required this.id,
     required this.householdId,
+    this.cameraId,
+    this.cameraName,
     required this.eventType,
     this.confidenceScore,
     this.imageCapturePath,
@@ -26,6 +30,8 @@ class SecurityEventModel {
   factory SecurityEventModel.fromJson(Map<String, dynamic> json) => SecurityEventModel(
         id: json['id'] as String,
         householdId: json['householdId'] as String,
+        cameraId: json['cameraId'] as String?,
+        cameraName: json['cameraName'] as String?,
         eventType: json['eventType'] as String,
         confidenceScore: (json['confidenceScore'] as num?)?.toDouble(),
         imageCapturePath: json['imageCapturePath'] as String?,

@@ -34,11 +34,24 @@ dependencies:
   # Shimmer loading effects
   shimmer: ^3.0.0
 
-  # Video player (HLS stream from MediaMTX)
-  video_player: ^2.9.2
+  # Video player (HLS stream from MediaMTX).
+  # media_kit (libmpv) — robust live HLS/RTSP playback. ExoPlayer (video_player)
+  # falls behind MediaMTX's LL-HLS live window and stalls; libmpv handles it.
+  media_kit: ^1.1.11
+  media_kit_video: ^1.2.5
+  media_kit_libs_android_video: ^1.3.6
 
   # Keep screen on while watching the live stream
   wakelock_plus: ^1.2.10
+
+  # Save screenshots to the device gallery
+  gal: ^2.3.0
+
+  # Pick photos for authorized-face registration
+  image_picker: ^1.1.2
+
+  # On-device face detection for the live biometric enrollment (guided scan)
+  google_mlkit_face_detection: ^0.13.1
 
 dev_dependencies:
   flutter_test:

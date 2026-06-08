@@ -12,6 +12,7 @@ class CameraConfigModel {
   final String? rtmpPushUrl;
   final String? hlsViewUrl;
   final String? rtspUrl;
+  final String? mediaMtxRtspUrl;
   final bool isConfigured;
   final DateTime? lastVerifiedAt;
 
@@ -29,6 +30,7 @@ class CameraConfigModel {
     this.rtmpPushUrl,
     this.hlsViewUrl,
     this.rtspUrl,
+    this.mediaMtxRtspUrl,
     required this.isConfigured,
     this.lastVerifiedAt,
   });
@@ -51,6 +53,7 @@ class CameraConfigModel {
       rtmpPushUrl: json['rtmpPushUrl'] as String?,
       hlsViewUrl: json['hlsViewUrl'] as String?,
       rtspUrl: json['rtspUrl'] as String?,
+      mediaMtxRtspUrl: json['mediaMtxRtspUrl'] as String?,
       isConfigured: json['isConfigured'] as bool? ?? false,
       lastVerifiedAt: json['lastVerifiedAt'] != null
           ? DateTime.tryParse(json['lastVerifiedAt'] as String)

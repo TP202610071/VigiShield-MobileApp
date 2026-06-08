@@ -11,6 +11,8 @@ import '../screens/history/event_detail_screen.dart';
 import '../screens/settings/settings_screen.dart';
 import '../screens/settings/cameras_list_screen.dart';
 import '../screens/settings/camera_setup_screen.dart';
+import '../screens/settings/faces_screen.dart';
+import '../screens/settings/face_enrollment_screen.dart';
 
 GoRouter createRouter(AuthProvider authProvider) => GoRouter(
       initialLocation: '/splash',
@@ -47,6 +49,15 @@ GoRouter createRouter(AuthProvider authProvider) => GoRouter(
           path: '/settings/cameras/:id',
           builder: (ctx, st) =>
               CameraSetupScreen(cameraId: st.pathParameters['id']),
+        ),
+        GoRoute(
+          path: '/settings/faces',
+          builder: (ctx, st) => const FacesScreen(),
+        ),
+        GoRoute(
+          path: '/settings/faces/enroll',
+          builder: (ctx, st) =>
+              FaceEnrollmentScreen(personName: st.extra as String? ?? ''),
         ),
 
         StatefulShellRoute.indexedStack(

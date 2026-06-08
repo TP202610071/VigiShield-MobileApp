@@ -105,6 +105,21 @@ class ApiClient {
       throw ApiException(_extractErrorMessage(e), e.response?.statusCode);
     }
   }
+
+  /// POST multipart/form-data (e.g. uploading face photos). Dio sets the
+  /// multipart boundary automatically when [formData] is FormData.
+  Future<T> postMultipart<T>(String path, FormData formData) async {
+    try {
+      final res = await _dio.post(
+        path,
+        data: formData,
+        options: Options(contentType: 'multipart/form-data'),
+      );
+      return res.data as T;
+    } on DioException catch (e) {
+      throw ApiException(_extractErrorMessage(e), e.response?.statusCode);
+    }
+  }
 }
 
 class ApiException implements Exception {

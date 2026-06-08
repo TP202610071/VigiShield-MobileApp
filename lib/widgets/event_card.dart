@@ -11,34 +11,67 @@ class EventCard extends StatelessWidget {
   const EventCard({super.key, required this.event, this.onTap});
 
   static String labelFor(String type) => switch (type) {
+        // Face recognition
         'FaceRecognized' => 'Acceso reconocido',
         'UnknownFace' => 'Persona desconocida',
         'LowConfidenceFace' => 'Detección baja confianza',
         'RecurrentUnknownFace' => 'Visitante desconocido recurrente',
+        // Access & intrusion
         'ForcedAccessAttempt' => 'Intento de acceso forzado',
         'LockpickingAttempt' => 'Intento de ganzúa detectado',
         'Tailgating' => 'Merodeador detectado',
         'Climbing' => 'Escalamiento detectado',
+        'Burglary' => 'Robo detectado',
+        // Physical
         'PhysicalAggression' => 'Agresión física detectada',
+        'Assault' => 'Asalto detectado',
+        'Abuse' => 'Abuso detectado',
+        'Arrest' => 'Arresto detectado',
+        // Property crime
+        'Stealing' => 'Robo detectado',
+        'Shoplifting' => 'Hurto en tienda detectado',
+        'Vandalism' => 'Vandalismo detectado',
+        'Robbery' => 'Robo a mano armada detectado',
+        'Arson' => 'Incendio provocado detectado',
+        // Hazard
+        'Explosion' => 'Explosión detectada',
+        'Roadaccidents' => 'Accidente de tráfico detectado',
+        // Object detection
+        'WeaponDetected' => 'Arma detectada',
         _ => type,
       };
 
   static Color colorFor(String type) => switch (type) {
         'FaceRecognized' => AppColors.safeGreen,
-        'LowConfidenceFace' || 'Tailgating' => AppColors.warningAmber,
+        'LowConfidenceFace' || 'Tailgating' || 'Arrest' => AppColors.warningAmber,
         _ => AppColors.alertRed,
       };
 
   static IconData iconFor(String type) => switch (type) {
+        // Face recognition
         'FaceRecognized' => Icons.face_outlined,
         'UnknownFace' => Icons.person_off_outlined,
         'LowConfidenceFace' => Icons.help_outline,
         'RecurrentUnknownFace' => Icons.warning_amber_outlined,
+        // Access & intrusion
         'ForcedAccessAttempt' => Icons.lock_open_outlined,
         'LockpickingAttempt' => Icons.key_off_outlined,
         'Tailgating' => Icons.directions_walk,
         'Climbing' => Icons.north,
+        'Burglary' => Icons.home_work_outlined,
+        // Physical
         'PhysicalAggression' => Icons.sports_mma,
+        'Assault' || 'Abuse' => Icons.personal_injury_outlined,
+        'Arrest' => Icons.gavel_outlined,
+        // Property crime
+        'Stealing' || 'Shoplifting' || 'Robbery' => Icons.shopping_bag_outlined,
+        'Vandalism' => Icons.broken_image_outlined,
+        'Arson' => Icons.local_fire_department_outlined,
+        // Hazard
+        'Explosion' => Icons.bolt_outlined,
+        'Roadaccidents' => Icons.car_crash_outlined,
+        // Object detection
+        'WeaponDetected' => Icons.gpp_bad_outlined,
         _ => Icons.notifications_outlined,
       };
 
@@ -124,6 +157,22 @@ class EventCard extends StatelessWidget {
                                     color: AppColors.textSecondary,
                                     fontStyle: FontStyle.italic,
                                   ),
+                                ),
+                              ],
+                              if (event.cameraName != null) ...[
+                                const SizedBox(height: 3),
+                                Row(
+                                  children: [
+                                    const Icon(Icons.videocam_outlined, size: 10, color: AppColors.textMuted),
+                                    const SizedBox(width: 3),
+                                    Text(
+                                      event.cameraName!,
+                                      style: GoogleFonts.inter(
+                                        fontSize: 10,
+                                        color: AppColors.textMuted,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ],

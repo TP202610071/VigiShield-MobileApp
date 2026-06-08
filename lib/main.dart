@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:media_kit/media_kit.dart';
 import 'package:provider/provider.dart';
 import 'core/constants/app_constants.dart';
 import 'core/network/api_client.dart';
@@ -19,6 +20,7 @@ import 'router/app_router.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  MediaKit.ensureInitialized(); // libmpv video backend
   await initializeDateFormatting('es', null);
 
   SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light.copyWith(
@@ -73,6 +75,7 @@ class _VigiShieldAppState extends State<VigiShieldApp> {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        Provider<ApiClient>.value(value: _api),
         ChangeNotifierProvider.value(value: _authProvider),
         ChangeNotifierProvider.value(value: _eventProvider),
         ChangeNotifierProvider.value(value: _systemProvider),
