@@ -40,6 +40,7 @@ class _CameraSetupScreenState extends State<CameraSetupScreen> {
   String? _savedRtmpPushUrl;
   String? _savedStreamKey;
   String? _savedRtspUrl;
+  String? _savedMediaMtxRtspUrl;
 
   @override
   void initState() {
@@ -76,6 +77,7 @@ class _CameraSetupScreenState extends State<CameraSetupScreen> {
       _savedRtmpPushUrl = cam.rtmpPushUrl;
       _savedStreamKey = cam.streamKey;
       _savedRtspUrl = cam.rtspUrl;
+      _savedMediaMtxRtspUrl = cam.mediaMtxRtspUrl;
     });
   }
 
@@ -132,6 +134,7 @@ class _CameraSetupScreenState extends State<CameraSetupScreen> {
         _savedRtmpPushUrl = saved?.rtmpPushUrl;
         _savedStreamKey = saved?.streamKey;
         _savedRtspUrl = saved?.rtspUrl;
+        _savedMediaMtxRtspUrl = saved?.mediaMtxRtspUrl;
       });
 
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -404,17 +407,19 @@ class _CameraSetupScreenState extends State<CameraSetupScreen> {
                 color: AppColors.textSecondary, fontSize: 13, height: 1.5),
           ),
           const SizedBox(height: 10),
-          if (_savedRtmpPushUrl != null)
+          if (_savedMediaMtxRtspUrl != null)
             _CopyBox(
               label: 'Comando para tu PC local (FFmpeg):',
-              value: 'ffmpeg -i ${_savedRtspUrl ?? "rtsp://usuario:clave@ip:554/ruta"} '
-                  '-c copy -f flv $_savedRtmpPushUrl',
+              value: 'ffmpeg -rtsp_transport tcp '
+                  '-i ${_savedRtspUrl ?? "rtsp://usuario:clave@ip:554/ruta"} '
+                  '-c copy -f rtsp -rtsp_transport tcp $_savedMediaMtxRtspUrl',
             ),
           const SizedBox(height: 8),
           _InfoCard(
             icon: Icons.info_outline,
-            text: 'FFmpeg es gratuito. Descárgalo en ffmpeg.org '
-                'o instálalo con: winget install ffmpeg',
+            text: 'Déjalo corriendo en una PC de tu casa con acceso a la cámara '
+                '(o una app como Termux en un Android viejo). FFmpeg es gratuito: '
+                'ffmpeg.org  o  winget install ffmpeg',
           ),
         ],
       ]),
