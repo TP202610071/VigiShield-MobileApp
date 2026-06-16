@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'package:dio/dio.dart';
 import '../models/user_model.dart';
 import '../../core/network/api_client.dart';
 
@@ -49,6 +51,18 @@ class AuthService {
     return UserModel.fromJson(data);
   }
 
+  Future<UserModel> uploadAvatar(File file) async {
+    final form = FormData.fromMap({
+      'file': await MultipartFile.fromFile(
+        file.path,
+        filename: file.path.split(RegExp(r'[\\/]')).last,
+      ),
+    });
+    final data =
+        await _client.postMultipart<Map<String, dynamic>>('/api/auth/avatar', form);
+    return UserModel.fromJson(data);
+  }
+
   Future<void> changePassword(String currentPassword, String newPassword) =>
       _client.put('/api/auth/change-password', body: {
         'currentPassword': currentPassword,
@@ -59,4 +73,19 @@ class AuthService {
       _client.post('/api/auth/recover-password', body: {'email': email});
 
   Future<void> logout() => _client.post('/api/auth/logout');
+
+  // ── Admin management (developer screen) ─────────────────────────────────────
+
+  Future<List<AdminUser>> getAdmins() async {
+    final data = await _client.get<List<dynamic>>('/api/users/admins');
+    return data.map((j) => AdminUser.fromJson(j as Map<String, dynamic>)).toList();
+  }
+
+  Future<AdminUser> addAdmin(String email) async {
+    final data = await _client
+        .post<Map<String, dynamic>>('/api/users/admins', body: {'email': email});
+    return AdminUser.fromJson(data);
+  }
+
+  Future<void> removeAdmin(String id) => _client.delete('/api/users/admins/$id');
 }

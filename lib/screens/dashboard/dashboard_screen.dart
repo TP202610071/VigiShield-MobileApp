@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import '../../core/i18n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/dev_settings_provider.dart';
 import '../../providers/event_provider.dart';
 import '../../providers/system_provider.dart';
 import '../../widgets/event_card.dart';
+import '../../widgets/user_avatar.dart';
 import '../../widgets/vs_button.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -36,6 +40,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final system = context.watch<SystemProvider>();
     final events = context.watch<EventProvider>();
     final user = auth.user;
+    final l10n = context.l10n;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -50,11 +55,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
               floating: true,
               snap: true,
               elevation: 0,
+              // Force left-aligned on every platform (iOS centres single-line
+              // titles by default, which made "Hola, …" jump to the centre).
+              centerTitle: false,
+              titleSpacing: 20,
               title: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Hola, ${user?.name.split(' ').first ?? ''}',
+                    l10n.greeting(user?.name.split(' ').first ?? ''),
                     style: GoogleFonts.inter(
                       fontSize: 22,
                       fontWeight: FontWeight.w700,
@@ -62,27 +71,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ),
                   Text(
-                    DateFormat("EEEE d 'de' MMMM", 'es').format(DateTime.now()),
+                    DateFormat(l10n.dateFormatLong, l10n.localeCode)
+                        .format(DateTime.now()),
                     style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary),
                   ),
                 ],
               ),
               actions: [
-                Container(
-                  margin: const EdgeInsets.only(right: 16),
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.border),
-                  ),
-                  child: Center(
-                    child: Text(
-                      user?.name.substring(0, 1).toUpperCase() ?? '?',
-                      style: GoogleFonts.inter(
-                          fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.accent),
-                    ),
+                Padding(
+                  padding: const EdgeInsets.only(right: 16),
+                  child: GestureDetector(
+                    onTap: () => context.push('/profile'),
+                    child: const UserAvatar(size: 36, fontSize: 14),
                   ),
                 ),
               ],
@@ -100,7 +100,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Eventos recientes',
+                        l10n.recentEvents,
                         style: GoogleFonts.inter(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -108,9 +108,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                       ),
                       GestureDetector(
-                        onTap: () {},
+                        onTap: () => context.go('/history'),
                         child: Text(
-                          'Ver todo',
+                          l10n.seeAll,
                           style: GoogleFonts.inter(fontSize: 13, color: AppColors.accent),
                         ),
                       ),
@@ -170,6 +170,9 @@ class _StatusCardState extends State<_StatusCard> with SingleTickerProviderState
     final status = widget.system.status;
     final isActive = status?.isMonitoringActive ?? true;
     final statusColor = isActive ? AppColors.safeGreen : AppColors.warningAmber;
+    final l10n = context.l10n;
+    final user = context.read<AuthProvider>().user;
+    final canControl = context.watch<DevSettingsProvider>().isPrimaryEffective(user);
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -216,7 +219,7 @@ class _StatusCardState extends State<_StatusCard> with SingleTickerProviderState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  isActive ? 'Sistema activo' : 'Sistema pausado',
+                  isActive ? l10n.systemActive : l10n.systemPaused,
                   style: GoogleFonts.inter(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -225,16 +228,14 @@ class _StatusCardState extends State<_StatusCard> with SingleTickerProviderState
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  isActive
-                      ? 'Monitoreando en tiempo real'
-                      : 'El monitoreo está detenido',
+                  isActive ? l10n.monitoringRealtime : l10n.monitoringStopped,
                   style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary),
                 ),
               ],
             ),
           ),
           const SizedBox(width: 12),
-          if (context.read<AuthProvider>().user?.isPrimary ?? false)
+          if (canControl)
             widget.system.isUpdating
                 ? const SizedBox(
                     width: 20,
@@ -243,7 +244,7 @@ class _StatusCardState extends State<_StatusCard> with SingleTickerProviderState
                         strokeWidth: 2, color: AppColors.accent),
                   )
                 : VsButton(
-                    label: isActive ? 'Pausar' : 'Reanudar',
+                    label: isActive ? l10n.pause : l10n.resume,
                     variant: isActive ? VsButtonVariant.secondary : VsButtonVariant.primary,
                     onPressed: () async {
                       final sp = context.read<SystemProvider>();
@@ -269,13 +270,14 @@ class _StatsRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final status = system.status;
+    final l10n = context.l10n;
     return Row(
       children: [
         Expanded(
           child: _StatCard(
             icon: Icons.event_note_outlined,
             value: status?.eventsTodayCount.toString() ?? '—',
-            label: 'Eventos hoy',
+            label: l10n.eventsToday,
             color: AppColors.accent,
           ),
         ),
@@ -286,7 +288,7 @@ class _StatsRow extends StatelessWidget {
             value: status?.lastEventAt != null
                 ? DateFormat('HH:mm').format(status!.lastEventAt!.toLocal())
                 : '—',
-            label: 'Último evento',
+            label: l10n.lastEvent,
             color: AppColors.warningAmber,
           ),
         ),
@@ -376,13 +378,13 @@ class _EmptyEvents extends StatelessWidget {
           const Icon(Icons.check_circle_outline, color: AppColors.safeGreen, size: 48),
           const SizedBox(height: 12),
           Text(
-            'Sin eventos recientes',
+            context.l10n.noRecentEvents,
             style: GoogleFonts.inter(
                 fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
           ),
           const SizedBox(height: 4),
           Text(
-            'Tu hogar está seguro',
+            context.l10n.homeSafe,
             style: GoogleFonts.inter(fontSize: 13, color: AppColors.textSecondary),
           ),
         ],

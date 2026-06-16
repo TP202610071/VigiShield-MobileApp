@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:media_kit/media_kit.dart';
+import 'package:media_kit_video/media_kit_video.dart';
 import 'package:provider/provider.dart';
+import '../../core/i18n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/models/security_event_model.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/dev_settings_provider.dart';
 import '../../providers/event_provider.dart';
 import '../../widgets/event_card.dart';
 
@@ -33,23 +37,24 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   }
 
   Future<void> _delete() async {
+    final l10n = context.l10n;
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.surfaceElevated,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('Eliminar evento',
+        title: Text(l10n.deleteEvent,
             style: GoogleFonts.inter(color: AppColors.textPrimary, fontWeight: FontWeight.w600)),
-        content: Text('¿Estás seguro de que deseas eliminar este evento?',
+        content: Text(l10n.deleteEventConfirm,
             style: GoogleFonts.inter(color: AppColors.textSecondary)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text('Cancelar', style: GoogleFonts.inter(color: AppColors.textSecondary)),
+            child: Text(l10n.cancel, style: GoogleFonts.inter(color: AppColors.textSecondary)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text('Eliminar', style: GoogleFonts.inter(color: AppColors.alertRed)),
+            child: Text(l10n.delete, style: GoogleFonts.inter(color: AppColors.alertRed)),
           ),
         ],
       ),
@@ -65,9 +70,10 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Detalle del evento'),
+        title: Text(context.l10n.eventDetail),
         actions: [
-          if (!_loading && _event != null && (context.read<AuthProvider>().user?.isPrimary ?? false))
+          if (!_loading && _event != null &&
+              context.read<DevSettingsProvider>().isPrimaryEffective(context.read<AuthProvider>().user))
             IconButton(
               icon: const Icon(Icons.delete_outline, color: AppColors.alertRed),
               onPressed: _delete,
@@ -78,7 +84,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           ? const Center(child: CircularProgressIndicator(color: AppColors.accent, strokeWidth: 2))
           : _event == null
               ? Center(
-                  child: Text('Evento no encontrado',
+                  child: Text(context.l10n.eventNotFound,
                       style: GoogleFonts.inter(color: AppColors.textSecondary)))
               : _buildContent(),
     );
@@ -86,9 +92,10 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
 
   Widget _buildContent() {
     final ev = _event!;
+    final l10n = context.l10n;
     final color = EventCard.colorFor(ev.eventType);
     final icon = EventCard.iconFor(ev.eventType);
-    final label = EventCard.labelFor(ev.eventType);
+    final label = l10n.eventTypeLabel(ev.eventType);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
@@ -124,7 +131,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  DateFormat("d 'de' MMMM, yyyy · HH:mm:ss", 'es')
+                  DateFormat(l10n.dateFormatFull, l10n.localeCode)
                       .format(ev.createdAt.toLocal()),
                   style: GoogleFonts.inter(fontSize: 13, color: AppColors.textSecondary),
                   textAlign: TextAlign.center,
@@ -144,7 +151,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                         const Icon(Icons.nightlight_round,
                             size: 14, color: AppColors.warningAmber),
                         const SizedBox(width: 6),
-                        Text('Actividad nocturna',
+                        Text(l10n.nightActivity,
                             style: GoogleFonts.inter(
                                 fontSize: 12, color: AppColors.warningAmber)),
                       ],
@@ -156,55 +163,77 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           ),
           const SizedBox(height: 16),
           _DetailSection(
-            title: 'Detalles',
+            title: l10n.details,
             rows: [
               if (ev.personName != null)
-                _Row(label: 'Persona', value: ev.personName!),
+                _Row(label: l10n.person, value: ev.personName!),
               _Row(
-                label: 'Nivel de riesgo',
-                value: _riskLabel(ev.riskLevel),
+                label: l10n.riskLevel,
+                value: l10n.riskLabel(ev.riskLevel),
                 valueColor: _riskColor(ev.riskLevel),
               ),
               if (ev.confidenceScore != null)
                 _Row(
-                  label: 'Confianza',
+                  label: l10n.confidence,
                   value: '${(ev.confidenceScore! * 100).toStringAsFixed(1)}%',
                 ),
-              _Row(label: 'Tipo de evento', value: ev.eventType),
+              _Row(label: l10n.eventType, value: l10n.eventTypeLabel(ev.eventType)),
             ],
           ),
           if (ev.imageCapturePath != null) ...[
             const SizedBox(height: 16),
             _DetailSection(
-              title: 'Captura de imagen',
+              title: l10n.imageCapture,
               rows: const [],
-              child: Container(
-                height: 200,
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.border),
-                ),
-                child: const Center(
-                  child: Icon(Icons.image_not_supported_outlined,
-                      color: AppColors.textMuted, size: 40),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.network(
+                  ev.imageCapturePath!,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  loadingBuilder: (c, child, prog) => prog == null
+                      ? child
+                      : Container(
+                          height: 200,
+                          alignment: Alignment.center,
+                          color: AppColors.surface,
+                          child: const CircularProgressIndicator(
+                              color: AppColors.accent, strokeWidth: 2),
+                        ),
+                  errorBuilder: (c, e, s) => Container(
+                    height: 200,
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: Center(
+                      child: Column(mainAxisSize: MainAxisSize.min, children: [
+                        const Icon(Icons.image_not_supported_outlined,
+                            color: AppColors.textMuted, size: 40),
+                        const SizedBox(height: 8),
+                        Text(l10n.imageUnavailable,
+                            style: GoogleFonts.inter(
+                                color: AppColors.textMuted, fontSize: 12)),
+                      ]),
+                    ),
+                  ),
                 ),
               ),
+            ),
+          ],
+          if (ev.videoClipPath != null) ...[
+            const SizedBox(height: 16),
+            _DetailSection(
+              title: l10n.videoClip,
+              rows: const [],
+              child: _ClipSection(url: ev.videoClipPath!),
             ),
           ],
         ],
       ),
     );
   }
-
-  String _riskLabel(String risk) => switch (risk) {
-        'None' => 'Ninguno',
-        'Low' => 'Bajo',
-        'Medium' => 'Medio',
-        'High' => 'Alto',
-        'Critical' => 'Crítico',
-        _ => risk,
-      };
 
   Color _riskColor(String risk) => switch (risk) {
         'None' => AppColors.textSecondary,
@@ -278,4 +307,41 @@ class _Row {
   final Color? valueColor;
 
   const _Row({required this.label, required this.value, this.valueColor});
+}
+
+/// Inline player for the event's recorded clip (R2-hosted MP4).
+class _ClipSection extends StatefulWidget {
+  final String url;
+  const _ClipSection({required this.url});
+
+  @override
+  State<_ClipSection> createState() => _ClipSectionState();
+}
+
+class _ClipSectionState extends State<_ClipSection> {
+  late final Player _player = Player();
+  late final VideoController _controller = VideoController(_player);
+
+  @override
+  void initState() {
+    super.initState();
+    _player.open(Media(widget.url), play: false);
+  }
+
+  @override
+  void dispose() {
+    _player.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: AspectRatio(
+        aspectRatio: 16 / 9,
+        child: Video(controller: _controller, fit: BoxFit.contain),
+      ),
+    );
+  }
 }

@@ -1,13 +1,15 @@
 name: vigishield_mobile_app
 description: "VigiShield — Sistema Inteligente de Seguridad Doméstica"
 publish_to: 'none'
-version: 1.0.0+1
+version: 0.1.0+1
 
 environment:
   sdk: ^3.8.1
 
 dependencies:
   flutter:
+    sdk: flutter
+  flutter_localizations:
     sdk: flutter
 
   # HTTP client

@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import '../data/models/user_model.dart';
 import '../data/services/auth_service.dart';
@@ -92,6 +93,41 @@ class AuthProvider extends ChangeNotifier {
     _user = null;
     _state = AuthState.unauthenticated;
     notifyListeners();
+  }
+
+  /// Re-fetch the current user (e.g. after a role/profile change elsewhere).
+  Future<void> refreshUser() async {
+    try {
+      _user = await _authService.getMe();
+      notifyListeners();
+    } catch (_) {/* keep the cached user */}
+  }
+
+  Future<bool> uploadAvatar(File file) async {
+    _errorMessage = null;
+    try {
+      _user = await _authService.uploadAvatar(file);
+      notifyListeners();
+      return true;
+    } on ApiException catch (e) {
+      _errorMessage = e.message;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> updateProfile({required String name, String? whatsAppNumber}) async {
+    _errorMessage = null;
+    try {
+      _user = await _authService.updateProfile(
+          name: name, whatsAppNumber: whatsAppNumber);
+      notifyListeners();
+      return true;
+    } on ApiException catch (e) {
+      _errorMessage = e.message;
+      notifyListeners();
+      return false;
+    }
   }
 
   Future<bool> changePassword(String current, String next) async {

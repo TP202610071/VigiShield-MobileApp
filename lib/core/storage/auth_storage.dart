@@ -24,4 +24,20 @@ class AuthStorage {
 
   Future<void> deleteServerUrl() =>
       _storage.delete(key: AppConstants.serverUrlKey);
+
+  // ── Language ───────────────────────────────────────────────────────────────
+
+  Future<String?> getLocale() => _storage.read(key: AppConstants.localeKey);
+
+  Future<void> saveLocale(String code) =>
+      _storage.write(key: AppConstants.localeKey, value: code);
+
+  // ── Developer role preview ──────────────────────────────────────────────────
+
+  Future<String?> getPreviewRole() =>
+      _storage.read(key: AppConstants.previewRoleKey);
+
+  Future<void> savePreviewRole(String? role) => role == null
+      ? _storage.delete(key: AppConstants.previewRoleKey)
+      : _storage.write(key: AppConstants.previewRoleKey, value: role);
 }

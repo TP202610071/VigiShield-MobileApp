@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import '../../core/i18n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/event_provider.dart';
 import '../../widgets/event_card.dart';
@@ -16,14 +17,20 @@ class HistoryScreen extends StatefulWidget {
 class _HistoryScreenState extends State<HistoryScreen> {
   final _scrollCtrl = ScrollController();
 
-  static const _filters = [
-    (label: 'Todos', value: null),
-    (label: 'Reconocidos', value: 'FaceRecognized'),
-    (label: 'Desconocidos', value: 'UnknownFace'),
-    (label: 'Merodeadores', value: 'Tailgating'),
-    (label: 'Acceso forzado', value: 'ForcedAccessAttempt'),
-    (label: 'Agresión', value: 'PhysicalAggression'),
+  static const _filterValues = <String?>[
+    null, 'FaceRecognized', 'UnknownFace', 'Tailgating',
+    'ForcedAccessAttempt', 'PhysicalAggression',
   ];
+
+  String _filterLabel(AppStrings l10n, String? v) => switch (v) {
+        null => l10n.filterAll,
+        'FaceRecognized' => l10n.filterRecognized,
+        'UnknownFace' => l10n.filterUnknown,
+        'Tailgating' => l10n.filterLoiterers,
+        'ForcedAccessAttempt' => l10n.filterForced,
+        'PhysicalAggression' => l10n.filterAggression,
+        _ => v,
+      };
 
   @override
   void initState() {
@@ -49,6 +56,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<EventProvider>();
+    final l10n = context.l10n;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -59,7 +67,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
               child: Text(
-                'Historial',
+                l10n.history,
                 style: GoogleFonts.inter(
                   fontSize: 28,
                   fontWeight: FontWeight.w700,
@@ -74,13 +82,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 20),
-                itemCount: _filters.length,
+                itemCount: _filterValues.length,
                 separatorBuilder: (_, __) => const SizedBox(width: 8),
                 itemBuilder: (context, i) {
-                  final f = _filters[i];
-                  final isActive = provider.activeFilter == f.value;
+                  final value = _filterValues[i];
+                  final isActive = provider.activeFilter == value;
                   return GestureDetector(
-                    onTap: () => provider.fetchEvents(type: f.value, refresh: true),
+                    onTap: () => provider.fetchEvents(type: value, refresh: true),
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
                       padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -93,7 +101,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       ),
                       child: Center(
                         child: Text(
-                          f.label,
+                          _filterLabel(l10n, value),
                           style: GoogleFonts.inter(
                             fontSize: 13,
                             fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
@@ -158,13 +166,13 @@ class _EmptyView extends StatelessWidget {
           const Icon(Icons.history, color: AppColors.textMuted, size: 56),
           const SizedBox(height: 16),
           Text(
-            'Sin eventos registrados',
+            context.l10n.noEventsLogged,
             style: GoogleFonts.inter(
                 fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
           ),
           const SizedBox(height: 6),
           Text(
-            'Los eventos detectados aparecerán aquí',
+            context.l10n.eventsWillAppear,
             style: GoogleFonts.inter(fontSize: 13, color: AppColors.textSecondary),
           ),
         ],
@@ -200,7 +208,7 @@ class _ErrorView extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(color: AppColors.accent),
               ),
-              child: Text('Reintentar',
+              child: Text(context.l10n.retry,
                   style: GoogleFonts.inter(fontSize: 14, color: AppColors.accent)),
             ),
           ),

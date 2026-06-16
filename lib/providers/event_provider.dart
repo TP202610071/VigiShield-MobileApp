@@ -53,6 +53,22 @@ class EventProvider extends ChangeNotifier {
     }
   }
 
+  /// Background refresh that does NOT clear the list or flip [isLoading] — so a
+  /// periodic poll (e.g. the camera screen's) updates the dashboard in place
+  /// instead of flashing the shimmer/empty state every few seconds.
+  Future<void> refreshSilently() async {
+    try {
+      final result = await _service.getEvents(type: _activeFilter, page: 1);
+      _events = result.items;
+      _totalPages = result.totalPages;
+      _page = 1;
+      _error = null;
+      notifyListeners();
+    } on ApiException {
+      // Keep the current list on a transient failure — never blank the UI.
+    }
+  }
+
   Future<void> loadMore() async {
     if (_isLoadingMore || !hasMore) return;
     _isLoadingMore = true;

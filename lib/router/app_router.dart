@@ -9,6 +9,8 @@ import '../screens/camera/camera_screen.dart';
 import '../screens/history/history_screen.dart';
 import '../screens/history/event_detail_screen.dart';
 import '../screens/settings/settings_screen.dart';
+import '../screens/settings/profile_screen.dart';
+import '../screens/settings/developer_screen.dart';
 import '../screens/settings/cameras_list_screen.dart';
 import '../screens/settings/camera_setup_screen.dart';
 import '../screens/settings/faces_screen.dart';
@@ -35,6 +37,13 @@ GoRouter createRouter(AuthProvider authProvider) => GoRouter(
         GoRoute(path: '/splash', builder: (ctx, st) => const SplashScreen()),
         GoRoute(path: '/login', builder: (ctx, st) => const LoginScreen()),
         GoRoute(path: '/register', builder: (ctx, st) => const RegisterScreen()),
+
+        // Profile + hidden developer tools (outside shell — full-screen pages)
+        GoRoute(path: '/profile', builder: (ctx, st) => const ProfileScreen()),
+        GoRoute(
+          path: '/settings/developer',
+          builder: (ctx, st) => const DeveloperScreen(),
+        ),
 
         // Camera management (outside shell so the app bar works independently)
         GoRoute(

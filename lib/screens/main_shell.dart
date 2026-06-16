@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import '../providers/ui_provider.dart';
 import '../widgets/vs_bottom_nav.dart';
 
 /// Owns screen orientation: the camera tab is locked landscape, every other tab
@@ -46,18 +48,23 @@ class _MainShellState extends State<MainShell> {
 
   @override
   Widget build(BuildContext context) {
+    // Hide the app's bottom nav when the camera is fullscreen so the live view
+    // takes the entire screen (the system bars are hidden by the camera screen).
+    final fullscreen = context.watch<UiProvider>().cameraFullscreen;
     return Scaffold(
       body: widget.navigationShell,
-      bottomNavigationBar: VsBottomNav(
-        currentIndex: widget.navigationShell.currentIndex,
-        onTap: (index) {
-          _applyOrientation(index); // snap immediately on tap
-          widget.navigationShell.goBranch(
-            index,
-            initialLocation: index == widget.navigationShell.currentIndex,
-          );
-        },
-      ),
+      bottomNavigationBar: fullscreen
+          ? null
+          : VsBottomNav(
+              currentIndex: widget.navigationShell.currentIndex,
+              onTap: (index) {
+                _applyOrientation(index); // snap immediately on tap
+                widget.navigationShell.goBranch(
+                  index,
+                  initialLocation: index == widget.navigationShell.currentIndex,
+                );
+              },
+            ),
     );
   }
 }

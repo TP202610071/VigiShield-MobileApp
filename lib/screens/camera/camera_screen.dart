@@ -12,11 +12,14 @@ import 'package:media_kit_video/media_kit_video.dart';
 import 'package:provider/provider.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
+import '../../core/i18n/app_localizations.dart';
+import '../../core/network/api_client.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/models/camera_config_model.dart';
 import '../../data/models/security_event_model.dart';
 import '../../providers/camera_provider.dart';
 import '../../providers/event_provider.dart';
+import '../../providers/ui_provider.dart';
 
 enum _ViewMode { single, grid, ai }
 
@@ -73,6 +76,10 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
 
   // ── Screenshot ──────────────────────────────────────────────────────────────
   bool _savingScreenshot = false;
+
+  // ── Fullscreen (immersive) ───────────────────────────────────────────────────
+  // Hides the overlay bars + the system status/nav bars for an unobstructed view.
+  bool _immersive = false;
 
   // ── AI view (polls annotated frames from Python backend on :5050) ───────────
   Timer? _aiFrameTimer;
@@ -135,6 +142,12 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
     _stopAiFramePoller();
     _player?.pause();
     for (final p in _gridPlayers.values) { p.pause(); }
+    // Always restore the system bars + bottom nav when leaving the camera tab.
+    if (_immersive) {
+      _immersive = false;
+      context.read<UiProvider>().setCameraFullscreen(false);
+    }
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     super.deactivate();
   }
 
@@ -164,6 +177,9 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
   void activate() {
     super.activate();
     _isActive = true;
+    if (_immersive) {
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    }
     // Re-open the live stream — the live window has moved on while we were away.
     // Give RTSP a fresh chance; cancel any stale recovery timers first so we
     // don't stack opens (a cause of the old re-connect loop).
@@ -193,6 +209,7 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
     for (final p in _gridPlayers.values) { p.dispose(); }
     _aiDio.close();
     _statusDio.close();
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     super.dispose();
   }
 
@@ -219,7 +236,9 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
 
   Future<void> _checkNewEvents() async {
     if (!mounted) return;
-    await context.read<EventProvider>().fetchEvents(refresh: true);
+    // Silent refresh: updates the list in place without blanking the dashboard
+    // (which stays alive in the IndexedStack and would otherwise flash/shimmer).
+    await context.read<EventProvider>().refreshSilently();
     if (!mounted) return;
     final events = context.read<EventProvider>().events;
     if (events.isEmpty) return;
@@ -504,9 +523,10 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
       if (bytes == null) throw Exception('No frame available');
       final name = 'vigishield_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}';
       await Gal.putImageBytes(bytes, name: name);
+      _uploadScreenshotToR2(bytes); // best-effort cloud backup (R2)
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Captura guardada en galería',
+          content: Text(context.l10n.screenshotSaved,
               style: GoogleFonts.inter(color: Colors.white)),
           backgroundColor: AppColors.safeGreen,
           behavior: SnackBarBehavior.floating,
@@ -517,7 +537,7 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Error al guardar: $e',
+          content: Text(context.l10n.screenshotError(e.toString()),
               style: GoogleFonts.inter(color: Colors.white)),
           backgroundColor: AppColors.alertRed,
           behavior: SnackBarBehavior.floating,
@@ -526,6 +546,25 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
       }
     } finally {
       if (mounted) setState(() => _savingScreenshot = false);
+    }
+  }
+
+  /// Best-effort: also push the screenshot to the cloud bucket (R2) via the
+  /// backend. Fire-and-forget — never blocks or surfaces errors to the user.
+  Future<void> _uploadScreenshotToR2(Uint8List bytes) async {
+    try {
+      final api = context.read<ApiClient>();
+      final form = FormData.fromMap({
+        'file': MultipartFile.fromBytes(
+          bytes,
+          filename:
+              'vigishield_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.jpg',
+        ),
+      });
+      await api.postMultipart('/api/media/screenshot', form);
+      _log('screenshot uploaded to R2');
+    } catch (e) {
+      _log('screenshot R2 upload skipped: $e');
     }
   }
 
@@ -607,6 +646,14 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
     }
   }
 
+  void _toggleFullscreen() {
+    setState(() => _immersive = !_immersive);
+    context.read<UiProvider>().setCameraFullscreen(_immersive);
+    SystemChrome.setEnabledSystemUIMode(
+      _immersive ? SystemUiMode.immersiveSticky : SystemUiMode.edgeToEdge,
+    );
+  }
+
   void _showCameraSettings() {
     final camId = context.read<CameraProvider>().selectedCamera?.id;
     if (camId == null) return;
@@ -644,14 +691,30 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
   Widget _buildSingle(bool isLandscape) {
     return Stack(fit: StackFit.expand, children: [
       _buildSingleContent(),
-      _buildTopBar(isLandscape),
-      _buildBottomBar(isLandscape),
+      if (!_immersive) _buildTopBar(isLandscape),
+      if (!_immersive) _buildBottomBar(isLandscape),
+      if (_immersive) _buildFullscreenExit(isLandscape),
       if (_showLiveAlert && _liveAlertEvent != null)
         _AlertBanner(
           event: _liveAlertEvent!,
           onDismiss: () => setState(() => _showLiveAlert = false),
         ),
     ]);
+  }
+
+  /// Small floating button shown in immersive mode to restore the bars.
+  Widget _buildFullscreenExit(bool isLandscape) {
+    return Positioned(
+      top: (isLandscape ? 10 : MediaQuery.of(context).padding.top + 8),
+      right: 12,
+      child: SafeArea(
+        child: _IconBtn(
+          icon: Icons.fullscreen_exit,
+          tooltip: context.l10n.tipExitFullscreen,
+          onTap: _toggleFullscreen,
+        ),
+      ),
+    );
   }
 
   Widget _buildSingleContent() {
@@ -671,16 +734,18 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
             fill: Colors.black,
           ),
         ),
-      // Connecting overlay — shown until mpv is playing or a real frame decoded.
-      if (!_hasVideo && !_isPlaying && _error == null)
+      // Connecting overlay — shown until a real video frame is actually decoded
+      // (width > 0). mpv reports playing=true before the first keyframe arrives,
+      // so gating only on _hasVideo covers the black gap on a fresh connect.
+      if (!_hasVideo && _error == null)
         Container(
           color: Colors.black.withAlpha(140),
-          child: const Center(
+          child: Center(
             child: Column(mainAxisSize: MainAxisSize.min, children: [
-              CircularProgressIndicator(color: AppColors.accent, strokeWidth: 2),
-              SizedBox(height: 16),
-              Text('Conectando…',
-                  style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+              const CircularProgressIndicator(color: AppColors.accent, strokeWidth: 2),
+              const SizedBox(height: 16),
+              Text(context.l10n.connecting,
+                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
             ]),
           ),
         ),
@@ -692,15 +757,18 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
   Widget _buildAiView(bool isLandscape) {
     return Stack(fit: StackFit.expand, children: [
       _buildAiContent(),
-      _buildTopBar(isLandscape, aiMode: true),
+      if (!_immersive) _buildTopBar(isLandscape, aiMode: true),
       // Live detection status banner (activity + suspicious flag + chips).
       if (_aiStatus != null)
         Positioned(
-          top: (isLandscape ? 12 : MediaQuery.of(context).padding.top + 12) + 40,
+          top: _immersive
+              ? (isLandscape ? 12 : MediaQuery.of(context).padding.top + 12)
+              : (isLandscape ? 12 : MediaQuery.of(context).padding.top + 12) + 40,
           left: 12, right: 12,
           child: _AiStatusBanner(status: _aiStatus!),
         ),
-      _buildBottomBar(isLandscape),
+      if (!_immersive) _buildBottomBar(isLandscape),
+      if (_immersive) _buildFullscreenExit(isLandscape),
       if (_showLiveAlert && _liveAlertEvent != null)
         _AlertBanner(
           event: _liveAlertEvent!,
@@ -724,13 +792,12 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           const CircularProgressIndicator(color: AppColors.accent, strokeWidth: 2),
           const SizedBox(height: 20),
-          Text('Conectando al motor AI…',
+          Text(context.l10n.aiConnecting,
               style: GoogleFonts.inter(
                   color: AppColors.textPrimary, fontSize: 16, fontWeight: FontWeight.w600)),
           const SizedBox(height: 8),
           Text(
-            'Asegúrate de que el backend Python esté corriendo.\n'
-            'Los frames aparecerán cuando se procese el primer fotograma.',
+            context.l10n.aiHint,
             textAlign: TextAlign.center,
             style: GoogleFonts.inter(color: AppColors.textSecondary, fontSize: 12),
           ),
@@ -768,7 +835,7 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
                 color: AppColors.accent.withAlpha(220),
                 borderRadius: BorderRadius.circular(6),
               ),
-              child: Text('AI DETECCIÓN',
+              child: Text(context.l10n.aiDetection,
                   style: GoogleFonts.inter(
                       color: Colors.black, fontSize: 9,
                       fontWeight: FontWeight.w800, letterSpacing: 1)),
@@ -814,6 +881,7 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
   // ── Bottom bar ──────────────────────────────────────────────────────────────
 
   Widget _buildBottomBar(bool isLandscape) {
+    final l10n = context.l10n;
     final provider = context.watch<CameraProvider>();
     final cameras = provider.cameras;
     final selectedIdx = cameras.isEmpty
@@ -876,7 +944,7 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
             icon: _viewMode == _ViewMode.ai
                 ? Icons.videocam_outlined
                 : Icons.psychology_outlined,
-            tooltip: _viewMode == _ViewMode.ai ? 'Vista en vivo' : 'Vista AI',
+            tooltip: _viewMode == _ViewMode.ai ? l10n.tipLiveView : l10n.tipAiView,
             onTap: _toggleAiView,
           ),
           const SizedBox(width: 8),
@@ -885,18 +953,24 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
               icon: _savingScreenshot
                   ? Icons.hourglass_bottom_outlined
                   : Icons.camera_alt_outlined,
-              tooltip: 'Captura de pantalla',
+              tooltip: l10n.tipScreenshot,
               onTap: _takeScreenshot,
+            ),
+            const SizedBox(width: 8),
+            _IconBtn(
+              icon: Icons.fullscreen,
+              tooltip: l10n.tipFullscreen,
+              onTap: _toggleFullscreen,
             ),
             const SizedBox(width: 8),
           ],
           _IconBtn(
             icon: Icons.tune_outlined,
-            tooltip: 'Ajustes de cámara',
+            tooltip: l10n.tipCameraSettings,
             onTap: _showCameraSettings,
           ),
           const SizedBox(width: 8),
-          _IconBtn(icon: Icons.refresh, tooltip: 'Reconectar', onTap: _retry),
+          _IconBtn(icon: Icons.refresh, tooltip: l10n.tipReconnect, onTap: _retry),
         ]),
       ),
     );
@@ -915,14 +989,14 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
             child: Row(children: [
               const Icon(Icons.grid_view_rounded, color: AppColors.accent, size: 18),
               const SizedBox(width: 8),
-              Text('Todas las cámaras',
+              Text(context.l10n.allCameras,
                   style: GoogleFonts.inter(
                       color: AppColors.textPrimary,
                       fontWeight: FontWeight.w600, fontSize: 14)),
               const Spacer(),
               _IconBtn(
                 icon: Icons.close,
-                tooltip: 'Salir del modo cuadrícula',
+                tooltip: context.l10n.tipExitGrid,
                 onTap: () {
                   setState(() => _viewMode = _ViewMode.single);
                   _resetStreamRecovery();
@@ -952,18 +1026,18 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           const Icon(Icons.videocam_off_outlined, color: AppColors.textSecondary, size: 56),
           const SizedBox(height: 20),
-          Text('No hay cámaras configuradas',
+          Text(context.l10n.noCameras,
               textAlign: TextAlign.center,
               style: GoogleFonts.inter(
                   color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.w600)),
           const SizedBox(height: 8),
-          Text('Ve a Ajustes → Mis Cámaras para agregar tu cámara IP.',
+          Text(context.l10n.noCamerasHint,
               textAlign: TextAlign.center,
               style: GoogleFonts.inter(color: AppColors.textSecondary, fontSize: 13)),
           const SizedBox(height: 24),
           _ActionChip(
             icon: Icons.add_circle_outline,
-            label: 'Agregar cámara',
+            label: context.l10n.addCamera,
             onTap: () => context.push('/settings/cameras'),
           ),
         ]),
@@ -978,20 +1052,20 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           const Icon(Icons.signal_wifi_off_outlined, color: AppColors.alertRed, size: 56),
           const SizedBox(height: 20),
-          Text('Stream no disponible',
+          Text(context.l10n.streamUnavailable,
               style: GoogleFonts.inter(
                   color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.w600)),
           const SizedBox(height: 8),
-          Text('Verifica que MediaMTX esté corriendo y la cámara accesible.',
+          Text(context.l10n.streamUnavailableHint,
               textAlign: TextAlign.center,
               style: GoogleFonts.inter(color: AppColors.textSecondary, fontSize: 13)),
           const SizedBox(height: 24),
           Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-            _ActionChip(icon: Icons.refresh, label: 'Reintentar', onTap: _retry),
+            _ActionChip(icon: Icons.refresh, label: context.l10n.retry, onTap: _retry),
             const SizedBox(width: 10),
             _ActionChip(
               icon: Icons.settings_outlined,
-              label: 'Ajustes',
+              label: context.l10n.navSettings,
               onTap: () => context.push('/settings/cameras'),
             ),
           ]),
@@ -1069,7 +1143,7 @@ class _CameraSettingsSheetState extends State<_CameraSettingsSheet> {
     if (!mounted) return;
     setState(() => _saving = false);
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(ok ? 'Ajustes aplicados a la cámara' : 'Error al aplicar ajustes',
+      content: Text(ok ? context.l10n.settingsApplied : context.l10n.settingsApplyError,
           style: GoogleFonts.inter(color: Colors.white)),
       backgroundColor: ok ? AppColors.safeGreen : AppColors.alertRed,
       behavior: SnackBarBehavior.floating,
@@ -1080,6 +1154,7 @@ class _CameraSettingsSheetState extends State<_CameraSettingsSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return DraggableScrollableSheet(
       initialChildSize: 0.88,
       minChildSize: 0.5,
@@ -1100,12 +1175,12 @@ class _CameraSettingsSheetState extends State<_CameraSettingsSheet> {
           Row(children: [
             const Icon(Icons.tune, color: AppColors.accent, size: 20),
             const SizedBox(width: 8),
-            Text('Ajustes de Cámara',
+            Text(l10n.cameraSettings,
                 style: GoogleFonts.inter(
                     color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.w700)),
           ]),
           const SizedBox(height: 4),
-          Text('Valores actuales leídos de la cámara. Mueve y guarda para aplicar en vivo.',
+          Text(l10n.cameraSettingsHint,
               style: GoogleFonts.inter(color: AppColors.textSecondary, fontSize: 13)),
           const SizedBox(height: 18),
 
@@ -1118,44 +1193,44 @@ class _CameraSettingsSheetState extends State<_CameraSettingsSheet> {
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 30),
               child: Column(children: [
-                const Icon(Icons.error_outline, color: AppColors.alertRed, size: 40),
+                const Icon(Icons.cloud_off_outlined, color: AppColors.warningAmber, size: 40),
                 const SizedBox(height: 12),
-                Text(_error!,
+                Text(l10n.cameraSettingsLanOnly,
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.inter(color: AppColors.textSecondary, fontSize: 13)),
+                    style: GoogleFonts.inter(color: AppColors.textSecondary, fontSize: 13, height: 1.4)),
                 const SizedBox(height: 16),
-                _ActionChip(icon: Icons.refresh, label: 'Reintentar', onTap: () {
+                _ActionChip(icon: Icons.refresh, label: l10n.retry, onTap: () {
                   setState(() { _loading = true; _error = null; });
                   _load();
                 }),
               ]),
             )
           else ...[
-            _grpLabel('IMAGEN'),
-            _SliderRow(label: 'Brillo', value: _brightness, onChanged: (v) => setState(() => _brightness = v)),
-            _SliderRow(label: 'Contraste', value: _contrast, onChanged: (v) => setState(() => _contrast = v)),
-            _SliderRow(label: 'Saturación', value: _saturation, onChanged: (v) => setState(() => _saturation = v)),
-            _SliderRow(label: 'Nitidez', value: _sharpness, onChanged: (v) => setState(() => _sharpness = v)),
+            _grpLabel(l10n.grpImage),
+            _SliderRow(label: l10n.brightness, value: _brightness, onChanged: (v) => setState(() => _brightness = v)),
+            _SliderRow(label: l10n.contrast, value: _contrast, onChanged: (v) => setState(() => _contrast = v)),
+            _SliderRow(label: l10n.saturation, value: _saturation, onChanged: (v) => setState(() => _saturation = v)),
+            _SliderRow(label: l10n.sharpness, value: _sharpness, onChanged: (v) => setState(() => _sharpness = v)),
             const SizedBox(height: 8),
-            _SwitchRow(label: 'WDR (rango dinámico)', value: _wdr, onChanged: (v) => setState(() => _wdr = v)),
+            _SwitchRow(label: l10n.wdr, value: _wdr, onChanged: (v) => setState(() => _wdr = v)),
             _ChoiceRow(
-              label: 'Visión nocturna',
+              label: l10n.nightVision,
               value: _night,
-              options: const {'auto': 'Automática', 'open': 'Siempre ON', 'close': 'Siempre OFF'},
+              options: {'auto': l10n.nightAuto, 'open': l10n.nightOn, 'close': l10n.nightOff},
               onChanged: (v) => setState(() => _night = v),
             ),
             const SizedBox(height: 16),
-            _grpLabel('VIDEO'),
+            _grpLabel(l10n.grpVideo),
             _StepRow(
-              label: 'Bitrate', suffix: 'kbps', value: _bitrate, min: 256, max: 4096, step: 256,
+              label: l10n.bitrate, suffix: 'kbps', value: _bitrate, min: 256, max: 4096, step: 256,
               onChanged: (v) => setState(() => _bitrate = v),
             ),
             _StepRow(
-              label: 'FPS', suffix: 'fps', value: _fps, min: 5, max: 30, step: 1,
+              label: l10n.fps, suffix: 'fps', value: _fps, min: 5, max: 30, step: 1,
               onChanged: (v) => setState(() => _fps = v),
             ),
             _StepRow(
-              label: 'Intervalo keyframe', suffix: 'frames', value: _gop, min: 10, max: 200, step: 5,
+              label: l10n.keyframeInterval, suffix: 'frames', value: _gop, min: 10, max: 200, step: 5,
               onChanged: (v) => setState(() => _gop = v),
             ),
             const SizedBox(height: 22),
@@ -1172,7 +1247,7 @@ class _CameraSettingsSheetState extends State<_CameraSettingsSheet> {
                     ? const SizedBox(
                         width: 20, height: 20,
                         child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2))
-                    : Text('Aplicar a la cámara',
+                    : Text(l10n.applyToCamera,
                         style: GoogleFonts.inter(
                             color: Colors.black, fontWeight: FontWeight.w700, fontSize: 14)),
               ),
@@ -1391,13 +1466,14 @@ class _AlertBannerState extends State<_AlertBanner> with TickerProviderStateMixi
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final color = _colorFor(widget.event.riskLevel);
-    final label = _labelFor(widget.event.eventType);
+    final label = l10n.eventTypeLabel(widget.event.eventType);
     final icon = _iconFor(widget.event.eventType);
     final pct = widget.event.confidenceScore;
     final time = DateFormat('HH:mm:ss').format(widget.event.createdAt.toLocal());
     final sub = [
-      _riskLabel(widget.event.riskLevel),
+      l10n.riskLabel(widget.event.riskLevel),
       if (pct != null) '${(pct * 100).toStringAsFixed(0)}%',
       time,
     ].join(' · ');
@@ -1473,37 +1549,6 @@ class _AlertBannerState extends State<_AlertBanner> with TickerProviderStateMixi
         _ => AppColors.safeGreen,
       };
 
-  static String _riskLabel(String risk) => switch (risk) {
-        'Critical' => 'Crítico',
-        'High' => 'Alto',
-        'Medium' => 'Medio',
-        'Low' => 'Bajo',
-        _ => risk,
-      };
-
-  static String _labelFor(String type) => switch (type) {
-        'FaceRecognized' => 'Acceso reconocido',
-        'UnknownFace' => 'Persona desconocida',
-        'LowConfidenceFace' => 'Detección baja confianza',
-        'RecurrentUnknownFace' => 'Visitante desconocido recurrente',
-        'ForcedAccessAttempt' => 'Intento de acceso forzado',
-        'LockpickingAttempt' => 'Intento de ganzúa',
-        'Tailgating' => 'Merodeador detectado',
-        'Climbing' => 'Escalamiento detectado',
-        'Burglary' => 'Robo detectado',
-        'PhysicalAggression' => 'Agresión física',
-        'Assault' => 'Asalto detectado',
-        'Abuse' => 'Abuso detectado',
-        'Arrest' => 'Arresto detectado',
-        'Stealing' || 'Shoplifting' || 'Robbery' => 'Robo detectado',
-        'Vandalism' => 'Vandalismo detectado',
-        'Arson' => 'Incendio provocado',
-        'Explosion' => 'Explosión detectada',
-        'Roadaccidents' => 'Accidente de tráfico',
-        'WeaponDetected' => 'Arma detectada',
-        _ => type,
-      };
-
   static IconData _iconFor(String type) => switch (type) {
         'FaceRecognized' => Icons.face_outlined,
         'UnknownFace' => Icons.person_off_outlined,
@@ -1539,7 +1584,9 @@ class _GridLayout extends StatelessWidget {
   Widget build(BuildContext context) {
     final count = cameras.length;
     if (count == 0) {
-      return const Center(child: Text('Sin cámaras', style: TextStyle(color: Colors.white54)));
+      return Center(
+          child: Text(context.l10n.noCameras,
+              style: const TextStyle(color: Colors.white54)));
     }
     if (count == 1) {
       return _GridCell(
@@ -1595,7 +1642,7 @@ class _GridCell extends StatelessWidget {
                   child: CircularProgressIndicator(color: AppColors.accent, strokeWidth: 2),
                 ),
                 const SizedBox(height: 8),
-                Text('Conectando…',
+                Text(context.l10n.connecting,
                     style: GoogleFonts.inter(color: Colors.white38, fontSize: 11)),
               ]),
             ),
@@ -1932,7 +1979,7 @@ class _LiveBadgeState extends State<_LiveBadge> with SingleTickerProviderStateMi
             ),
           ),
           const SizedBox(width: 6),
-          Text(widget.isLive ? 'EN VIVO' : 'OFFLINE',
+          Text(widget.isLive ? context.l10n.live : 'OFFLINE',
               style: GoogleFonts.inter(
                   color: Colors.white, fontSize: 10,
                   fontWeight: FontWeight.w700, letterSpacing: 1.5)),

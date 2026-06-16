@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import '../../core/i18n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/vs_button.dart';
@@ -43,13 +44,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (!mounted) return;
     setState(() => _isLoading = false);
     if (!success) {
-      final error = context.read<AuthProvider>().errorMessage ?? 'Error al registrarse';
+      final error = context.read<AuthProvider>().errorMessage ?? context.l10n.registerError;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -75,7 +77,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 32),
                 Text(
-                  'Crear cuenta',
+                  l10n.createAccount,
                   style: GoogleFonts.inter(
                     fontSize: 30,
                     fontWeight: FontWeight.w700,
@@ -85,47 +87,47 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Configura tu sistema VigiShield',
+                  l10n.registerSubtitle,
                   style: GoogleFonts.inter(fontSize: 14, color: AppColors.textSecondary),
                 ),
                 const SizedBox(height: 32),
                 VsTextField(
-                  label: 'NOMBRE COMPLETO',
-                  hint: 'Tu nombre',
+                  label: l10n.fullName,
+                  hint: l10n.nameHint,
                   controller: _nameCtrl,
                   textInputAction: TextInputAction.next,
-                  validator: (v) => (v?.length ?? 0) < 2 ? 'Mínimo 2 caracteres' : null,
+                  validator: (v) => (v?.length ?? 0) < 2 ? l10n.nameMin : null,
                 ),
                 const SizedBox(height: 18),
                 VsTextField(
-                  label: 'CORREO ELECTRÓNICO',
+                  label: l10n.emailField,
                   hint: 'tu@correo.com',
                   controller: _emailCtrl,
                   keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.next,
                   validator: (v) {
-                    if (v == null || v.isEmpty) return 'Campo requerido';
-                    if (!v.contains('@')) return 'Correo inválido';
+                    if (v == null || v.isEmpty) return l10n.requiredField;
+                    if (!v.contains('@')) return l10n.invalidEmail;
                     return null;
                   },
                 ),
                 const SizedBox(height: 18),
                 VsTextField(
-                  label: 'CONTRASEÑA',
-                  hint: 'Mínimo 8 caracteres',
+                  label: l10n.passwordField,
+                  hint: l10n.passwordHintMin,
                   controller: _passwordCtrl,
                   isPassword: true,
                   textInputAction: TextInputAction.next,
-                  validator: (v) => (v?.length ?? 0) < 8 ? 'Mínimo 8 caracteres' : null,
+                  validator: (v) => (v?.length ?? 0) < 8 ? l10n.passwordHintMin : null,
                 ),
                 const SizedBox(height: 18),
                 VsTextField(
-                  label: 'DIRECCIÓN DEL HOGAR',
-                  hint: 'Av. Ejemplo 123, Lima',
+                  label: l10n.householdAddressField,
+                  hint: l10n.addressHint,
                   controller: _addressCtrl,
                   textInputAction: TextInputAction.done,
                   onEditingComplete: _register,
-                  validator: (v) => (v?.length ?? 0) < 5 ? 'Dirección muy corta' : null,
+                  validator: (v) => (v?.length ?? 0) < 5 ? l10n.addressTooShort : null,
                 ),
                 const SizedBox(height: 12),
                 Container(
@@ -141,7 +143,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          'Serás el residente principal con acceso completo al sistema.',
+                          l10n.registerPrimaryInfo,
                           style: GoogleFonts.inter(fontSize: 12, color: AppColors.accent),
                         ),
                       ),
@@ -150,7 +152,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 28),
                 VsButton(
-                  label: 'Crear cuenta',
+                  label: l10n.createAccount,
                   onPressed: _isLoading ? null : _register,
                   isLoading: _isLoading,
                   width: double.infinity,
@@ -159,11 +161,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text('¿Ya tienes cuenta? ',
+                    Text(l10n.alreadyHaveAccount,
                         style: GoogleFonts.inter(fontSize: 14, color: AppColors.textSecondary)),
                     GestureDetector(
                       onTap: () => context.pop(),
-                      child: Text('Iniciar sesión',
+                      child: Text(l10n.login,
                           style: GoogleFonts.inter(
                               fontSize: 14, color: AppColors.accent, fontWeight: FontWeight.w600)),
                     ),

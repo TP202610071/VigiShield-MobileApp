@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import '../core/i18n/app_localizations.dart';
 import '../core/theme/app_theme.dart';
 import '../data/models/security_event_model.dart';
 
@@ -9,37 +10,6 @@ class EventCard extends StatelessWidget {
   final VoidCallback? onTap;
 
   const EventCard({super.key, required this.event, this.onTap});
-
-  static String labelFor(String type) => switch (type) {
-        // Face recognition
-        'FaceRecognized' => 'Acceso reconocido',
-        'UnknownFace' => 'Persona desconocida',
-        'LowConfidenceFace' => 'Detección baja confianza',
-        'RecurrentUnknownFace' => 'Visitante desconocido recurrente',
-        // Access & intrusion
-        'ForcedAccessAttempt' => 'Intento de acceso forzado',
-        'LockpickingAttempt' => 'Intento de ganzúa detectado',
-        'Tailgating' => 'Merodeador detectado',
-        'Climbing' => 'Escalamiento detectado',
-        'Burglary' => 'Robo detectado',
-        // Physical
-        'PhysicalAggression' => 'Agresión física detectada',
-        'Assault' => 'Asalto detectado',
-        'Abuse' => 'Abuso detectado',
-        'Arrest' => 'Arresto detectado',
-        // Property crime
-        'Stealing' => 'Robo detectado',
-        'Shoplifting' => 'Hurto en tienda detectado',
-        'Vandalism' => 'Vandalismo detectado',
-        'Robbery' => 'Robo a mano armada detectado',
-        'Arson' => 'Incendio provocado detectado',
-        // Hazard
-        'Explosion' => 'Explosión detectada',
-        'Roadaccidents' => 'Accidente de tráfico detectado',
-        // Object detection
-        'WeaponDetected' => 'Arma detectada',
-        _ => type,
-      };
 
   static Color colorFor(String type) => switch (type) {
         'FaceRecognized' => AppColors.safeGreen,
@@ -75,17 +45,19 @@ class EventCard extends StatelessWidget {
         _ => Icons.notifications_outlined,
       };
 
-  String _relativeTime() {
+  String _relativeTime(AppStrings l10n) {
     final now = DateTime.now().toUtc();
     final diff = now.difference(event.createdAt.toUtc());
-    if (diff.inSeconds < 60) return 'Hace un momento';
-    if (diff.inMinutes < 60) return 'Hace ${diff.inMinutes} min';
-    if (diff.inHours < 24) return 'Hace ${diff.inHours} h';
-    return DateFormat('d MMM, HH:mm', 'es').format(event.createdAt.toLocal());
+    if (diff.inSeconds < 60) return l10n.justNow;
+    if (diff.inMinutes < 60) return l10n.minutesAgo(diff.inMinutes);
+    if (diff.inHours < 24) return l10n.hoursAgo(diff.inHours);
+    return DateFormat(l10n.dateFormatShort, l10n.localeCode)
+        .format(event.createdAt.toLocal());
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final color = colorFor(event.eventType);
 
     return GestureDetector(
@@ -123,7 +95,7 @@ class EventCard extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                labelFor(event.eventType),
+                                l10n.eventTypeLabel(event.eventType),
                                 style: GoogleFonts.inter(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
@@ -136,7 +108,7 @@ class EventCard extends StatelessWidget {
                               Row(
                                 children: [
                                   Text(
-                                    _relativeTime(),
+                                    _relativeTime(l10n),
                                     style: GoogleFonts.inter(
                                       fontSize: 11,
                                       color: AppColors.textSecondary,
@@ -208,15 +180,6 @@ class _RiskBadge extends StatelessWidget {
         _ => AppColors.textMuted,
       };
 
-  String get _label => switch (riskLevel) {
-        'None' => '',
-        'Low' => 'Bajo',
-        'Medium' => 'Medio',
-        'High' => 'Alto',
-        'Critical' => 'Crítico',
-        _ => '',
-      };
-
   @override
   Widget build(BuildContext context) {
     if (riskLevel == 'None') return const SizedBox.shrink();
@@ -228,7 +191,7 @@ class _RiskBadge extends StatelessWidget {
         border: Border.all(color: _color.withOpacity(0.3)),
       ),
       child: Text(
-        _label,
+        context.l10n.riskLabel(riskLevel),
         style: GoogleFonts.inter(
           fontSize: 10,
           fontWeight: FontWeight.w600,

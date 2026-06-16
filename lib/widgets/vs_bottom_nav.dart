@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../core/i18n/app_localizations.dart';
 import '../core/theme/app_theme.dart';
 
 class VsBottomNav extends StatelessWidget {
@@ -13,14 +14,22 @@ class VsBottomNav extends StatelessWidget {
   });
 
   static const _items = [
-    _NavItemData(icon: Icons.home_outlined, activeIcon: Icons.home_rounded, label: 'Inicio'),
-    _NavItemData(icon: Icons.videocam_outlined, activeIcon: Icons.videocam_rounded, label: 'Cámara'),
-    _NavItemData(icon: Icons.history_outlined, activeIcon: Icons.history, label: 'Historial'),
-    _NavItemData(icon: Icons.settings_outlined, activeIcon: Icons.settings_rounded, label: 'Ajustes'),
+    _NavItemData(icon: Icons.home_outlined, activeIcon: Icons.home_rounded),
+    _NavItemData(icon: Icons.videocam_outlined, activeIcon: Icons.videocam_rounded),
+    _NavItemData(icon: Icons.history_outlined, activeIcon: Icons.history),
+    _NavItemData(icon: Icons.settings_outlined, activeIcon: Icons.settings_rounded),
   ];
+
+  static String _label(AppStrings l10n, int i) => switch (i) {
+        0 => l10n.navHome,
+        1 => l10n.navCamera,
+        2 => l10n.navHistory,
+        _ => l10n.navSettings,
+      };
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Container(
       decoration: const BoxDecoration(
         color: AppColors.surface,
@@ -65,7 +74,7 @@ class VsBottomNav extends StatelessWidget {
                         ),
                         const SizedBox(height: 3),
                         Text(
-                          item.label,
+                          _label(l10n, i),
                           style: GoogleFonts.inter(
                             fontSize: 10,
                             fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
@@ -88,7 +97,6 @@ class VsBottomNav extends StatelessWidget {
 class _NavItemData {
   final IconData icon;
   final IconData activeIcon;
-  final String label;
 
-  const _NavItemData({required this.icon, required this.activeIcon, required this.label});
+  const _NavItemData({required this.icon, required this.activeIcon});
 }
