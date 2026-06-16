@@ -4,6 +4,9 @@ import '../constants/app_constants.dart';
 class AuthStorage {
   final _storage = const FlutterSecureStorage(
     aOptions: AndroidOptions(encryptedSharedPreferences: true),
+    iOptions: IOSOptions(
+      accessibility: KeychainAccessibility.first_unlock,
+    ),
   );
 
   // ── JWT Token ──────────────────────────────────────────────────────────────

@@ -38,11 +38,22 @@ void main() async {
 
   // Load persisted settings before building the tree so the ApiClient, language
   // and role preview all start in the right state.
+  // Wrapped in try-catch: flutter_secure_storage can throw a Keychain
+  // PlatformException on iOS when accessed outside a debugger session.
   final storage = AuthStorage();
-  final savedUrl = await storage.getServerUrl();
-  final initialUrl = savedUrl ?? AppConstants.defaultServerUrl;
-  final initialLocale = await LocaleProvider.load(storage);
-  final initialPreviewRole = await DevSettingsProvider.load(storage);
+  String initialUrl;
+  AppLocale initialLocale;
+  String? initialPreviewRole;
+  try {
+    final savedUrl = await storage.getServerUrl();
+    initialUrl = savedUrl ?? AppConstants.defaultServerUrl;
+    initialLocale = await LocaleProvider.load(storage);
+    initialPreviewRole = await DevSettingsProvider.load(storage);
+  } catch (_) {
+    initialUrl = AppConstants.defaultServerUrl;
+    initialLocale = AppLocale.es;
+    initialPreviewRole = null;
+  }
 
   runApp(VigiShieldApp(
     initialServerUrl: initialUrl,
