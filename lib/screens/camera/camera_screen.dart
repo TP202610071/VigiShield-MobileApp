@@ -14,6 +14,7 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../../core/i18n/app_localizations.dart';
 import '../../core/network/api_client.dart';
+import '../../core/storage/auth_storage.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/models/camera_config_model.dart';
 import '../../data/models/security_event_model.dart';
@@ -59,9 +60,15 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
   int _hlsFailures = 0;  // consecutive HLS failures (→ hard error eventually)
   bool _opening = false; // guards against overlapping open() calls
 
-  // Prefer RTSP (≈1-2 s latency, no HLS segment buffering). If RTSP fails
-  // repeatedly we fall back to the always-works HLS URL (≈higher latency).
-  bool _useRtsp = true;
+  // HLS-only. Camera media is now served exclusively through the authenticated
+  // nginx HTTPS proxy (the raw RTSP/HLS ports are firewalled / auth-gated), and
+  // libmpv attaches the viewer JWT as a Bearer header on every HLS request. We no
+  // longer attempt direct RTSP (it would be rejected by MediaMTX read-auth).
+  bool _useRtsp = false;
+
+  // Authorization header (viewer JWT) sent with every camera request — HLS
+  // playback (libmpv httpHeaders) and the AI frame/status polls.
+  Map<String, String> _authHeaders = {};
 
   // Debug: which protocol is actually playing right now ('RTSP' / 'HLS' / '—').
   String _activeProtocol = '—';
@@ -270,8 +277,18 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
   // Stream playback (libmpv)
   // ──────────────────────────────────────────────────────────────────────────────
 
+  /// Load the viewer JWT once so it can be attached to every camera request.
+  Future<void> _ensureAuthHeaders() async {
+    if (_authHeaders.isNotEmpty) return;
+    final token = await AuthStorage().getToken();
+    if (token != null && token.isNotEmpty) {
+      _authHeaders = {'Authorization': 'Bearer $token'};
+    }
+  }
+
   Future<void> _initStream() async {
     final provider = context.read<CameraProvider>();
+    await _ensureAuthHeaders();
     if (provider.cameras.isEmpty) await provider.fetchCameras();
     if (!mounted) return;
 
@@ -388,7 +405,7 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
       // play:true starts immediately. libmpv handles the live window and
       // buffering internally. We arm a stall watchdog below in case it never
       // produces a frame (e.g. RTSP refused) so we can fall back.
-      await _player!.open(Media(url), play: true);
+      await _player!.open(Media(url, httpHeaders: _authHeaders), play: true);
     } catch (e) {
       _log('open() threw: $e');
       _onRecoverableFailure();
@@ -463,8 +480,10 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
     if (camId == null) return;
     final hls = cam?.hlsViewUrl;
     final host = (hls != null && hls.isNotEmpty) ? Uri.parse(hls).host : 'localhost';
-    final url = 'http://$host:5050/frame/$camId';
-    final statusUrl = 'http://$host:5050/status/$camId';
+    // Annotated frames now go through the authenticated nginx proxy (/ai/…),
+    // not the raw :5050 frame server (which is loopback-only on the VM).
+    final url = 'https://$host/ai/frame/$camId';
+    final statusUrl = 'https://$host/ai/status/$camId';
     _log('AI poller start → $url');
     var frameInFlight = false;
     var gotFirstFrame = false;
@@ -474,7 +493,7 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
       if (!mounted || frameInFlight) return;
       frameInFlight = true;
       try {
-        final resp = await _aiDio.get<List<int>>(url);
+        final resp = await _aiDio.get<List<int>>(url, options: Options(headers: _authHeaders));
         if (resp.statusCode == 200 && resp.data != null && mounted) {
           if (!gotFirstFrame) { gotFirstFrame = true; _log('AI first frame ok (${resp.data!.length}B)'); }
           setState(() => _aiFrame = Uint8List.fromList(resp.data!));
@@ -489,7 +508,7 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
     _aiStatusTimer = Timer.periodic(const Duration(milliseconds: 600), (_) async {
       if (!mounted) return;
       try {
-        final resp = await _statusDio.get<Map<String, dynamic>>(statusUrl);
+        final resp = await _statusDio.get<Map<String, dynamic>>(statusUrl, options: Options(headers: _authHeaders));
         if (resp.statusCode == 200 && resp.data != null && mounted) {
           setState(() => _aiStatus = resp.data);
         }
@@ -596,12 +615,13 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
 
   Future<void> _enterGridMode() async {
     final cameras = context.read<CameraProvider>().cameras;
+    await _ensureAuthHeaders();
     setState(() => _viewMode = _ViewMode.grid);
     for (final cam in cameras) {
-      // RTSP for low latency; HLS fallback if a camera has no RTSP URL.
-      final url = (cam.mediaMtxRtspUrl?.isNotEmpty ?? false)
-          ? cam.mediaMtxRtspUrl!
-          : cam.hlsViewUrl;
+      // Authenticated HLS (via nginx). RTSP is no longer used as a viewer path.
+      final url = (cam.hlsViewUrl?.isNotEmpty ?? false)
+          ? cam.hlsViewUrl!
+          : cam.mediaMtxRtspUrl;
       if (url == null || url.isEmpty || _gridPlayers.containsKey(cam.id)) continue;
       final p = Player();
       if (p.platform is NativePlayer) {
@@ -612,7 +632,7 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
       _gridPlayers[cam.id] = p;
       _gridControllers[cam.id] = VideoController(p);
       try {
-        await p.open(Media(url), play: true);
+        await p.open(Media(url, httpHeaders: _authHeaders), play: true);
       } catch (_) {/* cell shows spinner */}
       if (mounted) setState(() {});
     }
