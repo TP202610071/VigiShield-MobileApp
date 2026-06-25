@@ -60,15 +60,21 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
   int _hlsFailures = 0;  // consecutive HLS failures (→ hard error eventually)
   bool _opening = false; // guards against overlapping open() calls
 
-  // HLS-only. Camera media is now served exclusively through the authenticated
-  // nginx HTTPS proxy (the raw RTSP/HLS ports are firewalled / auth-gated), and
-  // libmpv attaches the viewer JWT as a Bearer header on every HLS request. We no
-  // longer attempt direct RTSP (it would be rejected by MediaMTX read-auth).
-  bool _useRtsp = false;
+  // Prefer RTSP (≈1-2 s latency, real time). Falls back to HLS after repeated
+  // failures. Both paths are now authenticated: RTSP reads carry a short signed
+  // stream token as the RTSP password (MediaMTX validates it); HLS carries the
+  // viewer JWT as a Bearer header through the nginx proxy.
+  bool _useRtsp = true;
 
   // Authorization header (viewer JWT) sent with every camera request — HLS
   // playback (libmpv httpHeaders) and the AI frame/status polls.
   Map<String, String> _authHeaders = {};
+
+  // Short signed token used as the RTSP password (a full JWT is too long for
+  // ffmpeg's RTSP credential buffer). Fetched from the JWT-gated /ai/stream-token
+  // and cached until shortly before it expires.
+  String? _streamToken;
+  int _streamTokenExp = 0; // unix seconds
 
   // Debug: which protocol is actually playing right now ('RTSP' / 'HLS' / '—').
   String _activeProtocol = '—';
@@ -286,6 +292,41 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
     }
   }
 
+  /// Fetch (and cache) the short RTSP read token from the JWT-gated
+  /// /ai/stream-token endpoint. The token is what authenticates RTSP reads to
+  /// MediaMTX. Cached until ~2 min before expiry. On failure we leave it null so
+  /// _resolveStreamUrl skips RTSP and uses the (also-authenticated) HLS path.
+  Future<void> _ensureStreamToken() async {
+    final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    if (_streamToken != null && _streamTokenExp - now > 120) return;
+    await _ensureAuthHeaders();
+    if (!mounted || _authHeaders.isEmpty) return;
+    final cam = context.read<CameraProvider>().selectedCamera;
+    final hls = cam?.hlsViewUrl;
+    if (hls == null || hls.isEmpty) return;
+    final host = Uri.parse(hls).host;
+    try {
+      final resp = await _statusDio.get<Map<String, dynamic>>(
+        'https://$host/ai/stream-token',
+        options: Options(headers: _authHeaders),
+      );
+      if (resp.statusCode == 200 && resp.data != null) {
+        _streamToken = resp.data!['token'] as String?;
+        _streamTokenExp = (resp.data!['exp'] as num?)?.toInt() ?? 0;
+        _log('stream token fetched (exp=$_streamTokenExp)');
+      }
+    } catch (e) {
+      _log('stream token fetch failed: $e — will use HLS');
+    }
+  }
+
+  /// `rtsp://host:8554/key` → `rtsp://viewer:<token>@host:8554/key`
+  String _injectRtspToken(String rtsp, String token) {
+    final i = rtsp.indexOf('://');
+    if (i < 0) return rtsp;
+    return '${rtsp.substring(0, i + 3)}viewer:$token@${rtsp.substring(i + 3)}';
+  }
+
   Future<void> _initStream() async {
     final provider = context.read<CameraProvider>();
     await _ensureAuthHeaders();
@@ -379,12 +420,20 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
     if (cam == null) return null;
     final rtsp = cam.mediaMtxRtspUrl;
     final hls = cam.hlsViewUrl;
-    if (_useRtsp && rtsp != null && rtsp.isNotEmpty) return rtsp;
+    // Use RTSP only when we hold a valid stream token to authenticate the read;
+    // otherwise fall back to the JWT-authenticated HLS path.
+    if (_useRtsp && rtsp != null && rtsp.isNotEmpty && _streamToken != null) {
+      return _injectRtspToken(rtsp, _streamToken!);
+    }
     return (hls != null && hls.isNotEmpty) ? hls : rtsp;
   }
 
   Future<void> _openStream({String? overrideUrl}) async {
     if (_opening) return; // an open() is already in flight — don't stack them
+    // Make sure we have a fresh RTSP read token before resolving the URL (cheap
+    // when cached). If it can't be fetched, _resolveStreamUrl uses HLS instead.
+    if (overrideUrl == null && _useRtsp) await _ensureStreamToken();
+    if (!mounted) return;
     final url = overrideUrl ?? _resolveStreamUrl();
     if (url == null || url.isEmpty) {
       if (mounted) setState(() { _error = 'no_config'; });
@@ -440,6 +489,9 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
 
     if (_useRtsp) {
       _rtspFailures++;
+      // Drop the cached stream token so the next attempt fetches a fresh one —
+      // covers the case where RTSP failed because the token expired.
+      _streamToken = null;
       if (_rtspFailures >= 3) {
         // RTSP can't sustain here (firewall / network) — fall back to HLS.
         _log('RTSP failed 3x → falling back to HLS');
