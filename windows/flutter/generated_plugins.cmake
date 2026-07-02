@@ -7,6 +7,8 @@ list(APPEND FLUTTER_PLUGIN_LIST
   flutter_secure_storage_windows
   gal
   media_kit_video
+  share_plus
+  url_launcher_windows
   volume_controller
 )
 
