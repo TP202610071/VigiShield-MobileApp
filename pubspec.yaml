@@ -50,6 +50,11 @@ dependencies:
   # Save screenshots to the device gallery
   gal: ^2.3.0
 
+  # Share event media (photo/clip) to other apps
+  share_plus: ^10.1.4
+  # Temp dir for downloading media before save/share
+  path_provider: ^2.1.5
+
   # Pick photos for authorized-face registration
   image_picker: ^1.1.2
 
