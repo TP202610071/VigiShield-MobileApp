@@ -1,9 +1,13 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:gal/gal.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../core/i18n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/models/security_event_model.dart';
@@ -185,41 +189,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             _DetailSection(
               title: l10n.imageCapture,
               rows: const [],
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Image.network(
-                  ev.imageCapturePath!,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  loadingBuilder: (c, child, prog) => prog == null
-                      ? child
-                      : Container(
-                          height: 200,
-                          alignment: Alignment.center,
-                          color: AppColors.surface,
-                          child: const CircularProgressIndicator(
-                              color: AppColors.accent, strokeWidth: 2),
-                        ),
-                  errorBuilder: (c, e, s) => Container(
-                    height: 200,
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.border),
-                    ),
-                    child: Center(
-                      child: Column(mainAxisSize: MainAxisSize.min, children: [
-                        const Icon(Icons.image_not_supported_outlined,
-                            color: AppColors.textMuted, size: 40),
-                        const SizedBox(height: 8),
-                        Text(l10n.imageUnavailable,
-                            style: GoogleFonts.inter(
-                                color: AppColors.textMuted, fontSize: 12)),
-                      ]),
-                    ),
-                  ),
-                ),
-              ),
+              child: _EventPhoto(url: ev.imageCapturePath!),
             ),
           ],
           if (ev.videoClipPath != null) ...[
@@ -336,12 +306,270 @@ class _ClipSectionState extends State<_ClipSection> {
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
-      child: AspectRatio(
-        aspectRatio: 16 / 9,
-        child: Video(controller: _controller, fit: BoxFit.contain),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: AspectRatio(
+            aspectRatio: 16 / 9,
+            child: Video(controller: _controller, fit: BoxFit.contain),
+          ),
+        ),
+        const SizedBox(height: 10),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            _MediaActionButton(
+              icon: Icons.fullscreen,
+              label: context.l10n.fullscreen,
+              onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => _FullScreenVideo(url: widget.url))),
+            ),
+            _MediaActionButton(
+              icon: Icons.download_outlined,
+              label: context.l10n.save,
+              onTap: () => _MediaActions.save(context, widget.url, isVideo: true),
+            ),
+            _MediaActionButton(
+              icon: Icons.share_outlined,
+              label: context.l10n.share,
+              onTap: () => _MediaActions.share(context, widget.url),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+// ── Event photo (tap → fullscreen, save, share) ───────────────────────────────
+
+class _EventPhoto extends StatelessWidget {
+  final String url;
+  const _EventPhoto({required this.url});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        GestureDetector(
+          onTap: () => Navigator.of(context).push(MaterialPageRoute(
+              builder: (_) => _FullScreenImage(url: url))),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Image.network(
+                  url,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  loadingBuilder: (c, child, prog) => prog == null
+                      ? child
+                      : Container(
+                          height: 200,
+                          alignment: Alignment.center,
+                          color: AppColors.surface,
+                          child: const CircularProgressIndicator(
+                              color: AppColors.accent, strokeWidth: 2),
+                        ),
+                  errorBuilder: (c, e, s) => Container(
+                    height: 200,
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: Center(
+                      child: Column(mainAxisSize: MainAxisSize.min, children: [
+                        const Icon(Icons.image_not_supported_outlined,
+                            color: AppColors.textMuted, size: 40),
+                        const SizedBox(height: 8),
+                        Text(context.l10n.imageUnavailable,
+                            style: GoogleFonts.inter(
+                                color: AppColors.textMuted, fontSize: 12)),
+                      ]),
+                    ),
+                  ),
+                ),
+                // Expand hint
+                Positioned(
+                  right: 8, top: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.fullscreen, color: Colors.white, size: 18),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            _MediaActionButton(
+              icon: Icons.download_outlined,
+              label: context.l10n.save,
+              onTap: () => _MediaActions.save(context, url, isVideo: false),
+            ),
+            _MediaActionButton(
+              icon: Icons.share_outlined,
+              label: context.l10n.share,
+              onTap: () => _MediaActions.share(context, url),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _MediaActionButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  const _MediaActionButton(
+      {required this.icon, required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return TextButton.icon(
+      onPressed: onTap,
+      icon: Icon(icon, size: 18, color: AppColors.accent),
+      label: Text(label,
+          style: GoogleFonts.inter(color: AppColors.accent, fontSize: 13)),
+    );
+  }
+}
+
+// ── Fullscreen viewers ────────────────────────────────────────────────────────
+
+class _FullScreenImage extends StatelessWidget {
+  final String url;
+  const _FullScreenImage({required this.url});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        iconTheme: const IconThemeData(color: Colors.white),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.download_outlined, color: Colors.white),
+            onPressed: () => _MediaActions.save(context, url, isVideo: false),
+          ),
+          IconButton(
+            icon: const Icon(Icons.share_outlined, color: Colors.white),
+            onPressed: () => _MediaActions.share(context, url),
+          ),
+        ],
+      ),
+      body: InteractiveViewer(
+        minScale: 1,
+        maxScale: 5,
+        child: Center(child: Image.network(url)),
       ),
     );
+  }
+}
+
+class _FullScreenVideo extends StatefulWidget {
+  final String url;
+  const _FullScreenVideo({required this.url});
+
+  @override
+  State<_FullScreenVideo> createState() => _FullScreenVideoState();
+}
+
+class _FullScreenVideoState extends State<_FullScreenVideo> {
+  late final Player _player = Player();
+  late final VideoController _controller = VideoController(_player);
+
+  @override
+  void initState() {
+    super.initState();
+    _player.open(Media(widget.url), play: true);
+  }
+
+  @override
+  void dispose() {
+    _player.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        iconTheme: const IconThemeData(color: Colors.white),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.download_outlined, color: Colors.white),
+            onPressed: () => _MediaActions.save(context, widget.url, isVideo: true),
+          ),
+          IconButton(
+            icon: const Icon(Icons.share_outlined, color: Colors.white),
+            onPressed: () => _MediaActions.share(context, widget.url),
+          ),
+        ],
+      ),
+      body: Center(child: Video(controller: _controller, fit: BoxFit.contain)),
+    );
+  }
+}
+
+// ── Download / save-to-gallery / share helpers ────────────────────────────────
+
+class _MediaActions {
+  static Future<String?> _downloadToTemp(String url) async {
+    final dir = await getTemporaryDirectory();
+    var name = Uri.parse(url).pathSegments.isNotEmpty
+        ? Uri.parse(url).pathSegments.last
+        : 'vigishield_media';
+    if (!name.contains('.')) name = '$name.bin';
+    final path = '${dir.path}/$name';
+    await Dio().download(url, path);
+    return path;
+  }
+
+  static Future<void> save(BuildContext context, String url,
+      {required bool isVideo}) async {
+    final l10n = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final path = await _downloadToTemp(url);
+      if (path == null) throw Exception('download failed');
+      if (isVideo) {
+        await Gal.putVideo(path);
+      } else {
+        await Gal.putImage(path);
+      }
+      messenger.showSnackBar(SnackBar(content: Text(l10n.savedToGallery)));
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text(l10n.saveFailed)));
+    }
+  }
+
+  static Future<void> share(BuildContext context, String url) async {
+    final l10n = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final path = await _downloadToTemp(url);
+      if (path == null) throw Exception('download failed');
+      await Share.shareXFiles([XFile(path)]);
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text(l10n.saveFailed)));
+    }
   }
 }

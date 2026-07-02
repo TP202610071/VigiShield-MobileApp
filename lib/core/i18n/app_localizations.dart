@@ -240,6 +240,10 @@ class AppStrings {
   String get imageUnavailable =>
       _('Imagen no disponible', 'Image unavailable');
   String get videoClip => _('Clip de video', 'Video clip');
+  String get fullscreen => _('Pantalla completa', 'Fullscreen');
+  String get share => _('Compartir', 'Share');
+  String get savedToGallery => _('Guardado en la galería', 'Saved to gallery');
+  String get saveFailed => _('No se pudo guardar', 'Could not save');
   String get nightActivity => _('Actividad nocturna', 'Nighttime activity');
   String get deleteEvent => _('Eliminar evento', 'Delete event');
   String get deleteEventConfirm => _(
