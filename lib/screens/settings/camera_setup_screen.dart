@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/theme/app_theme.dart';
+import '../../core/utils/lan_scanner.dart';
 import '../../data/models/camera_config_model.dart';
 import '../../providers/camera_provider.dart';
 import '../../widgets/vs_button.dart';
@@ -24,6 +24,7 @@ class _CameraSetupScreenState extends State<CameraSetupScreen> {
   final _formKey = GlobalKey<FormState>();
 
   String _streamMode = 'DirectRtsp';
+  bool _scanning = false;
   final _nameCtrl = TextEditingController();
   final _ipCtrl = TextEditingController();
   final _portCtrl = TextEditingController(text: '554');
@@ -90,6 +91,33 @@ class _CameraSetupScreenState extends State<CameraSetupScreen> {
     _userCtrl.dispose();
     _passCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _scanNetwork() async {
+    setState(() => _scanning = true);
+    List<FoundCamera> found = const [];
+    try {
+      found = await LanScanner.scan();
+    } catch (_) {/* show empty results */}
+    if (!mounted) return;
+    setState(() => _scanning = false);
+    await showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.surfaceElevated,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) => _ScanResultsSheet(
+        cameras: found,
+        onPick: (ip) {
+          setState(() {
+            _ipCtrl.text = ip;
+            if (_portCtrl.text.trim().isEmpty) _portCtrl.text = '554';
+            _streamMode = 'DirectRtsp';
+          });
+          Navigator.pop(ctx);
+        },
+      ),
+    );
   }
 
   Future<void> _save() async {
@@ -224,6 +252,35 @@ class _CameraSetupScreenState extends State<CameraSetupScreen> {
                     color: AppColors.textSecondary, fontSize: 13),
               ),
               const SizedBox(height: 14),
+
+              // Primary path: auto-detect cameras on the local network.
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: _scanning ? null : _scanNetwork,
+                  icon: _scanning
+                      ? const SizedBox(
+                          width: 16, height: 16,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: AppColors.accent))
+                      : const Icon(Icons.wifi_find),
+                  label: Text(_scanning
+                      ? 'Buscando cámaras…'
+                      : 'Escanear mi red en busca de cámaras'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.accent,
+                    side: const BorderSide(color: AppColors.accent),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Detecta cámaras (puerto RTSP 554) en tu red Wi-Fi y llena la IP por ti. '
+                'Debes estar conectado a la misma red que la cámara.',
+                style: GoogleFonts.inter(color: AppColors.textMuted, fontSize: 12),
+              ),
+              const SizedBox(height: 16),
 
               VsTextField(
                 controller: _ipCtrl,
@@ -627,5 +684,64 @@ class _CopyBox extends StatelessWidget {
         ]),
       ),
     ]);
+  }
+}
+
+/// Bottom sheet listing cameras found by the LAN scan.
+class _ScanResultsSheet extends StatelessWidget {
+  final List<FoundCamera> cameras;
+  final void Function(String ip) onPick;
+  const _ScanResultsSheet({required this.cameras, required this.onPick});
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(children: [
+              const Icon(Icons.wifi_find, color: AppColors.accent, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                cameras.isEmpty
+                    ? 'Sin resultados'
+                    : '${cameras.length} cámara(s) encontrada(s)',
+                style: GoogleFonts.inter(
+                    color: AppColors.textPrimary,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600),
+              ),
+            ]),
+            const SizedBox(height: 12),
+            if (cameras.isEmpty)
+              Text(
+                'No se encontraron cámaras (puerto 554) en tu red. Verifica que la '
+                'cámara esté encendida y en la misma red Wi-Fi, o ingresa la IP manualmente.',
+                style: GoogleFonts.inter(
+                    color: AppColors.textSecondary, fontSize: 13),
+              )
+            else
+              ...cameras.map((c) => ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.videocam_outlined,
+                        color: AppColors.accent),
+                    title: Text(c.ip,
+                        style: GoogleFonts.robotoMono(
+                            color: AppColors.textPrimary, fontSize: 15)),
+                    subtitle: Text(
+                        c.hasWebUi ? 'RTSP 554 · interfaz web 80' : 'RTSP 554',
+                        style: GoogleFonts.inter(
+                            color: AppColors.textMuted, fontSize: 12)),
+                    trailing: const Icon(Icons.add_circle_outline,
+                        color: AppColors.accent),
+                    onTap: () => onPick(c.ip),
+                  )),
+          ],
+        ),
+      ),
+    );
   }
 }

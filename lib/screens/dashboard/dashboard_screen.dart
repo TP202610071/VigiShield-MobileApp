@@ -124,7 +124,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   else
                     ...events.events
                         .take(5)
-                        .map((e) => EventCard(event: e)),
+                        .map((e) => EventCard(
+                              event: e,
+                              onTap: () => context.push('/history/${e.id}'),
+                            )),
                   const SizedBox(height: 24),
                 ]),
               ),
