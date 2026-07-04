@@ -32,6 +32,22 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            <!-- Deep link: vigishield://event/<id> (works with no server setup) -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="vigishield" android:host="event"/>
+            </intent-filter>
+            <!-- App Link: https://vigishield.app/event/<id> (requires assetlinks.json hosted at
+                 https://vigishield.app/.well-known/assetlinks.json for autoVerify). WhatsApp URL
+                 buttons must be https, so this is the one used by the alert templates. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="https" android:host="vigishield.app" android:pathPrefix="/event"/>
+            </intent-filter>
         </activity>
         <meta-data
             android:name="flutterEmbedding"

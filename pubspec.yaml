@@ -50,6 +50,9 @@ dependencies:
   # Save screenshots to the device gallery
   gal: ^2.3.0
 
+  # Deep links (open a specific event from a WhatsApp/notification link)
+  app_links: ^6.3.2
+
   # Share event media (photo/clip) to other apps
   share_plus: ^10.1.4
   # Temp dir for downloading media before save/share
