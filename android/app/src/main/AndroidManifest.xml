@@ -28,6 +28,9 @@
               android:name="io.flutter.embedding.android.NormalTheme"
               android:resource="@style/NormalTheme"
               />
+            <!-- Let app_links handle deep links (maps /event/<id> -> /history/<id>);
+                 disable Flutter's auto-forwarding so go_router doesn't 404 on the raw URL. -->
+            <meta-data android:name="flutter_deeplinking_enabled" android:value="false" />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>

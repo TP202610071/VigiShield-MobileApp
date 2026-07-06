@@ -20,7 +20,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Vigishield Mobile App</string>
+	<string>VigiShield</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -29,6 +29,8 @@
 	<string>6.0</string>
 	<key>CFBundleName</key>
 	<string>vigishield_mobile_app</string>
+	<key>FlutterDeepLinkingEnabled</key>
+	<false/>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
