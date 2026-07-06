@@ -22,6 +22,7 @@ import 'providers/system_provider.dart';
 import 'providers/ui_provider.dart';
 import 'package:app_links/app_links.dart';
 import 'package:go_router/go_router.dart';
+import 'core/utils/deep_links.dart';
 import 'router/app_router.dart';
 
 void main() async {
@@ -116,28 +117,28 @@ class _VigiShieldAppState extends State<VigiShieldApp> {
   /// (WhatsApp button or push notification), e.g. `https://vigishield.app/event/<id>`
   /// or `vigishield://event/<id>`.
   Future<void> _initDeepLinks() async {
+    // Warm links (app already running): navigate on top of the current screen.
+    _appLinks.uriLinkStream.listen((uri) {
+      final id = _extractEventId(uri);
+      if (id != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) => _router.push('/history/$id'));
+      }
+    }, onError: (_) {});
+    // Cold-start link: stash it so the splash routes there after auth resolves
+    // (a direct push here would be wiped by the splash's go('/dashboard')).
     try {
       final initial = await _appLinks.getInitialLink();
-      if (initial != null) _handleDeepLink(initial);
+      final id = initial == null ? null : _extractEventId(initial);
+      if (id != null) DeepLinks.pendingEventId = id;
     } catch (_) {/* no initial link */}
-    _appLinks.uriLinkStream.listen(_handleDeepLink, onError: (_) {});
   }
 
-  void _handleDeepLink(Uri uri) {
-    String? id;
+  String? _extractEventId(Uri uri) {
     final segs = uri.pathSegments;
-    if (uri.host == 'event' && segs.isNotEmpty) {
-      id = segs.first; // vigishield://event/<id>
-    } else {
-      final i = segs.indexOf('event'); // https://vigishield.app/event/<id>
-      if (i >= 0 && i + 1 < segs.length) id = segs[i + 1];
-    }
-    if (id != null && id.isNotEmpty) {
-      // Give the router a tick in case the app is still starting up.
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _router.push('/history/$id');
-      });
-    }
+    if (uri.host == 'event' && segs.isNotEmpty) return segs.first; // vigishield://event/<id>
+    final i = segs.indexOf('event'); // https://vigishield.app/event/<id>
+    if (i >= 0 && i + 1 < segs.length) return segs[i + 1];
+    return null;
   }
 
   @override

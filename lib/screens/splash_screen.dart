@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../core/theme/app_theme.dart';
+import '../core/utils/deep_links.dart';
 import '../providers/auth_provider.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -50,7 +51,14 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
     await context.read<AuthProvider>().tryRestoreSession();
     if (!mounted) return;
     if (context.read<AuthProvider>().isAuthenticated) {
+      // If the app was cold-started from a deep link, land on the referenced
+      // event (on top of the dashboard) instead of just the dashboard.
+      final pendingEvent = DeepLinks.pendingEventId;
+      DeepLinks.pendingEventId = null;
       context.go('/dashboard');
+      if (pendingEvent != null && pendingEvent.isNotEmpty) {
+        context.push('/history/$pendingEvent');
+      }
     } else {
       context.go('/login');
     }
