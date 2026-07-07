@@ -63,3 +63,22 @@ class AdminUser {
         createdAt: DateTime.parse(json['createdAt'] as String),
       );
 }
+
+/// A household + its primary user, for the developer alert-trigger tool.
+class HouseholdSummary {
+  final String householdId;
+  final String name;
+  final String email;
+
+  const HouseholdSummary({
+    required this.householdId,
+    required this.name,
+    required this.email,
+  });
+
+  factory HouseholdSummary.fromJson(Map<String, dynamic> json) => HouseholdSummary(
+        householdId: json['householdId'] as String,
+        name: (json['name'] ?? '') as String,
+        email: (json['email'] ?? '') as String,
+      );
+}

@@ -26,6 +26,11 @@ class _DeveloperScreenState extends State<DeveloperScreen> {
   List<AdminUser>? _admins;
   bool _loadingAdmins = true;
 
+  // Developer alert-trigger tool
+  final _householdQueryCtrl = TextEditingController();
+  List<HouseholdSummary> _households = [];
+  bool _searchingHouseholds = false;
+
   @override
   void initState() {
     super.initState();
@@ -141,6 +146,44 @@ class _DeveloperScreenState extends State<DeveloperScreen> {
           ],
           const SizedBox(height: 28),
 
+          // ── Trigger alert (testing) ───────────────────────────────────────
+          _Label('Disparar alerta (pruebas)'),
+          const SizedBox(height: 6),
+          Text(
+              'Busca un hogar por nombre o correo y dispara una alerta real: se guarda '
+              'en el historial, aparece en la cámara y envía el WhatsApp, como si hubiera ocurrido.',
+              style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary, height: 1.4)),
+          const SizedBox(height: 12),
+          Row(children: [
+            Expanded(
+              child: VsTextField(
+                controller: _householdQueryCtrl,
+                label: 'Hogar (nombre o correo)',
+                hint: 'Ej: Diego',
+              ),
+            ),
+            const SizedBox(width: 10),
+            VsButton(
+              label: 'Buscar',
+              variant: VsButtonVariant.secondary,
+              icon: Icons.search,
+              onPressed: _searchHouseholds,
+            ),
+          ]),
+          const SizedBox(height: 10),
+          if (_searchingHouseholds)
+            const Center(
+                child: Padding(
+                    padding: EdgeInsets.all(12),
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2, color: AppColors.accent)))
+          else
+            ..._households.map((h) => _HouseholdTile(
+                  household: h,
+                  onTrigger: () => _pickAndTrigger(h),
+                )),
+          const SizedBox(height: 28),
+
           // ── Diagnostics ───────────────────────────────────────────────────
           _Label(l10n.diagnostics),
           const SizedBox(height: 12),
@@ -153,6 +196,70 @@ class _DeveloperScreenState extends State<DeveloperScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _searchHouseholds() async {
+    setState(() => _searchingHouseholds = true);
+    try {
+      final r = await context
+          .read<AuthProvider>()
+          .service
+          .searchHouseholds(_householdQueryCtrl.text.trim());
+      if (mounted) setState(() { _households = r; _searchingHouseholds = false; });
+    } catch (_) {
+      if (mounted) setState(() { _households = []; _searchingHouseholds = false; });
+      _toast('Error al buscar hogares');
+    }
+  }
+
+  Future<void> _pickAndTrigger(HouseholdSummary h) async {
+    const options = <String, String>{
+      'UnknownFace': 'Persona desconocida',
+      'WeaponDetected': 'Arma detectada',
+      'Tailgating': 'Merodeador detectado',
+      'Climbing': 'Escalamiento',
+      'PhysicalAggression': 'Agresión física',
+    };
+    final type = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: AppColors.surfaceElevated,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) => SafeArea(
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Text('Disparar alerta para ${h.name}',
+                style: GoogleFonts.inter(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16)),
+          ),
+          ...options.entries.map((e) => ListTile(
+                leading: const Icon(Icons.notifications_active_outlined,
+                    color: AppColors.accent),
+                title: Text(e.value,
+                    style: GoogleFonts.inter(color: AppColors.textPrimary)),
+                onTap: () => Navigator.pop(ctx, e.key),
+              )),
+          const SizedBox(height: 12),
+        ]),
+      ),
+    );
+    if (type == null || !mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await context.read<AuthProvider>().service.simulateEvent(h.householdId, type);
+      messenger.showSnackBar(SnackBar(
+          content: Text('Alerta "${options[type]}" enviada a ${h.name}')));
+    } catch (_) {
+      messenger.showSnackBar(const SnackBar(content: Text('No se pudo disparar la alerta')));
+    }
+  }
+
+  void _toast(String m) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
   }
 
   Future<void> _addAdmin() async {
@@ -357,6 +464,46 @@ class _AdminTile extends StatelessWidget {
             icon: const Icon(Icons.remove_circle_outline, color: AppColors.alertRed, size: 20),
             onPressed: onRemove,
           ),
+      ]),
+    );
+  }
+}
+
+class _HouseholdTile extends StatelessWidget {
+  final HouseholdSummary household;
+  final VoidCallback onTrigger;
+  const _HouseholdTile({required this.household, required this.onTrigger});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(children: [
+        const Icon(Icons.home_outlined, color: AppColors.accent, size: 18),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(household.name,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.inter(
+                    fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+            Text(household.email,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary)),
+          ]),
+        ),
+        TextButton.icon(
+          onPressed: onTrigger,
+          icon: const Icon(Icons.notifications_active_outlined, size: 18, color: AppColors.accent),
+          label: Text('Disparar',
+              style: GoogleFonts.inter(color: AppColors.accent, fontSize: 13)),
+        ),
       ]),
     );
   }

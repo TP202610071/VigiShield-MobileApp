@@ -88,4 +88,21 @@ class AuthService {
   }
 
   Future<void> removeAdmin(String id) => _client.delete('/api/users/admins/$id');
+
+  // ── Developer alert-trigger tool (Admin only) ───────────────────────────────
+
+  Future<List<HouseholdSummary>> searchHouseholds(String query) async {
+    final data = await _client.get<List<dynamic>>(
+        '/api/users/households', queryParams: {'query': query});
+    return data
+        .map((j) => HouseholdSummary.fromJson(j as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// Trigger a real alert for any household (saved + notified + shown in the app).
+  Future<void> simulateEvent(String householdId, String eventType) =>
+      _client.post('/api/events/simulate', body: {
+        'householdId': householdId,
+        'eventType': eventType,
+      });
 }
