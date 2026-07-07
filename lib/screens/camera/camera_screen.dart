@@ -540,7 +540,7 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
     var frameInFlight = false;
     var gotFirstFrame = false;
     var loggedErr = false;
-    _aiFrameTimer = Timer.periodic(const Duration(milliseconds: 300), (_) async {
+    _aiFrameTimer = Timer.periodic(const Duration(milliseconds: 200), (_) async {
       // Skip if a request is still in flight so slow frames don't pile up.
       if (!mounted || frameInFlight) return;
       frameInFlight = true;
@@ -1904,7 +1904,10 @@ class _AiStatusBannerState extends State<_AiStatusBanner>
                   color: color, size: 16),
               const SizedBox(width: 6),
               Flexible(
-                child: Text('$label · ${(conf * 100).toStringAsFixed(0)}%',
+                child: Text(
+                    (label == '—' || label.isEmpty)
+                        ? (suspicious ? 'ACTIVIDAD SOSPECHOSA' : 'Vigilando')
+                        : '$label · ${(conf * 100).toStringAsFixed(0)}%',
                     overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.robotoMono(
                         color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
