@@ -15,6 +15,19 @@
 	<string>VigiShield necesita guardar capturas de pantalla en tu galería.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>VigiShield necesita acceso al micrófono para la transmisión de video.</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>com.vigishield.app</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>vigishield</string>
+			</array>
+		</dict>
+	</array>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>
