@@ -42,6 +42,8 @@ class EventCard extends StatelessWidget {
         'Roadaccidents' => Icons.car_crash_outlined,
         // Object detection
         'WeaponDetected' => Icons.gpp_bad_outlined,
+        // Anticipatory (CAIEE)
+        'SuspiciousIntent' => Icons.crisis_alert_outlined,
         _ => Icons.notifications_outlined,
       };
 
