@@ -13,6 +13,7 @@ import '../screens/settings/profile_screen.dart';
 import '../screens/settings/developer_screen.dart';
 import '../screens/settings/cameras_list_screen.dart';
 import '../screens/settings/camera_setup_screen.dart';
+import '../screens/settings/zone_editor_screen.dart';
 import '../screens/settings/faces_screen.dart';
 import '../screens/settings/face_enrollment_screen.dart';
 
@@ -58,6 +59,11 @@ GoRouter createRouter(AuthProvider authProvider) => GoRouter(
           path: '/settings/cameras/:id',
           builder: (ctx, st) =>
               CameraSetupScreen(cameraId: st.pathParameters['id']),
+        ),
+        GoRoute(
+          path: '/settings/cameras/:id/zones',
+          builder: (ctx, st) =>
+              ZoneEditorScreen(cameraId: st.pathParameters['id']!),
         ),
         GoRoute(
           path: '/settings/faces',
