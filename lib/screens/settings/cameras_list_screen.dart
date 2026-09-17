@@ -77,6 +77,9 @@ class _CamerasListScreenState extends State<CamerasListScreen> {
                 onEdit: isPrimary
                     ? () => context.push('/settings/cameras/${cam.id}')
                     : null,
+                onZones: isPrimary
+                    ? () => context.push('/settings/cameras/${cam.id}/zones')
+                    : null,
                 onDelete: isPrimary
                     ? () => _confirmDelete(context, cam.id, cam.name)
                     : null,
@@ -184,12 +187,14 @@ class _CameraCard extends StatelessWidget {
   final dynamic cam;
   final bool isPrimary;
   final VoidCallback? onEdit;
+  final VoidCallback? onZones;
   final VoidCallback? onDelete;
 
   const _CameraCard({
     required this.cam,
     required this.isPrimary,
     this.onEdit,
+    this.onZones,
     this.onDelete,
   });
 
@@ -276,6 +281,12 @@ class _CameraCard extends StatelessWidget {
               ]),
         ),
         if (isPrimary) ...[
+          IconButton(
+            icon: const Icon(Icons.crop_free,
+                color: AppColors.accent, size: 18),
+            onPressed: onZones,
+            tooltip: 'Zonas de interés',
+          ),
           IconButton(
             icon: const Icon(Icons.edit_outlined,
                 color: AppColors.textSecondary, size: 18),
