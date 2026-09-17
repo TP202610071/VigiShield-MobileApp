@@ -1,9 +1,20 @@
 import '../models/camera_config_model.dart';
+import '../models/zone_model.dart';
 import '../../core/network/api_client.dart';
 
 class CameraDataService {
   final ApiClient _api;
   CameraDataService(this._api);
+
+  /// Guarda las zonas de interés (ROI) dibujadas por el usuario para una cámara.
+  /// Una lista vacía borra las zonas (vuelve al comportamiento sin contexto).
+  Future<CameraConfigModel> updateZones(String cameraId, List<Zone> zones) async {
+    final data = await _api.put<Map<String, dynamic>>(
+      '/api/stream/cameras/$cameraId/zones',
+      body: {'zones': encodeZones(zones)},
+    );
+    return CameraConfigModel.fromJson(data);
+  }
 
   Future<List<CameraConfigModel>> getCameras() async {
     final data = await _api.get<List<dynamic>>('/api/stream/cameras');

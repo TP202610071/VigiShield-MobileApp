@@ -15,6 +15,8 @@ class CameraConfigModel {
   final String? mediaMtxRtspUrl;
   final bool isConfigured;
   final DateTime? lastVerifiedAt;
+  // Zonas de interés (ROI) dibujadas por el usuario — JSON crudo, o null.
+  final String? zonesJson;
 
   const CameraConfigModel({
     required this.id,
@@ -33,6 +35,7 @@ class CameraConfigModel {
     this.mediaMtxRtspUrl,
     required this.isConfigured,
     this.lastVerifiedAt,
+    this.zonesJson,
   });
 
   bool get isDirectRtsp => streamMode == 'DirectRtsp';
@@ -58,6 +61,7 @@ class CameraConfigModel {
       lastVerifiedAt: json['lastVerifiedAt'] != null
           ? DateTime.tryParse(json['lastVerifiedAt'] as String)
           : null,
+      zonesJson: json['zonesJson'] as String?,
     );
   }
 }
