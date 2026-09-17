@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../data/models/camera_config_model.dart';
+import '../data/models/zone_model.dart';
 import '../data/services/camera_service.dart';
 
 class CameraProvider extends ChangeNotifier {
@@ -99,6 +100,29 @@ class CameraProvider extends ChangeNotifier {
             }
           }
         }
+        list[idx] = updated;
+        _cameras = list;
+      }
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      return false;
+    } finally {
+      _isSaving = false;
+      notifyListeners();
+    }
+  }
+
+  /// Guarda las zonas de interés (ROI) de una cámara y refresca la copia local.
+  Future<bool> updateZones(String id, List<Zone> zones) async {
+    _isSaving = true;
+    _error = null;
+    notifyListeners();
+    try {
+      final updated = await _service.updateZones(id, zones);
+      final idx = _cameras.indexWhere((c) => c.id == id);
+      if (idx >= 0) {
+        final list = List<CameraConfigModel>.from(_cameras);
         list[idx] = updated;
         _cameras = list;
       }
