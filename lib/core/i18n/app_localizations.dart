@@ -373,6 +373,8 @@ class AppStrings {
         'Roadaccidents' =>
           _('Accidente de tráfico detectado', 'Traffic accident detected'),
         'WeaponDetected' => _('Arma detectada', 'Weapon detected'),
+        'SuspiciousIntent' => _(
+            'Riesgo de intrusión (anticipado)', 'Intrusion risk (anticipatory)'),
         _ => type,
       };
 
