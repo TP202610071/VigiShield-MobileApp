@@ -1863,7 +1863,9 @@ class _AiStatusBannerState extends State<_AiStatusBanner>
     final activity = (s['activity'] as Map?)?.cast<String, dynamic>() ?? const {};
     final label = (activity['label'] ?? '—').toString();
     final conf = (activity['confidence'] is num) ? (activity['confidence'] as num).toDouble() : 0.0;
-    final suspicious = s['suspicious'] == true;
+    final intentState = ((s['intent'] as Map?)?['state'] ?? '').toString();
+    final suspicious = s['suspicious'] == true ||
+        intentState == 'suspect' || intentState == 'high_risk';
     final persons = (s['persons'] is num) ? (s['persons'] as num).toInt() : 0;
     final objects = (s['objects'] as List?)?.map((e) => e.toString()).toList() ?? const [];
     final faces = (s['faces'] as List?) ?? const [];
@@ -1942,25 +1944,24 @@ class _AiStatusBannerState extends State<_AiStatusBanner>
                           fontWeight: FontWeight.w800, letterSpacing: 1)),
                 ),
             ]),
-            if (chips.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Wrap(spacing: 6, runSpacing: 6, children: chips),
-            ],
-            if (alerts.isNotEmpty) ...[
+            // Chips en UNA sola fila horizontal (scroll), para no crecer en vertical
+            // y tapar el video. Las alertas se resumen en un chip al final.
+            if (chips.isNotEmpty || alerts.isNotEmpty) ...[
               const SizedBox(height: 6),
-              for (final a in alerts)
-                Padding(
-                  padding: const EdgeInsets.only(top: 2),
-                  child: Row(mainAxisSize: MainAxisSize.min, children: [
-                    const Icon(Icons.priority_high_rounded, color: AppColors.warningAmber, size: 13),
-                    const SizedBox(width: 4),
-                    Flexible(
-                      child: Text(a,
-                          overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.inter(color: AppColors.warningAmber, fontSize: 11)),
-                    ),
-                  ]),
+              SizedBox(
+                height: 24,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  children: [
+                    for (final c in chips)
+                      Padding(padding: const EdgeInsets.only(right: 6), child: c),
+                    if (alerts.isNotEmpty)
+                      _chip(Icons.priority_high_rounded,
+                          alerts.length == 1 ? alerts.first : '${alerts.length} alertas',
+                          AppColors.warningAmber),
+                  ],
                 ),
+              ),
             ],
           ]),
         );
