@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../core/i18n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
+import '../../providers/camera_provider.dart';
 import '../../providers/event_provider.dart';
 import '../../widgets/event_card.dart';
 
@@ -37,8 +38,22 @@ class _HistoryScreenState extends State<HistoryScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<EventProvider>().fetchEvents(refresh: true);
+      // Las cámaras alimentan la fila de filtros; si aún no se consultaron
+      // (p. ej. se entra al historial antes que a la pestaña de video) se piden.
+      final cams = context.read<CameraProvider>();
+      if (cams.cameras.isEmpty) cams.fetchCameras();
     });
     _scrollCtrl.addListener(_onScroll);
+  }
+
+  /// Cambia UN filtro conservando el otro.
+  void _apply(EventProvider p, {String? type, String? cameraId, bool keepType = true,
+      bool keepCamera = true}) {
+    p.fetchEvents(
+      type: keepType ? (type ?? p.activeFilter) : type,
+      cameraId: keepCamera ? (cameraId ?? p.activeCameraId) : cameraId,
+      refresh: true,
+    );
   }
 
   void _onScroll() {
@@ -56,6 +71,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<EventProvider>();
+    final cameras = context.watch<CameraProvider>().cameras;
     final l10n = context.l10n;
 
     return Scaffold(
@@ -77,43 +93,28 @@ class _HistoryScreenState extends State<HistoryScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            SizedBox(
-              height: 36,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                itemCount: _filterValues.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 8),
-                itemBuilder: (context, i) {
-                  final value = _filterValues[i];
-                  final isActive = provider.activeFilter == value;
-                  return GestureDetector(
-                    onTap: () => provider.fetchEvents(type: value, refresh: true),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      padding: const EdgeInsets.symmetric(horizontal: 14),
-                      decoration: BoxDecoration(
-                        color: isActive ? AppColors.accent : AppColors.surface,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: isActive ? AppColors.accent : AppColors.border,
-                        ),
-                      ),
-                      child: Center(
-                        child: Text(
-                          _filterLabel(l10n, value),
-                          style: GoogleFonts.inter(
-                            fontSize: 13,
-                            fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
-                            color: isActive ? Colors.black : AppColors.textSecondary,
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
+            // Fila 1 — filtro por tipo de evento.
+            _ChipRow(
+              options: [
+                for (final v in _filterValues) (v, _filterLabel(l10n, v)),
+              ],
+              selected: provider.activeFilter,
+              onSelect: (v) => _apply(provider, type: v, keepType: false),
             ),
+            // Fila 2 — filtro por cámara. Solo aparece si el hogar tiene más de
+            // una: con una sola cámara el filtro no distingue nada.
+            if (cameras.length > 1) ...[
+              const SizedBox(height: 8),
+              _ChipRow(
+                icon: Icons.videocam_outlined,
+                options: [
+                  (null, l10n.filterAllCameras),
+                  for (final c in cameras) (c.id, c.name),
+                ],
+                selected: provider.activeCameraId,
+                onSelect: (v) => _apply(provider, cameraId: v, keepCamera: false),
+              ),
+            ],
             const SizedBox(height: 16),
             Expanded(
               child: provider.isLoading
@@ -151,6 +152,72 @@ class _HistoryScreenState extends State<HistoryScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Fila horizontal de fichas de filtro. La usan el filtro por tipo de evento y
+/// el filtro por cámara, para que ambos se vean y se comporten igual.
+class _ChipRow extends StatelessWidget {
+  final List<(String?, String)> options;
+  final String? selected;
+  final ValueChanged<String?> onSelect;
+  final IconData? icon;
+
+  const _ChipRow({
+    required this.options,
+    required this.selected,
+    required this.onSelect,
+    this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 36,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        itemCount: options.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (context, i) {
+          final (value, label) = options[i];
+          final isActive = selected == value;
+          return GestureDetector(
+            onTap: () => onSelect(value),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              decoration: BoxDecoration(
+                color: isActive ? AppColors.accent : AppColors.surface,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isActive ? AppColors.accent : AppColors.border,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (icon != null && value != null) ...[
+                    Icon(icon,
+                        size: 14,
+                        color: isActive ? Colors.black : AppColors.textSecondary),
+                    const SizedBox(width: 6),
+                  ],
+                  Text(
+                    label,
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+                      color: isActive ? Colors.black : AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }
