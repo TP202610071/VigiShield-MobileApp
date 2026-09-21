@@ -153,6 +153,10 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
     _isActive = false;
     _cancelRecoveryTimers();
     _stopAiFramePoller();
+    // El aviso emergente de evento solo tiene sentido mientras se mira la cámara.
+    // Dejarlo corriendo hacía que, estando en el historial, el refresco de fondo
+    // recortara la lista a la primera página cada 15 s.
+    _eventPollTimer?.cancel();
     _player?.pause();
     for (final p in _gridPlayers.values) { p.pause(); }
     // Always restore the system bars + bottom nav when leaving the camera tab.
@@ -204,6 +208,7 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
     }
     for (final p in _gridPlayers.values) { p.play(); }
     if (_viewMode == _ViewMode.ai) _startAiFramePoller();
+    _startEventPolling(); // se detiene al salir de la pestaña (ver deactivate)
   }
 
   @override

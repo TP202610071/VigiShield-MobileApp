@@ -58,6 +58,9 @@ class EventProvider extends ChangeNotifier {
       _totalPages = result.totalPages;
     } on ApiException catch (e) {
       _error = e.message;
+      // Si falló al traer una página siguiente, devolvemos el contador: de lo
+      // contrario el reintento saltaría esa página y se perderían eventos.
+      if (_page > 1) _page--;
     } finally {
       _isLoading = false;
       _isLoadingMore = false;
@@ -65,16 +68,29 @@ class EventProvider extends ChangeNotifier {
     }
   }
 
-  /// Background refresh that does NOT clear the list or flip [isLoading] — so a
-  /// periodic poll (e.g. the camera screen's) updates the dashboard in place
-  /// instead of flashing the shimmer/empty state every few seconds.
+  /// Refresco en segundo plano: no limpia la lista ni activa [isLoading], para
+  /// que el sondeo periódico de la pantalla de cámara actualice el panel en su
+  /// sitio en vez de mostrar el esqueleto de carga cada pocos segundos.
+  ///
+  /// Si el usuario ya cargó más páginas, NO se reemplaza la lista: antes esto
+  /// la recortaba a la primera página y, estando en el historial desplazado, la
+  /// lista se encogía de golpe y el scroll saltaba hacia atrás. Ahora solo se
+  /// anteponen los eventos que aún no teníamos.
   Future<void> refreshSilently() async {
+    if (_isLoadingMore) return; // no pisar una carga de página en curso
     try {
       final result = await _service.getEvents(
           type: _activeFilter, cameraId: _activeCameraId, page: 1);
-      _events = result.items;
-      _totalPages = result.totalPages;
-      _page = 1;
+      if (_page == 1) {
+        _events = result.items;
+        _totalPages = result.totalPages;
+      } else {
+        final conocidos = _events.map((e) => e.id).toSet();
+        final nuevos =
+            result.items.where((e) => !conocidos.contains(e.id)).toList();
+        if (nuevos.isEmpty) return;
+        _events = [...nuevos, ..._events];
+      }
       _error = null;
       notifyListeners();
     } on ApiException {

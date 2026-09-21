@@ -27,6 +27,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) => _refresh());
   }
 
+  @override
+  void activate() {
+    super.activate();
+    // El panel vive en un IndexedStack y no se reconstruye al volver a su
+    // pestaña, así que sin esto mostraría los datos de la última vez. Antes se
+    // mantenía al día de rebote, por el sondeo de la pantalla de cámara; ese
+    // sondeo ahora se detiene al salir de la cámara (recortaba el historial).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      // Refresco que NO reinicia los filtros: el proveedor de eventos es el
+      // mismo que usa el historial, y un fetchEvents(refresh: true) le borraría
+      // al usuario el filtro que tenía puesto al pasar por aquí.
+      context.read<SystemProvider>().fetchStatus();
+      context.read<EventProvider>().refreshSilently();
+    });
+  }
+
   Future<void> _refresh() async {
     await Future.wait([
       context.read<SystemProvider>().fetchStatus(),
