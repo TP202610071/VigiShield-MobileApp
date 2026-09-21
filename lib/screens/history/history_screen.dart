@@ -18,20 +18,18 @@ class HistoryScreen extends StatefulWidget {
 class _HistoryScreenState extends State<HistoryScreen> {
   final _scrollCtrl = ScrollController();
 
+  /// Tipos que el sistema puede llegar a registrar hoy: los cuatro que produce el
+  /// motor de IA más los que la herramienta de pruebas puede disparar. Faltaba
+  /// "Riesgo de intrusión", que sí se genera y no había forma de filtrarlo.
   static const _filterValues = <String?>[
-    null, 'FaceRecognized', 'UnknownFace', 'Tailgating',
-    'ForcedAccessAttempt', 'PhysicalAggression',
+    null, 'FaceRecognized', 'UnknownFace', 'Tailgating', 'SuspiciousIntent',
+    'WeaponDetected', 'Climbing', 'PhysicalAggression',
   ];
 
-  String _filterLabel(AppStrings l10n, String? v) => switch (v) {
-        null => l10n.filterAll,
-        'FaceRecognized' => l10n.filterRecognized,
-        'UnknownFace' => l10n.filterUnknown,
-        'Tailgating' => l10n.filterLoiterers,
-        'ForcedAccessAttempt' => l10n.filterForced,
-        'PhysicalAggression' => l10n.filterAggression,
-        _ => v,
-      };
+  /// El nombre sale del vocabulario canónico (el mismo del historial y de las
+  /// alertas de WhatsApp) en vez de una lista aparte que puede desincronizarse.
+  String _filterLabel(AppStrings l10n, String? v) =>
+      v == null ? l10n.filterAll : l10n.eventTypeLabel(v);
 
   @override
   void initState() {
