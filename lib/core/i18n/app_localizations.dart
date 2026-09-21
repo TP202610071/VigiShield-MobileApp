@@ -217,13 +217,11 @@ class AppStrings {
 
   // ── History ─────────────────────────────────────────────────────────────────
   String get history => _('Historial', 'History');
+  // Las fichas de filtro por tipo toman su texto de eventTypeLabel, no de
+  // cadenas propias: tener dos listas era justo lo que hacía que el mismo evento
+  // se llamara de una forma en el filtro y de otra en la ficha del historial.
   String get filterAll => _('Todos', 'All');
   String get filterAllCameras => _('Todas las cámaras', 'All cameras');
-  String get filterRecognized => _('Reconocidos', 'Recognized');
-  String get filterUnknown => _('Desconocidos', 'Unknown');
-  String get filterLoiterers => _('Merodeo', 'Loitering');
-  String get filterForced => _('Acceso forzado', 'Forced access');
-  String get filterAggression => _('Agresión', 'Aggression');
   String get noEventsLogged =>
       _('Sin eventos registrados', 'No events logged');
   String get eventsWillAppear => _(
