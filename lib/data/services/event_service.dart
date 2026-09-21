@@ -8,6 +8,7 @@ class EventService {
 
   Future<EventListResult> getEvents({
     String? type,
+    String? cameraId,
     DateTime? from,
     DateTime? to,
     int page = 1,
@@ -15,6 +16,7 @@ class EventService {
   }) async {
     final data = await _client.get<Map<String, dynamic>>('/api/events', queryParams: {
       if (type != null) 'type': type,
+      if (cameraId != null) 'cameraId': cameraId,
       if (from != null) 'from': from.toIso8601String(),
       if (to != null) 'to': to.toIso8601String(),
       'page': page,

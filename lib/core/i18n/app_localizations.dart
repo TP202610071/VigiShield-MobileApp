@@ -218,9 +218,10 @@ class AppStrings {
   // ── History ─────────────────────────────────────────────────────────────────
   String get history => _('Historial', 'History');
   String get filterAll => _('Todos', 'All');
+  String get filterAllCameras => _('Todas las cámaras', 'All cameras');
   String get filterRecognized => _('Reconocidos', 'Recognized');
   String get filterUnknown => _('Desconocidos', 'Unknown');
-  String get filterLoiterers => _('Merodeadores', 'Loiterers');
+  String get filterLoiterers => _('Merodeo', 'Loitering');
   String get filterForced => _('Acceso forzado', 'Forced access');
   String get filterAggression => _('Agresión', 'Aggression');
   String get noEventsLogged =>
@@ -265,7 +266,7 @@ class AppStrings {
   String get alertUnknownPerson =>
       _('Persona desconocida', 'Unknown person');
   String get alertForcedAccess => _('Acceso forzado', 'Forced access');
-  String get alertLoiterer => _('Merodeador', 'Loiterer');
+  String get alertLoiterer => _('Merodeo', 'Loitering');
   String get alertClimbing => _('Escalamiento', 'Climbing');
   String get alertAggression => _('Agresión física', 'Physical aggression');
 
@@ -343,38 +344,41 @@ class AppStrings {
   String get you => _('Tú', 'You');
 
   // ── Event type labels ───────────────────────────────────────────────────────
+  // Este es el vocabulario CANÓNICO del sistema: debe coincidir palabra por
+  // palabra con EventService.SpanishLabel del backend, que es el que nombra el
+  // evento en los mensajes de WhatsApp. Si aquí dice una cosa y allá otra, el
+  // mismo incidente aparece con dos nombres distintos.
+  // Son sustantivos ("Merodeo"), no frases con "detectado": el tipo de evento se
+  // usa como etiqueta, y el hecho de que se haya detectado ya lo dice el contexto.
   String eventTypeLabel(String type) => switch (type) {
         'FaceRecognized' => _('Acceso reconocido', 'Recognized access'),
         'UnknownFace' => _('Persona desconocida', 'Unknown person'),
         'LowConfidenceFace' =>
-          _('Detección baja confianza', 'Low-confidence detection'),
+          _('Detección de baja confianza', 'Low-confidence detection'),
         'RecurrentUnknownFace' => _(
             'Visitante desconocido recurrente', 'Recurrent unknown visitor'),
         'ForcedAccessAttempt' =>
           _('Intento de acceso forzado', 'Forced-access attempt'),
         'LockpickingAttempt' =>
-          _('Intento de ganzúa detectado', 'Lock-picking attempt'),
-        'Tailgating' => _('Merodeador detectado', 'Loiterer detected'),
-        'Climbing' => _('Escalamiento detectado', 'Climbing detected'),
-        'Burglary' => _('Robo detectado', 'Burglary detected'),
+          _('Intento de ganzúa', 'Lock-picking attempt'),
+        'Tailgating' => _('Merodeo', 'Loitering'),
+        'Climbing' => _('Escalamiento', 'Climbing'),
+        'Burglary' => _('Allanamiento', 'Burglary'),
         'PhysicalAggression' =>
-          _('Agresión física detectada', 'Physical aggression detected'),
-        'Assault' => _('Asalto detectado', 'Assault detected'),
-        'Abuse' => _('Abuso detectado', 'Abuse detected'),
-        'Arrest' => _('Arresto detectado', 'Arrest detected'),
-        'Stealing' => _('Robo detectado', 'Theft detected'),
-        'Shoplifting' =>
-          _('Hurto en tienda detectado', 'Shoplifting detected'),
-        'Vandalism' => _('Vandalismo detectado', 'Vandalism detected'),
-        'Robbery' =>
-          _('Robo a mano armada detectado', 'Armed robbery detected'),
-        'Arson' => _('Incendio provocado detectado', 'Arson detected'),
-        'Explosion' => _('Explosión detectada', 'Explosion detected'),
+          _('Agresión física', 'Physical aggression'),
+        'Assault' => _('Asalto', 'Assault'),
+        'Abuse' => _('Abuso', 'Abuse'),
+        'Arrest' => _('Arresto', 'Arrest'),
+        'Stealing' => _('Hurto', 'Theft'),
+        'Shoplifting' => _('Hurto en tienda', 'Shoplifting'),
+        'Vandalism' => _('Vandalismo', 'Vandalism'),
+        'Robbery' => _('Robo a mano armada', 'Armed robbery'),
+        'Arson' => _('Incendio provocado', 'Arson'),
+        'Explosion' => _('Explosión', 'Explosion'),
         'Roadaccidents' =>
-          _('Accidente de tráfico detectado', 'Traffic accident detected'),
+          _('Accidente de tránsito', 'Traffic accident'),
         'WeaponDetected' => _('Arma detectada', 'Weapon detected'),
-        'SuspiciousIntent' => _(
-            'Riesgo de intrusión (anticipado)', 'Intrusion risk (anticipatory)'),
+        'SuspiciousIntent' => _('Riesgo de intrusión', 'Intrusion risk'),
         _ => type,
       };
 

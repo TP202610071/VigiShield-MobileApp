@@ -213,12 +213,15 @@ class _DeveloperScreenState extends State<DeveloperScreen> {
   }
 
   Future<void> _pickAndTrigger(HouseholdSummary h) async {
-    const options = <String, String>{
-      'UnknownFace': 'Persona desconocida',
-      'WeaponDetected': 'Arma detectada',
-      'Tailgating': 'Merodeador detectado',
-      'Climbing': 'Escalamiento',
-      'PhysicalAggression': 'Agresión física',
+    // Mismos nombres que el historial y que las alertas de WhatsApp: se toman
+    // del vocabulario canónico en vez de repetirlos aquí.
+    final l10n = context.l10n;
+    final options = <String, String>{
+      for (final t in const [
+        'UnknownFace', 'WeaponDetected', 'Tailgating',
+        'Climbing', 'PhysicalAggression', 'SuspiciousIntent',
+      ])
+        t: l10n.eventTypeLabel(t),
     };
     final type = await showModalBottomSheet<String>(
       context: context,

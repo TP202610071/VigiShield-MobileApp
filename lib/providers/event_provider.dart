@@ -15,6 +15,7 @@ class EventProvider extends ChangeNotifier {
   int _page = 1;
   int _totalPages = 1;
   String? _activeFilter;
+  String? _activeCameraId;
 
   List<SecurityEventModel> get events => _events;
   bool get isLoading => _isLoading;
@@ -22,12 +23,22 @@ class EventProvider extends ChangeNotifier {
   String? get error => _error;
   bool get hasMore => _page < _totalPages;
   String? get activeFilter => _activeFilter;
+  String? get activeCameraId => _activeCameraId;
 
-  Future<void> fetchEvents({String? type, bool refresh = false}) async {
+  /// [refresh] reinicia la paginación y FIJA los filtros a lo recibido: un
+  /// `refresh: true` sin filtros los limpia. Para cambiar uno conservando el
+  /// otro hay que volver a pasar el que se mantiene (el historial lo hace así).
+  /// Sin [refresh] se conservan los filtros vigentes — es el caso de loadMore.
+  Future<void> fetchEvents({
+    String? type,
+    String? cameraId,
+    bool refresh = false,
+  }) async {
     if (refresh) {
       _page = 1;
       _events = [];
       _activeFilter = type;
+      _activeCameraId = cameraId;
     }
 
     if (_page == 1) {
@@ -37,7 +48,8 @@ class EventProvider extends ChangeNotifier {
     }
 
     try {
-      final result = await _service.getEvents(type: type ?? _activeFilter, page: _page);
+      final result = await _service.getEvents(
+          type: _activeFilter, cameraId: _activeCameraId, page: _page);
       if (_page == 1) {
         _events = result.items;
       } else {
@@ -58,7 +70,8 @@ class EventProvider extends ChangeNotifier {
   /// instead of flashing the shimmer/empty state every few seconds.
   Future<void> refreshSilently() async {
     try {
-      final result = await _service.getEvents(type: _activeFilter, page: 1);
+      final result = await _service.getEvents(
+          type: _activeFilter, cameraId: _activeCameraId, page: 1);
       _events = result.items;
       _totalPages = result.totalPages;
       _page = 1;
