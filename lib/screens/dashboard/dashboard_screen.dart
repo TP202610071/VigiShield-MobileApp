@@ -21,33 +21,27 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _refresh());
-  }
+  bool _isTabActive = false;
 
   @override
-  void activate() {
-    super.activate();
-    // El panel vive en un IndexedStack y no se reconstruye al volver a su
-    // pestaña, así que sin esto mostraría los datos de la última vez. Antes se
-    // mantenía al día de rebote, por el sondeo de la pantalla de cámara; ese
-    // sondeo ahora se detiene al salir de la cámara (recortaba el historial).
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // go_router mantiene las ramas montadas y cambia su TickerMode: cambiar
+    // de pestaña no llama a State.activate/deactivate.
+    final active = TickerMode.of(context);
+    if (active == _isTabActive) return;
+    _isTabActive = active;
+    if (!active) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      // Refresco que NO reinicia los filtros: el proveedor de eventos es el
-      // mismo que usa el historial, y un fetchEvents(refresh: true) le borraría
-      // al usuario el filtro que tenía puesto al pasar por aquí.
-      context.read<SystemProvider>().fetchStatus();
-      context.read<EventProvider>().refreshSilently();
+      if (!mounted || !_isTabActive) return;
+      _refresh();
     });
   }
 
   Future<void> _refresh() async {
     await Future.wait([
       context.read<SystemProvider>().fetchStatus(),
-      context.read<EventProvider>().fetchEvents(refresh: true),
+      context.read<EventProvider>().refreshSilently(),
     ]);
   }
 

@@ -12,6 +12,9 @@ class VsTextField extends StatefulWidget {
   final TextInputAction? textInputAction;
   final VoidCallback? onEditingComplete;
   final bool autofocus;
+  /// Se dispara en cada tecla. Lo usa el medidor de fuerza de contraseña, que
+  /// tiene que reaccionar mientras se escribe, no solo al validar el formulario.
+  final ValueChanged<String>? onChanged;
 
   const VsTextField({
     super.key,
@@ -24,6 +27,7 @@ class VsTextField extends StatefulWidget {
     this.textInputAction,
     this.onEditingComplete,
     this.autofocus = false,
+    this.onChanged,
   });
 
   @override
@@ -83,6 +87,7 @@ class _VsTextFieldState extends State<VsTextField> {
             validator: widget.validator,
             textInputAction: widget.textInputAction,
             onEditingComplete: widget.onEditingComplete,
+            onChanged: widget.onChanged,
             autofocus: widget.autofocus,
             style: GoogleFonts.inter(
               fontSize: 15,

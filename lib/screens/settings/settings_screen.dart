@@ -8,6 +8,7 @@ import '../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/dev_settings_provider.dart';
 import '../../providers/system_provider.dart';
+import '../../widgets/password_strength.dart';
 import '../../widgets/user_avatar.dart';
 import '../../widgets/vs_button.dart';
 import '../../widgets/vs_text_field.dart';
@@ -241,6 +242,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final currentCtrl = TextEditingController();
     final newCtrl = TextEditingController();
     final formKey = GlobalKey<FormState>();
+    var nueva = '';
 
     showModalBottomSheet(
       context: context,
@@ -249,7 +251,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (ctx) => Padding(
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setS) => Padding(
         padding: EdgeInsets.only(
           left: 20, right: 20, top: 28,
           bottom: MediaQuery.of(ctx).viewInsets.bottom + 28,
@@ -277,8 +280,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 controller: newCtrl,
                 isPassword: true,
                 textInputAction: TextInputAction.done,
-                validator: (v) => (v?.length ?? 0) < 8 ? l10n.passwordMin : null,
+                onChanged: (v) => setS(() => nueva = v),
+                validator: (v) => PasswordRules.validate(v, l10n),
               ),
+              PasswordStrength(password: nueva),
               const SizedBox(height: 24),
               VsButton(
                 label: l10n.saveChanges,
@@ -299,6 +304,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ],
           ),
+        ),
         ),
       ),
     );
@@ -538,21 +544,50 @@ class _AlertConfigTileState extends State<_AlertConfigTile> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(l10n.configureAlerts,
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(l10n.configureAlerts,
+                        style: GoogleFonts.inter(
+                            fontSize: 18, fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary)),
+                  ),
+                  // Apaga o enciende todos de una vez: con 20 tipos, hacerlo uno
+                  // a uno para silenciar el sistema no era razonable.
+                  TextButton(
+                    onPressed: () => setS(() =>
+                        draft = draft.setAll(draft.disabledEventTypes.isNotEmpty)),
+                    child: Text(
+                      draft.disabledEventTypes.isEmpty
+                          ? l10n.disableAllAlerts
+                          : l10n.enableAllAlerts,
+                      style: GoogleFonts.inter(
+                          fontSize: 13, fontWeight: FontWeight.w600,
+                          color: AppColors.accent),
+                    ),
+                  ),
+                ],
+              ),
+              Text(l10n.configureAlertsHint,
                   style: GoogleFonts.inter(
-                      fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
-              const SizedBox(height: 20),
-              _SwitchRow(l10n.alertUnknownPerson, draft.unknownPersonEnabled,
-                  (v) => setS(() => draft = draft.copyWith(unknownPersonEnabled: v))),
-              _SwitchRow(l10n.alertForcedAccess, draft.forcedAccessEnabled,
-                  (v) => setS(() => draft = draft.copyWith(forcedAccessEnabled: v))),
-              _SwitchRow(l10n.alertLoiterer, draft.tailgatingEnabled,
-                  (v) => setS(() => draft = draft.copyWith(tailgatingEnabled: v))),
-              _SwitchRow(l10n.alertClimbing, draft.climbingEnabled,
-                  (v) => setS(() => draft = draft.copyWith(climbingEnabled: v))),
-              _SwitchRow(l10n.alertAggression, draft.aggressionEnabled,
-                  (v) => setS(() => draft = draft.copyWith(aggressionEnabled: v))),
-              const SizedBox(height: 20),
+                      fontSize: 12, color: AppColors.textSecondary, height: 1.4)),
+              const SizedBox(height: 12),
+              Flexible(
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (final tipo in draft.availableEventTypes)
+                        _SwitchRow(
+                          l10n.eventTypeLabel(tipo),
+                          draft.isEnabled(tipo),
+                          (v) => setS(() => draft = draft.toggle(tipo, v)),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
               VsButton(
                 label: l10n.save,
                 width: double.infinity,

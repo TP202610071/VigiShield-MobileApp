@@ -9,6 +9,15 @@ class AlertConfigModel {
   final String? nighttimeEnd;
   final bool whatsAppEnabled;
 
+  /// Todos los tipos que el hogar puede gobernar. Los envía el backend para no
+  /// mantener la lista duplicada en la app.
+  final List<String> availableEventTypes;
+
+  /// Los que están apagados. Es la fuente de verdad: los cinco booleanos de
+  /// arriba agrupaban varios tipos bajo un mismo interruptor y dejaban algunos
+  /// (como "Riesgo de intrusión") sin forma de activarse o desactivarse.
+  final List<String> disabledEventTypes;
+
   const AlertConfigModel({
     required this.unknownPersonEnabled,
     required this.forcedAccessEnabled,
@@ -19,7 +28,26 @@ class AlertConfigModel {
     this.nighttimeStart,
     this.nighttimeEnd,
     required this.whatsAppEnabled,
+    this.availableEventTypes = const [],
+    this.disabledEventTypes = const [],
   });
+
+  bool isEnabled(String type) => !disabledEventTypes.contains(type);
+
+  /// Enciende o apaga un tipo concreto.
+  AlertConfigModel toggle(String type, bool enabled) {
+    final off = [...disabledEventTypes];
+    off.remove(type);
+    if (!enabled) off.add(type);
+    return copyWith(disabledEventTypes: off);
+  }
+
+  /// Apaga o enciende todos de golpe.
+  AlertConfigModel setAll(bool enabled) =>
+      copyWith(disabledEventTypes: enabled ? const [] : [...availableEventTypes]);
+
+  static List<String> _strings(dynamic v) =>
+      v is List ? v.map((e) => e.toString()).toList() : const [];
 
   factory AlertConfigModel.fromJson(Map<String, dynamic> json) => AlertConfigModel(
         unknownPersonEnabled: json['unknownPersonEnabled'] as bool,
@@ -31,6 +59,8 @@ class AlertConfigModel {
         nighttimeStart: json['nighttimeStart'] as String?,
         nighttimeEnd: json['nighttimeEnd'] as String?,
         whatsAppEnabled: json['whatsAppEnabled'] as bool,
+        availableEventTypes: _strings(json['availableEventTypes']),
+        disabledEventTypes: _strings(json['disabledEventTypes']),
       );
 
   Map<String, dynamic> toJson() => {
@@ -43,6 +73,7 @@ class AlertConfigModel {
         'nighttimeStart': nighttimeStart,
         'nighttimeEnd': nighttimeEnd,
         'whatsAppEnabled': whatsAppEnabled,
+        'disabledEventTypes': disabledEventTypes,
       };
 
   AlertConfigModel copyWith({
@@ -53,6 +84,7 @@ class AlertConfigModel {
     bool? aggressionEnabled,
     int? tailgatingThresholdSeconds,
     bool? whatsAppEnabled,
+    List<String>? disabledEventTypes,
   }) =>
       AlertConfigModel(
         unknownPersonEnabled: unknownPersonEnabled ?? this.unknownPersonEnabled,
@@ -60,9 +92,12 @@ class AlertConfigModel {
         tailgatingEnabled: tailgatingEnabled ?? this.tailgatingEnabled,
         climbingEnabled: climbingEnabled ?? this.climbingEnabled,
         aggressionEnabled: aggressionEnabled ?? this.aggressionEnabled,
-        tailgatingThresholdSeconds: tailgatingThresholdSeconds ?? this.tailgatingThresholdSeconds,
+        tailgatingThresholdSeconds:
+            tailgatingThresholdSeconds ?? this.tailgatingThresholdSeconds,
         nighttimeStart: nighttimeStart,
         nighttimeEnd: nighttimeEnd,
         whatsAppEnabled: whatsAppEnabled ?? this.whatsAppEnabled,
+        availableEventTypes: availableEventTypes,
+        disabledEventTypes: disabledEventTypes ?? this.disabledEventTypes,
       );
 }

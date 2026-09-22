@@ -128,7 +128,10 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
 
   // Shared 1 Hz clock for the on-screen time.
   final Stream<void> _clock =
-      Stream<void>.periodic(const Duration(seconds: 1)).asBroadcastStream();
+      Stream<void>.periodic(const Duration(seconds: 1)).asBroadcastStream(
+        onListen: (subscription) => subscription.resume(),
+        onCancel: (subscription) => subscription.pause(),
+      );
 
   // ──────────────────────────────────────────────────────────────────────────────
   // Lifecycle
@@ -143,9 +146,25 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
     // must NOT set orientation itself — it lives in an IndexedStack and stays
     // alive on other tabs, so forcing landscape here rotates the other tabs.
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       _initStream();
       _startEventPolling();
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Las ramas del IndexedStack siguen montadas: activate/deactivate no
+    // indican su visibilidad. go_router desactiva su TickerMode al ocultarlas.
+    final active = TickerMode.of(context);
+    if (active == _isActive) return;
+    _isActive = active;
+    if (active) {
+      _startEventPolling();
+    } else {
+      _eventPollTimer?.cancel();
+    }
   }
 
   @override
@@ -248,16 +267,17 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
 
   void _startEventPolling() {
     _eventPollTimer?.cancel();
+    if (!mounted || !_isActive) return;
     _lastSeenEventTime = DateTime.now().toUtc().subtract(const Duration(seconds: 30));
     _eventPollTimer = Timer.periodic(const Duration(seconds: 15), (_) => _checkNewEvents());
   }
 
   Future<void> _checkNewEvents() async {
-    if (!mounted) return;
+    if (!mounted || !_isActive) return;
     // Silent refresh: updates the list in place without blanking the dashboard
     // (which stays alive in the IndexedStack and would otherwise flash/shimmer).
     await context.read<EventProvider>().refreshSilently();
-    if (!mounted) return;
+    if (!mounted || !_isActive) return;
     final events = context.read<EventProvider>().events;
     if (events.isEmpty) return;
 

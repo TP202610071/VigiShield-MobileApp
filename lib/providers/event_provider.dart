@@ -16,6 +16,7 @@ class EventProvider extends ChangeNotifier {
   int _totalPages = 1;
   String? _activeFilter;
   String? _activeCameraId;
+  int _requestVersion = 0;
 
   List<SecurityEventModel> get events => _events;
   bool get isLoading => _isLoading;
@@ -34,6 +35,7 @@ class EventProvider extends ChangeNotifier {
     String? cameraId,
     bool refresh = false,
   }) async {
+    final requestVersion = ++_requestVersion;
     if (refresh) {
       _page = 1;
       _events = [];
@@ -50,21 +52,26 @@ class EventProvider extends ChangeNotifier {
     try {
       final result = await _service.getEvents(
           type: _activeFilter, cameraId: _activeCameraId, page: _page);
+      if (requestVersion != _requestVersion) return;
       if (_page == 1) {
         _events = result.items;
       } else {
         _events = [..._events, ...result.items];
       }
       _totalPages = result.totalPages;
+      _error = null;
     } on ApiException catch (e) {
+      if (requestVersion != _requestVersion) return;
       _error = e.message;
       // Si falló al traer una página siguiente, devolvemos el contador: de lo
       // contrario el reintento saltaría esa página y se perderían eventos.
       if (_page > 1) _page--;
     } finally {
-      _isLoading = false;
-      _isLoadingMore = false;
-      notifyListeners();
+      if (requestVersion == _requestVersion) {
+        _isLoading = false;
+        _isLoadingMore = false;
+        notifyListeners();
+      }
     }
   }
 
@@ -78,9 +85,12 @@ class EventProvider extends ChangeNotifier {
   /// anteponen los eventos que aún no teníamos.
   Future<void> refreshSilently() async {
     if (_isLoadingMore) return; // no pisar una carga de página en curso
+    final requestVersion = _requestVersion;
     try {
       final result = await _service.getEvents(
           type: _activeFilter, cameraId: _activeCameraId, page: 1);
+      // Una respuesta anterior no pertenece a los filtros/página actuales.
+      if (requestVersion != _requestVersion) return;
       if (_page == 1) {
         _events = result.items;
         _totalPages = result.totalPages;

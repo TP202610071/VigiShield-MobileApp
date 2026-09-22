@@ -117,12 +117,23 @@ class _HistoryScreenState extends State<HistoryScreen> {
             Expanded(
               child: provider.isLoading
                   ? const Center(child: CircularProgressIndicator(color: AppColors.accent, strokeWidth: 2))
-                  : provider.error != null
-                      ? _ErrorView(message: provider.error!, onRetry: () => provider.fetchEvents(refresh: true))
+                  : provider.error != null && provider.events.isEmpty
+                      ? _ErrorView(
+                          message: provider.error!,
+                          onRetry: () => provider.fetchEvents(
+                            refresh: true,
+                            type: provider.activeFilter,
+                            cameraId: provider.activeCameraId,
+                          ),
+                        )
                       : provider.events.isEmpty
                           ? _EmptyView()
                           : RefreshIndicator(
-                              onRefresh: () => provider.fetchEvents(refresh: true),
+                              onRefresh: () => provider.fetchEvents(
+                                refresh: true,
+                                type: provider.activeFilter,
+                                cameraId: provider.activeCameraId,
+                              ),
                               color: AppColors.accent,
                               backgroundColor: AppColors.surface,
                               child: ListView.builder(
@@ -148,6 +159,19 @@ class _HistoryScreenState extends State<HistoryScreen> {
                               ),
                             ),
             ),
+            if (provider.error != null && provider.events.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  children: [
+                    Expanded(child: Text(provider.error!)),
+                    TextButton(
+                      onPressed: provider.isLoadingMore ? null : provider.loadMore,
+                      child: Text(l10n.retry),
+                    ),
+                  ],
+                ),
+              ),
           ],
         ),
       ),
