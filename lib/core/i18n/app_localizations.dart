@@ -105,8 +105,25 @@ class AppStrings {
   String get currentPassword => _('CONTRASEÑA ACTUAL', 'CURRENT PASSWORD');
   String get newPassword => _('NUEVA CONTRASEÑA', 'NEW PASSWORD');
   String get passwordMin => _('Mínimo 8 caracteres', 'At least 8 characters');
+
+  // ── Contraseña segura (checklist en vivo) ───────────────────────────────────
+  String get passwordWeak =>
+      _('La contraseña no cumple los requisitos', 'The password does not meet the requirements');
+  String pwRuleLength(int n) => _('Al menos $n caracteres', 'At least $n characters');
+  String get pwRuleUpper => _('Una letra mayúscula', 'One uppercase letter');
+  String get pwRuleLower => _('Una letra minúscula', 'One lowercase letter');
+  String get pwRuleDigit => _('Un número', 'One number');
+  String get pwRuleSymbol => _('Un carácter especial', 'One special character');
+  String get pwWeak => _('Débil', 'Weak');
+  String get pwMedium => _('Media', 'Medium');
+  String get pwStrong => _('Segura', 'Strong');
   String get passwordUpdated => _('Contraseña actualizada', 'Password updated');
   String get configureAlerts => _('Configurar alertas', 'Configure alerts');
+  String get configureAlertsHint => _(
+      'Elige qué situaciones quieres que te avisen. Las que apagues se seguirán registrando en el historial, pero sin notificarte.',
+      'Choose which situations you want to be alerted about. The ones you turn off are still recorded in the history, just without notifying you.');
+  String get disableAllAlerts => _('Desactivar todas', 'Turn all off');
+  String get enableAllAlerts => _('Activar todas', 'Turn all on');
   String get myCameras => _('Mis cámaras', 'My cameras');
   String get authorizedFaces => _('Caras autorizadas', 'Authorized faces');
   String get language => _('Idioma', 'Language');

@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../core/i18n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
+import '../../widgets/password_strength.dart';
 import '../../widgets/vs_button.dart';
 import '../../widgets/vs_text_field.dart';
 
@@ -22,6 +23,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _passwordCtrl = TextEditingController();
   final _addressCtrl = TextEditingController();
   bool _isLoading = false;
+  String _password = ''; // alimenta el checklist de fuerza en vivo
 
   @override
   void dispose() {
@@ -118,8 +120,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   controller: _passwordCtrl,
                   isPassword: true,
                   textInputAction: TextInputAction.next,
-                  validator: (v) => (v?.length ?? 0) < 8 ? l10n.passwordHintMin : null,
+                  onChanged: (v) => setState(() => _password = v),
+                  validator: (v) => PasswordRules.validate(v, l10n),
                 ),
+                PasswordStrength(password: _password),
                 const SizedBox(height: 18),
                 VsTextField(
                   label: l10n.householdAddressField,
