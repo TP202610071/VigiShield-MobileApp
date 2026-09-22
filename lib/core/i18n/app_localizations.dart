@@ -114,6 +114,71 @@ class AppStrings {
   String get pwRuleLower => _('Una letra minúscula', 'One lowercase letter');
   String get pwRuleDigit => _('Un número', 'One number');
   String get pwRuleSymbol => _('Un carácter especial', 'One special character');
+  // ── Restablecer contraseña / invitación (enlaces de correo) ─────────────────
+  String get resetTitle => _('Nueva contraseña', 'New password');
+  String get resetSubtitle => _(
+      'Elige una contraseña nueva para tu cuenta.',
+      'Choose a new password for your account.');
+  String get resetDone => _(
+      'Listo. Ya puedes iniciar sesión con tu contraseña nueva.',
+      'Done. You can now sign in with your new password.');
+  String get resetLinkInvalid => _(
+      'Este enlace ya caducó o fue utilizado. Solicita uno nuevo desde "¿Olvidaste tu contraseña?".',
+      'This link has expired or was already used. Request a new one from "Forgot your password?".');
+  String get repeatPassword => _('Repite la contraseña', 'Repeat the password');
+  String get passwordsDoNotMatch => _('Las contraseñas no coinciden', 'The passwords do not match');
+  String get savePassword => _('Guardar contraseña', 'Save password');
+  String get backToLogin => _('Volver a iniciar sesión', 'Back to sign in');
+
+  String get connectionError => _(
+      'No se pudo conectar con el servidor. Revisa tu conexión.',
+      'Could not reach the server. Check your connection.');
+  String get inviteTitle => _('Invitación a una vivienda', 'Household invitation');
+  String invitedBy(String quien) => _(
+      '$quien te invitó a la vigilancia de su vivienda.',
+      '$quien invited you to monitor their home.');
+  String get inviteSubtitle => _(
+      'Crea tu cuenta para unirte. Tendrás acceso de solo lectura: video en vivo, historial y evidencias.',
+      'Create your account to join. You will have read-only access: live video, history and evidence.');
+  String get inviteAccept => _('Unirme a la vivienda', 'Join the household');
+  String get inviteDone => _(
+      'Listo. Ya formas parte de la vivienda.',
+      'Done. You are now part of the household.');
+  String get inviteInvalid => _(
+      'Este enlace de invitación no es válido.',
+      'This invitation link is not valid.');
+  String get inviteUsed => _(
+      'Esta invitación ya fue utilizada. Si ya tienes cuenta, inicia sesión.',
+      'This invitation was already used. If you already have an account, sign in.');
+  String get inviteExpired => _(
+      'Esta invitación caducó. Pide al residente principal que te envíe una nueva.',
+      'This invitation has expired. Ask the primary resident to send you a new one.');
+  String get yourEmail => _('Tu correo', 'Your email');
+  String get yourName => _('Tu nombre', 'Your name');
+  String get createYourPassword => _('Crea tu contraseña', 'Create your password');
+
+  // ── Usuarios de la vivienda ─────────────────────────────────────────────────
+  String get householdUsers => _('Usuarios', 'Users');
+  String get householdUsersHint => _(
+      'Personas con acceso de solo lectura a tu vivienda: pueden ver el video y el historial, pero no cambiar la configuración.',
+      'People with read-only access to your home: they can see the video and history, but cannot change settings.');
+  String get inviteUser => _('Invitar', 'Invite');
+  String get inviteUserTitle => _('Invitar a alguien', 'Invite someone');
+  String get inviteUserHint => _(
+      'Le enviaremos un correo con un enlace para crear su cuenta. Caduca en 7 días.',
+      'We will email them a link to create their account. It expires in 7 days.');
+  String get inviteSent => _('Invitación enviada', 'Invitation sent');
+  String get noSecondaryUsers => _('Sin usuarios invitados', 'No invited users');
+  String get noSecondaryUsersHint => _(
+      'Invita a alguien de confianza para que pueda vigilar la vivienda contigo.',
+      'Invite someone you trust so they can watch over the home with you.');
+  String get revokeAccess => _('Revocar acceso', 'Revoke access');
+  String revokeAccessConfirm(String nombre) => _(
+      '¿Quitar el acceso de $nombre? Dejará de poder ver tu vivienda de inmediato.',
+      'Remove $nombre\'s access? They will immediately lose access to your home.');
+  String get accessRevoked => _('Acceso revocado', 'Access revoked');
+  String memberSinceShort(String fecha) => _('Desde $fecha', 'Since $fecha');
+
   String get pwWeak => _('Débil', 'Weak');
   String get pwMedium => _('Media', 'Medium');
   String get pwStrong => _('Segura', 'Strong');

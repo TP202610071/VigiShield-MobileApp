@@ -45,11 +45,16 @@
             <!-- App Link: https://vigishield.app/event/<id> (requires assetlinks.json hosted at
                  https://vigishield.app/.well-known/assetlinks.json for autoVerify). WhatsApp URL
                  buttons must be https, so this is the one used by the alert templates. -->
+            <!-- App Links verificados para vigishield.app (assetlinks.json). Cada
+                 ruta que el sistema envía por correo debe estar aquí, o Android la
+                 abre en el navegador aunque la app esté instalada. -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW"/>
                 <category android:name="android.intent.category.DEFAULT"/>
                 <category android:name="android.intent.category.BROWSABLE"/>
                 <data android:scheme="https" android:host="vigishield.app" android:pathPrefix="/event"/>
+                <data android:scheme="https" android:host="vigishield.app" android:pathPrefix="/reset"/>
+                <data android:scheme="https" android:host="vigishield.app" android:pathPrefix="/invitacion"/>
             </intent-filter>
         </activity>
         <meta-data

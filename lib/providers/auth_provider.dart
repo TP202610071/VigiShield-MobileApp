@@ -142,6 +142,19 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  /// Restablece la contraseña con el token del correo (sin sesión previa).
+  Future<bool> resetPassword(String token, String newPassword) async {
+    _errorMessage = null;
+    try {
+      await _authService.resetPassword(token, newPassword);
+      return true;
+    } on ApiException catch (e) {
+      _errorMessage = e.message;
+      notifyListeners();
+      return false;
+    }
+  }
+
   void clearError() {
     _errorMessage = null;
     notifyListeners();
