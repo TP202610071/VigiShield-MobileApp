@@ -50,15 +50,21 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
     if (!mounted) return;
     await context.read<AuthProvider>().tryRestoreSession();
     if (!mounted) return;
+    // Si la app se abrió desde un enlace, se va a su destino en vez de quedarse
+    // en el panel. Restablecer contraseña y aceptar invitación son PÚBLICOS: hay
+    // que poder llegar a ellos precisamente cuando no se puede iniciar sesión.
+    final pendiente = DeepLinks.pendingRoute;
+    DeepLinks.pendingRoute = null;
+    final esPublico = pendiente != null &&
+        (pendiente.startsWith('/reset-password') || pendiente.startsWith('/invitacion'));
+
+    if (esPublico) {
+      context.go(pendiente);
+      return;
+    }
     if (context.read<AuthProvider>().isAuthenticated) {
-      // If the app was cold-started from a deep link, land on the referenced
-      // event (on top of the dashboard) instead of just the dashboard.
-      final pendingEvent = DeepLinks.pendingEventId;
-      DeepLinks.pendingEventId = null;
       context.go('/dashboard');
-      if (pendingEvent != null && pendingEvent.isNotEmpty) {
-        context.push('/history/$pendingEvent');
-      }
+      if (pendiente != null) context.push(pendiente);
     } else {
       context.go('/login');
     }

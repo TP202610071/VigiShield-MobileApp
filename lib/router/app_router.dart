@@ -3,6 +3,9 @@ import '../providers/auth_provider.dart';
 import '../screens/splash_screen.dart';
 import '../screens/auth/login_screen.dart';
 import '../screens/auth/register_screen.dart';
+import '../screens/auth/reset_password_screen.dart';
+import '../screens/auth/accept_invitation_screen.dart';
+import '../screens/settings/users_screen.dart';
 import '../screens/main_shell.dart';
 import '../screens/dashboard/dashboard_screen.dart';
 import '../screens/camera/camera_screen.dart';
@@ -26,6 +29,13 @@ GoRouter createRouter(AuthProvider authProvider) => GoRouter(
 
         if (auth == AuthState.initial || path == '/splash') return null;
 
+        // Restablecer contraseña y aceptar invitación llegan por enlace de correo
+        // y deben abrirse SIN sesión: es justo cuando no se puede iniciar sesión.
+        // Tampoco se expulsa de ellas a quien sí la tenga (puede estar aceptando
+        // una invitación a otra vivienda desde un teléfono ya usado).
+        const linkPaths = ['/reset-password', '/invitacion'];
+        if (linkPaths.contains(path)) return null;
+
         final publicPaths = ['/login', '/register'];
         final isAuth = auth == AuthState.authenticated;
 
@@ -38,6 +48,23 @@ GoRouter createRouter(AuthProvider authProvider) => GoRouter(
         GoRoute(path: '/splash', builder: (ctx, st) => const SplashScreen()),
         GoRoute(path: '/login', builder: (ctx, st) => const LoginScreen()),
         GoRoute(path: '/register', builder: (ctx, st) => const RegisterScreen()),
+
+        // Destinos de los enlaces que enviamos por correo.
+        GoRoute(
+          path: '/reset-password',
+          builder: (ctx, st) =>
+              ResetPasswordScreen(token: st.uri.queryParameters['token'] ?? ''),
+        ),
+        GoRoute(
+          path: '/invitacion',
+          builder: (ctx, st) =>
+              AcceptInvitationScreen(token: st.uri.queryParameters['token'] ?? ''),
+        ),
+
+        GoRoute(
+          path: '/settings/users',
+          builder: (ctx, st) => const UsersScreen(),
+        ),
 
         // Profile + hidden developer tools (outside shell — full-screen pages)
         GoRoute(path: '/profile', builder: (ctx, st) => const ProfileScreen()),

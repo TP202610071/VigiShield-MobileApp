@@ -113,24 +113,43 @@ class _VigiShieldAppState extends State<VigiShieldApp> {
     _initDeepLinks();
   }
 
-  /// Open the app to a specific event when launched/resumed from a deep link
-  /// (WhatsApp button or push notification), e.g. `https://vigishield.app/event/<id>`
-  /// or `vigishield://event/<id>`.
+  /// Abre la app en el destino de un enlace: el evento de una alerta
+  /// (`/event/<id>`), el restablecimiento de contraseña (`/reset?token=`) o una
+  /// invitación a una vivienda (`/invitacion?token=`).
+  ///
+  /// Todo enlace que el sistema envíe por correo debe resolverse AQUÍ y estar
+  /// declarado en el AndroidManifest: si falta cualquiera de las dos cosas,
+  /// Android lo abre en el navegador aunque la app esté instalada.
   Future<void> _initDeepLinks() async {
-    // Warm links (app already running): navigate on top of the current screen.
+    // Enlace en caliente (app ya abierta): navegar sobre la pantalla actual.
     _appLinks.uriLinkStream.listen((uri) {
-      final id = _extractEventId(uri);
-      if (id != null) {
-        WidgetsBinding.instance.addPostFrameCallback((_) => _router.push('/history/$id'));
+      final destino = _rutaPara(uri);
+      if (destino != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) => _router.push(destino));
       }
     }, onError: (_) {});
-    // Cold-start link: stash it so the splash routes there after auth resolves
-    // (a direct push here would be wiped by the splash's go('/dashboard')).
+    // Arranque en frío: se guarda para que la pantalla de bienvenida navegue
+    // después de resolver la sesión (un push aquí lo borraría su go('/dashboard')).
     try {
       final initial = await _appLinks.getInitialLink();
-      final id = initial == null ? null : _extractEventId(initial);
-      if (id != null) DeepLinks.pendingEventId = id;
+      final destino = initial == null ? null : _rutaPara(initial);
+      if (destino != null) DeepLinks.pendingRoute = destino;
     } catch (_) {/* no initial link */}
+  }
+
+  /// Ruta interna a la que corresponde un enlace, o null si no lo reconocemos.
+  String? _rutaPara(Uri uri) {
+    final segs = uri.pathSegments;
+    final token = uri.queryParameters['token'];
+
+    if (segs.contains('reset') && (token ?? '').isNotEmpty) {
+      return '/reset-password?token=$token';
+    }
+    if (segs.contains('invitacion') && (token ?? '').isNotEmpty) {
+      return '/invitacion?token=$token';
+    }
+    final id = _extractEventId(uri);
+    return id == null ? null : '/history/$id';
   }
 
   String? _extractEventId(Uri uri) {

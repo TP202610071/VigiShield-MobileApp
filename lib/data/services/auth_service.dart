@@ -72,6 +72,12 @@ class AuthService {
   Future<void> recoverPassword(String email) =>
       _client.post('/api/auth/recover-password', body: {'email': email});
 
+  /// Fija una contraseña nueva con el token del correo. Sin sesión: es
+  /// justamente el caso en que no se puede iniciar sesión.
+  Future<void> resetPassword(String token, String newPassword) =>
+      _client.post('/api/auth/reset-password',
+          body: {'token': token, 'newPassword': newPassword});
+
   Future<void> logout() => _client.post('/api/auth/logout');
 
   // ── Admin management (developer screen) ─────────────────────────────────────

@@ -139,6 +139,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   label: l10n.authorizedFaces,
                   onTap: () => context.push('/settings/faces'),
                 ),
+                const SizedBox(height: 16),
+                _SettingsTile(
+                  icon: Icons.group_outlined,
+                  label: l10n.householdUsers,
+                  onTap: () => context.push('/settings/users'),
+                ),
                 const SizedBox(height: 24),
               ],
 
