@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import '../data/models/camera_config_model.dart';
 import '../data/models/zone_model.dart';
 import '../data/services/camera_service.dart';
+import '../data/services/camera_lan_control.dart';
 
 class CameraProvider extends ChangeNotifier {
   final CameraDataService _service;
@@ -161,7 +162,19 @@ class CameraProvider extends ChangeNotifier {
 
   // ── Live camera image/video controls (hi3510 CGI via backend) ───────────────
 
+  /// Lee los ajustes de la cámara. Intenta primero por la red local (el único
+  /// camino que funciona con el backend en la nube: una IP privada no se
+  /// alcanza desde la VM) y solo si eso falla prueba por el servidor, que sí
+  /// sirve si algún día el backend corre en la misma red que la cámara.
   Future<Map<String, String>?> loadCameraControls(String id) async {
+    final lan = await _lanControl(id);
+    if (lan != null) {
+      try {
+        return await lan.read();
+      } catch (e) {
+        _error = e.toString();
+      }
+    }
     try {
       return await _service.getCameraControls(id);
     } catch (e) {
@@ -170,13 +183,39 @@ class CameraProvider extends ChangeNotifier {
     }
   }
 
+  /// Aplica los ajustes, con la misma preferencia por la red local.
   Future<bool> applyCameraControls(String id, Map<String, String> settings) async {
+    final lan = await _lanControl(id);
+    if (lan != null) {
+      try {
+        await lan.apply(settings);
+        return true;
+      } catch (e) {
+        _error = e.toString();
+      }
+    }
     try {
       await _service.updateCameraControls(id, settings);
       return true;
     } catch (e) {
       _error = e.toString();
       return false;
+    }
+  }
+
+  /// Cachea el acceso a la cámara para no pedirlo en cada lectura y escritura.
+  final Map<String, CameraLanControl> _lanCache = {};
+
+  Future<CameraLanControl?> _lanControl(String id) async {
+    final cacheado = _lanCache[id];
+    if (cacheado != null) return cacheado;
+    try {
+      final acceso = await _service.getCameraLanAccess(id);
+      if (acceso.ip.isEmpty) return null;
+      return _lanCache[id] = CameraLanControl(acceso);
+    } catch (_) {
+      // Sin IP configurada (cámara CGNAT) o sin permiso: queda el backend.
+      return null;
     }
   }
 }
