@@ -3,8 +3,9 @@ import '../data/models/system_status_model.dart';
 import '../data/models/alert_config_model.dart';
 import '../data/services/system_service.dart';
 import '../core/network/api_client.dart';
+import 'session_scoped.dart';
 
-class SystemProvider extends ChangeNotifier {
+class SystemProvider extends ChangeNotifier implements SessionScoped {
   final SystemService _service;
 
   SystemProvider(this._service);
@@ -98,4 +99,15 @@ class SystemProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
+  /// Borra todo lo de la sesión: estado del sistema y configuración de alertas.
+  @override
+  void clearSession() {
+    _status = null;
+    _alertConfig = null;
+    _isLoading = false;
+    _isUpdating = false;
+    _error = null;
+    notifyListeners();
+  }
+
 }

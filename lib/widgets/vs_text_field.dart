@@ -16,6 +16,11 @@ class VsTextField extends StatefulWidget {
   /// tiene que reaccionar mientras se escribe, no solo al validar el formulario.
   final ValueChanged<String>? onChanged;
 
+  /// Pistas para el gestor de contraseñas del sistema (Contraseñas de Apple,
+  /// Autocompletar de Android). Sin esto, ni ofrece guardar la contraseña ni
+  /// puede rellenarla después.
+  final List<String>? autofillHints;
+
   const VsTextField({
     super.key,
     required this.label,
@@ -28,6 +33,7 @@ class VsTextField extends StatefulWidget {
     this.onEditingComplete,
     this.autofocus = false,
     this.onChanged,
+    this.autofillHints,
   });
 
   @override
@@ -89,6 +95,7 @@ class _VsTextFieldState extends State<VsTextField> {
             onEditingComplete: widget.onEditingComplete,
             onChanged: widget.onChanged,
             autofocus: widget.autofocus,
+            autofillHints: widget.autofillHints,
             style: GoogleFonts.inter(
               fontSize: 15,
               color: AppColors.textPrimary,

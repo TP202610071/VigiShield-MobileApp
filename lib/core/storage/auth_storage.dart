@@ -43,4 +43,12 @@ class AuthStorage {
   Future<void> savePreviewRole(String? role) => role == null
       ? _storage.delete(key: AppConstants.previewRoleKey)
       : _storage.write(key: AppConstants.previewRoleKey, value: role);
+
+  // Almacen generico para banderas pequenas (p. ej. el bloqueo biometrico).
+  // Van en el mismo almacen cifrado que el token: son preferencias que no
+  // deberian poder cambiarse desde fuera de la app.
+  Future<String?> readValue(String key) => _storage.read(key: key);
+  Future<void> writeValue(String key, String value) =>
+      _storage.write(key: key, value: value);
+
 }

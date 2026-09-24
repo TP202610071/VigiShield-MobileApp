@@ -1,8 +1,24 @@
+import 'package:package_info_plus/package_info_plus.dart';
+
 class AppConstants {
   AppConstants._();
 
   // ── App info ───────────────────────────────────────────────────────────────
-  static const String appVersion = '0.1.0';
+  /// Version que se muestra en Ajustes. NO se escribe a mano: la rellena
+  /// [loadAppVersion] leyendo el paquete instalado, asi que siempre coincide
+  /// con `version:` del pubspec y nunca se queda desfasada.
+  static String appVersion = _versionPorDefecto;
+  static const String _versionPorDefecto = '0.9.0';
+
+  /// Lee la version real del paquete. Se llama una vez al arrancar.
+  static Future<void> loadAppVersion() async {
+    try {
+      final info = await PackageInfo.fromPlatform();
+      if (info.version.isNotEmpty) appVersion = info.version;
+    } catch (_) {
+      // En tests no hay plataforma: se queda el valor por defecto.
+    }
+  }
 
   // ── Storage keys ───────────────────────────────────────────────────────────
   static const String tokenKey = 'vigishield_access_token';

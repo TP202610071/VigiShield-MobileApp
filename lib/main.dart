@@ -28,6 +28,8 @@ import 'router/app_router.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   MediaKit.ensureInitialized(); // libmpv video backend
+  // La version de Ajustes sale del paquete instalado, no de un literal.
+  await AppConstants.loadAppVersion();
   await initializeDateFormatting('es', null);
   await initializeDateFormatting('en', null);
 
@@ -109,6 +111,10 @@ class _VigiShieldAppState extends State<VigiShieldApp> {
     _localeProvider = LocaleProvider(_storage, widget.initialLocale);
     _devSettingsProvider =
         DevSettingsProvider(_storage, widget.initialPreviewRole);
+    // Al cerrar sesión hay que vaciar estos: viven toda la vida de la app y si
+    // no, la siguiente cuenta hereda cámaras, eventos y alertas de la anterior.
+    _authProvider.registerSessionScoped(
+        [_eventProvider, _systemProvider, _cameraProvider]);
     _router = createRouter(_authProvider);
     _initDeepLinks();
   }
@@ -142,10 +148,16 @@ class _VigiShieldAppState extends State<VigiShieldApp> {
     final segs = uri.pathSegments;
     final token = uri.queryParameters['token'];
 
-    if (segs.contains('reset') && (token ?? '').isNotEmpty) {
+    // En https://vigishield.app/reset?token= la palabra va en la ruta, pero en
+    // vigishield://reset?token= va en el host. Hay que mirar las dos: el
+    // esquema propio es la via de respaldo cuando el navegador se queda el
+    // enlace del correo.
+    bool apunta(String nombre) => uri.host == nombre || segs.contains(nombre);
+
+    if (apunta('reset') && (token ?? '').isNotEmpty) {
       return '/reset-password?token=$token';
     }
-    if (segs.contains('invitacion') && (token ?? '').isNotEmpty) {
+    if (apunta('invitacion') && (token ?? '').isNotEmpty) {
       return '/invitacion?token=$token';
     }
     final id = _extractEventId(uri);
@@ -192,13 +204,48 @@ class _VigiShieldAppState extends State<VigiShieldApp> {
             // Re-key the visible subtree by language so every screen re-renders
             // its (read-based) strings the instant the user switches languages —
             // without tearing down the go_router navigation stack.
-            builder: (context, child) => KeyedSubtree(
-              key: ValueKey(locale.languageCode),
-              child: child ?? const SizedBox.shrink(),
+            builder: (context, child) => _OcultarTeclado(
+              child: KeyedSubtree(
+                key: ValueKey(locale.languageCode),
+                child: child ?? const SizedBox.shrink(),
+              ),
             ),
             routerConfig: router,
           );
         },
+      ),
+    );
+  }
+}
+
+/// Oculta el teclado al tocar fuera de un campo o al arrastrar una lista.
+///
+/// Se envuelve la app entera en vez de repetirlo en cada pantalla: antes, con
+/// el teclado abierto, la unica forma de cerrarlo era el boton del sistema, y
+/// en formularios largos tapaba justo lo que hacia falta leer.
+class _OcultarTeclado extends StatelessWidget {
+  final Widget child;
+  const _OcultarTeclado({required this.child});
+
+  void _soltarFoco() {
+    final foco = FocusManager.instance.primaryFocus;
+    if (foco != null && foco.hasFocus) foco.unfocus();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      // translucent: no se traga los toques, solo los observa.
+      behavior: HitTestBehavior.translucent,
+      onTap: _soltarFoco,
+      child: NotificationListener<ScrollStartNotification>(
+        onNotification: (n) {
+          // Solo al arrastrar con el dedo; un desplazamiento programatico
+          // (por ejemplo al enfocar un campo) no debe cerrar el teclado.
+          if (n.dragDetails != null) _soltarFoco();
+          return false;
+        },
+        child: child,
       ),
     );
   }

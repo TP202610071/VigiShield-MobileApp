@@ -11,6 +11,7 @@ import '../../providers/dev_settings_provider.dart';
 import '../../providers/server_config_provider.dart';
 import '../../widgets/vs_button.dart';
 import '../../widgets/vs_text_field.dart';
+import '../../widgets/sheet_header.dart';
 
 /// Hidden, admin-only developer tools. Reached by tapping the app version 7×
 /// in Settings → About. Lets a developer preview other roles for demos, point
@@ -231,12 +232,8 @@ class _DeveloperScreenState extends State<DeveloperScreen> {
       builder: (ctx) => SafeArea(
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           Padding(
-            padding: const EdgeInsets.all(16),
-            child: Text('Disparar alerta para ${h.name}',
-                style: GoogleFonts.inter(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16)),
+            padding: const EdgeInsets.fromLTRB(20, 14, 8, 4),
+            child: SheetHeader(titulo: 'Disparar alerta para ${h.name}'),
           ),
           ...options.entries.map((e) => ListTile(
                 leading: const Icon(Icons.notifications_active_outlined,
@@ -277,14 +274,13 @@ class _DeveloperScreenState extends State<DeveloperScreen> {
           borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (ctx) => Padding(
         padding: EdgeInsets.only(
-            left: 20, right: 20, top: 28,
+            left: 20, right: 20, top: 14,
             bottom: MediaQuery.of(ctx).viewInsets.bottom + 28),
         child: Form(
           key: formKey,
           child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(l10n.addAdmin,
-                style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
-            const SizedBox(height: 8),
+            SheetHeader(titulo: l10n.addAdmin),
+            const SizedBox(height: 4),
             Text(l10n.adminAddHint,
                 style: GoogleFonts.inter(fontSize: 13, color: AppColors.textSecondary, height: 1.4)),
             const SizedBox(height: 18),
@@ -308,6 +304,7 @@ class _DeveloperScreenState extends State<DeveloperScreen> {
       ),
     );
     if (email == null || email.isEmpty) return;
+    if (!mounted) return; // la hoja pudo cerrarse tras desmontarse la pantalla
     try {
       await context.read<AuthProvider>().service.addAdmin(email);
       await _loadAdmins();
@@ -339,7 +336,7 @@ class _DeveloperScreenState extends State<DeveloperScreen> {
           borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (ctx) => Padding(
         padding: EdgeInsets.only(
-            left: 20, right: 20, top: 28,
+            left: 20, right: 20, top: 14,
             bottom: MediaQuery.of(ctx).viewInsets.bottom + 28),
         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(l10n.serverAddress,

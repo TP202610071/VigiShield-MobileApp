@@ -1,5 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- Desbloqueo con huella / rostro (local_auth) -->
+    <uses-permission android:name="android.permission.USE_BIOMETRIC"/>
+
     <!-- Camera permissions -->
     <uses-permission android:name="android.permission.CAMERA"/>
     <uses-feature android:name="android.hardware.camera" android:required="false"/>
@@ -35,12 +38,18 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
-            <!-- Deep link: vigishield://event/<id> (works with no server setup) -->
+            <!-- Esquema propio. Es la via FIABLE: los App Links https dependen
+                 de que el sistema tenga activado "abrir enlaces compatibles", y
+                 el cliente de correo puede envolver el enlace en un redirector,
+                 con lo que el intent inicial ya no es vigishield.app. Las paginas
+                 web de /reset e /invitacion rebotan a este esquema. -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW"/>
                 <category android:name="android.intent.category.DEFAULT"/>
                 <category android:name="android.intent.category.BROWSABLE"/>
                 <data android:scheme="vigishield" android:host="event"/>
+                <data android:scheme="vigishield" android:host="reset"/>
+                <data android:scheme="vigishield" android:host="invitacion"/>
             </intent-filter>
             <!-- App Link: https://vigishield.app/event/<id> (requires assetlinks.json hosted at
                  https://vigishield.app/.well-known/assetlinks.json for autoVerify). WhatsApp URL

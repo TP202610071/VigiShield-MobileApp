@@ -3,8 +3,9 @@ import '../data/models/camera_config_model.dart';
 import '../data/models/zone_model.dart';
 import '../data/services/camera_service.dart';
 import '../data/services/camera_lan_control.dart';
+import 'session_scoped.dart';
 
-class CameraProvider extends ChangeNotifier {
+class CameraProvider extends ChangeNotifier implements SessionScoped {
   final CameraDataService _service;
 
   CameraProvider(this._service);
@@ -231,6 +232,20 @@ class CameraProvider extends ChangeNotifier {
       return null;
     }
   }
+  /// Borra todo lo de la sesión: las cámaras de una cuenta no deben quedar
+  /// visibles al entrar con otra.
+  @override
+  void clearSession() {
+    _cameras = [];
+    _selectedIndex = 0;
+    _isLoading = false;
+    _isSaving = false;
+    _error = null;
+    _lanCache.clear();
+    lastControlFailure = CameraControlFailure.unreachable;
+    notifyListeners();
+  }
+
 }
 
 /// Por qué no se pudo controlar la cámara. Cada caso se arregla distinto.

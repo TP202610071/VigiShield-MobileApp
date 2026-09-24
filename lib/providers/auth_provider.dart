@@ -4,6 +4,7 @@ import '../data/models/user_model.dart';
 import '../data/services/auth_service.dart';
 import '../core/storage/auth_storage.dart';
 import '../core/network/api_client.dart';
+import 'session_scoped.dart';
 
 enum AuthState { initial, authenticated, unauthenticated }
 
@@ -16,6 +17,10 @@ class AuthProvider extends ChangeNotifier {
   String? _errorMessage;
 
   AuthProvider(this._authService, this._storage);
+
+  /// Almacen cifrado de la sesion. Lo usa el bloqueo biometrico para
+  /// guardar su bandera junto al token, no en preferencias en claro.
+  AuthStorage get storage => _storage;
 
   AuthState get state => _state;
   UserModel? get user => _user;
@@ -48,6 +53,10 @@ class AuthProvider extends ChangeNotifier {
     try {
       final result = await _authService.login(email, password);
       await _storage.saveToken(result.token);
+      // Se vacía ANTES de entrar: si la cuenta anterior dejó cámaras o eventos
+      // cargados, se verían un instante (o hasta la primera recarga) como si
+      // fueran de la cuenta nueva.
+      _clearSessionData();
       _user = result.user;
       _state = AuthState.authenticated;
       notifyListeners();
@@ -74,6 +83,10 @@ class AuthProvider extends ChangeNotifier {
         householdAddress: householdAddress,
       );
       await _storage.saveToken(result.token);
+      // Se vacía ANTES de entrar: si la cuenta anterior dejó cámaras o eventos
+      // cargados, se verían un instante (o hasta la primera recarga) como si
+      // fueran de la cuenta nueva.
+      _clearSessionData();
       _user = result.user;
       _state = AuthState.authenticated;
       notifyListeners();
@@ -85,6 +98,24 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  /// Providers con datos de la sesión, que hay que vaciar al cerrarla.
+  ///
+  /// Viven toda la vida de la app, así que sin esto las cámaras y los eventos
+  /// de una cuenta seguían visibles al entrar con otra.
+  final List<SessionScoped> _sessionScoped = [];
+
+  void registerSessionScoped(Iterable<SessionScoped> providers) {
+    _sessionScoped
+      ..clear()
+      ..addAll(providers);
+  }
+
+  void _clearSessionData() {
+    for (final p in _sessionScoped) {
+      p.clearSession();
+    }
+  }
+
   Future<void> logout() async {
     try {
       await _authService.logout();
@@ -92,6 +123,7 @@ class AuthProvider extends ChangeNotifier {
     await _storage.deleteToken();
     _user = null;
     _state = AuthState.unauthenticated;
+    _clearSessionData();
     notifyListeners();
   }
 
