@@ -7,6 +7,8 @@
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
+	<key>NSFaceIDUsageDescription</key>
+	<string>VigiShield usa Face ID para desbloquear la app y proteger el acceso a tus camaras.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>VigiShield necesita acceso a la cámara para registrar rostros autorizados.</string>
 	<key>NSPhotoLibraryUsageDescription</key>

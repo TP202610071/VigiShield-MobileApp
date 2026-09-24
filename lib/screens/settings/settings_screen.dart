@@ -12,6 +12,8 @@ import '../../widgets/password_strength.dart';
 import '../../widgets/user_avatar.dart';
 import '../../widgets/vs_button.dart';
 import '../../widgets/vs_text_field.dart';
+import '../../widgets/sheet_header.dart';
+import '../../core/security/biometric_lock.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -121,6 +123,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 label: l10n.changePassword,
                 onTap: () => _showChangePasswordDialog(context),
               ),
+              const SizedBox(height: 16),
+              const _BiometricTile(),
               const SizedBox(height: 24),
 
               if (isPrimary) ...[
@@ -441,12 +445,12 @@ class _LanguageTile extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           _LangOption(
-            label: l10n.spanish, flag: '🇪🇸',
+            label: l10n.spanish, code: 'ES',
             selected: !provider.isEnglish,
             onTap: () { provider.setLocale(AppLocale.es); Navigator.pop(ctx); },
           ),
           _LangOption(
-            label: l10n.english, flag: '🇬🇧',
+            label: l10n.english, code: 'EN',
             selected: provider.isEnglish,
             onTap: () { provider.setLocale(AppLocale.en); Navigator.pop(ctx); },
           ),
@@ -459,18 +463,36 @@ class _LanguageTile extends StatelessWidget {
 
 class _LangOption extends StatelessWidget {
   final String label;
-  final String flag;
+  final String code;
   final bool selected;
   final VoidCallback onTap;
   const _LangOption({
-    required this.label, required this.flag,
+    required this.label, required this.code,
     required this.selected, required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: Text(flag, style: const TextStyle(fontSize: 22)),
+      // Insignia con el codigo del idioma en vez de una bandera emoji: el emoji
+      // se dibuja con la fuente del sistema, rompe el tema y ademas un idioma
+      // no es un pais (el ingles no es solo britanico).
+      leading: Container(
+        width: 34, height: 34,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: AppColors.accent.withAlpha(selected ? 48 : 24),
+          borderRadius: BorderRadius.circular(9),
+          border: Border.all(
+              color: AppColors.accent.withAlpha(selected ? 140 : 60)),
+        ),
+        child: Text(code,
+            style: GoogleFonts.inter(
+                color: AppColors.accent,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.5)),
+      ),
       title: Text(label, style: GoogleFonts.inter(color: AppColors.textPrimary)),
       trailing: selected ? const Icon(Icons.check, color: AppColors.accent) : null,
       onTap: onTap,
@@ -543,36 +565,29 @@ class _AlertConfigTileState extends State<_AlertConfigTile> {
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setS) => Padding(
           padding: EdgeInsets.only(
-            left: 20, right: 20, top: 28,
+            left: 20, right: 20, top: 14,
             bottom: MediaQuery.of(ctx).viewInsets.bottom + 28,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(l10n.configureAlerts,
-                        style: GoogleFonts.inter(
-                            fontSize: 18, fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary)),
+              SheetHeader(
+                titulo: l10n.configureAlerts,
+                // Apaga o enciende todos de una vez: hacerlo tipo por tipo para
+                // silenciar el sistema no era razonable.
+                accion: TextButton(
+                  onPressed: () => setS(() =>
+                      draft = draft.setAll(draft.disabledEventTypes.isNotEmpty)),
+                  child: Text(
+                    draft.disabledEventTypes.isEmpty
+                        ? l10n.disableAllAlerts
+                        : l10n.enableAllAlerts,
+                    style: GoogleFonts.inter(
+                        fontSize: 13, fontWeight: FontWeight.w600,
+                        color: AppColors.accent),
                   ),
-                  // Apaga o enciende todos de una vez: con 20 tipos, hacerlo uno
-                  // a uno para silenciar el sistema no era razonable.
-                  TextButton(
-                    onPressed: () => setS(() =>
-                        draft = draft.setAll(draft.disabledEventTypes.isNotEmpty)),
-                    child: Text(
-                      draft.disabledEventTypes.isEmpty
-                          ? l10n.disableAllAlerts
-                          : l10n.enableAllAlerts,
-                      style: GoogleFonts.inter(
-                          fontSize: 13, fontWeight: FontWeight.w600,
-                          color: AppColors.accent),
-                    ),
-                  ),
-                ],
+                ),
               ),
               Text(l10n.configureAlertsHint,
                   style: GoogleFonts.inter(
@@ -637,6 +652,102 @@ class _SwitchRow extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Interruptor del desbloqueo con huella o rostro.
+///
+/// Solo aparece si el dispositivo tiene biometria utilizable: ofrecer la opcion
+/// en un movil sin huella registrada seria prometer algo que no funciona.
+class _BiometricTile extends StatefulWidget {
+  const _BiometricTile();
+
+  @override
+  State<_BiometricTile> createState() => _BiometricTileState();
+}
+
+class _BiometricTileState extends State<_BiometricTile> {
+  BiometricLock? _bloqueo;
+  bool _disponible = false;
+  bool _activado = false;
+  BiometricKind _tipo = BiometricKind.none;
+  bool _cargando = true;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _cargar());
+  }
+
+  Future<void> _cargar() async {
+    final bloqueo = BiometricLock(context.read<AuthProvider>().storage);
+    final disponible = await bloqueo.disponible;
+    final activado = await bloqueo.activado;
+    final tipo = disponible ? await bloqueo.tipo : BiometricKind.none;
+    if (!mounted) return;
+    setState(() {
+      _bloqueo = bloqueo;
+      _disponible = disponible;
+      _activado = activado;
+      _tipo = tipo;
+      _cargando = false;
+    });
+  }
+
+  Future<void> _cambiar(bool valor) async {
+    final bloqueo = _bloqueo;
+    if (bloqueo == null) return;
+    // Para ENCENDERLO se exige pasar la biometria primero: asi nadie deja el
+    // movil bloqueado con una huella que no es la suya.
+    if (valor && !await bloqueo.verificar(context.l10n.biometricReason)) return;
+    await bloqueo.activar(valor);
+    if (!mounted) return;
+    setState(() => _activado = valor);
+  }
+
+  IconData get _icono => switch (_tipo) {
+        BiometricKind.faceId => Icons.face_unlock_outlined,
+        BiometricKind.fingerprint || BiometricKind.touchId => Icons.fingerprint,
+        _ => Icons.shield_outlined,
+      };
+
+  @override
+  Widget build(BuildContext context) {
+    if (_cargando || !_disponible) return const SizedBox.shrink();
+    final l10n = context.l10n;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(children: [
+        Icon(_icono, color: AppColors.textSecondary, size: 18),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(l10n.biometricLock,
+                  style: GoogleFonts.inter(
+                      fontSize: 14, color: AppColors.textPrimary)),
+              const SizedBox(height: 2),
+              Text(l10n.biometricLockHint,
+                  style: GoogleFonts.inter(
+                      fontSize: 11,
+                      color: AppColors.textSecondary,
+                      height: 1.3)),
+            ],
+          ),
+        ),
+        Switch(
+          value: _activado,
+          onChanged: _cambiar,
+          activeThumbColor: AppColors.accent,
+        ),
+      ]),
     );
   }
 }

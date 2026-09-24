@@ -9,6 +9,7 @@ import '../../core/theme/app_theme.dart';
 import '../../data/services/user_service.dart';
 import '../../widgets/vs_button.dart';
 import '../../widgets/vs_text_field.dart';
+import '../../widgets/sheet_header.dart';
 
 /// Gestión de los residentes secundarios del hogar. Sólo la ve el residente
 /// principal: es quien decide a quién deja ver su vivienda.
@@ -73,11 +74,8 @@ class _UsersScreenState extends State<UsersScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(l10n.inviteUserTitle,
-                  style: GoogleFonts.inter(
-                      fontSize: 18, fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary)),
-              const SizedBox(height: 8),
+              SheetHeader(titulo: l10n.inviteUserTitle),
+              const SizedBox(height: 4),
               Text(l10n.inviteUserHint,
                   style: GoogleFonts.inter(
                       fontSize: 13, height: 1.4, color: AppColors.textSecondary)),

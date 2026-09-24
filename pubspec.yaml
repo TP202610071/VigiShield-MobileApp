@@ -1,7 +1,7 @@
 name: vigishield_mobile_app
 description: "VigiShield — Sistema Inteligente de Seguridad Doméstica"
 publish_to: 'none'
-version: 0.1.0+1
+version: 0.9.0+9
 
 environment:
   sdk: ^3.8.1
@@ -63,6 +63,8 @@ dependencies:
 
   # On-device face detection for the live biometric enrollment (guided scan)
   google_mlkit_face_detection: ^0.13.1
+  package_info_plus: ^9.0.1
+  local_auth: ^3.0.2
 
 dev_dependencies:
   flutter_test:

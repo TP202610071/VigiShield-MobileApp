@@ -5,6 +5,8 @@ import 'package:provider/provider.dart';
 import '../core/theme/app_theme.dart';
 import '../core/utils/deep_links.dart';
 import '../providers/auth_provider.dart';
+import '../core/i18n/app_localizations.dart';
+import '../core/security/biometric_lock.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -63,11 +65,48 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
       return;
     }
     if (context.read<AuthProvider>().isAuthenticated) {
+      // Puerta biometrica: la sesion sigue guardada, pero si el usuario activo
+      // el bloqueo no se entra sin huella o rostro. En una app que ensena el
+      // video de tu casa, tener la sesion abierta no deberia bastar.
+      if (!await _pasaElBloqueo()) return;
+      if (!mounted) return;
       context.go('/dashboard');
       if (pendiente != null) context.push(pendiente);
     } else {
       context.go('/login');
     }
+  }
+
+  /// Pide la biometria si esta activada. Si falla, se ofrece cerrar sesion y
+  /// entrar con contrasena en vez de dejar la app colgada en el splash.
+  Future<bool> _pasaElBloqueo() async {
+    final bloqueo = BiometricLock(context.read<AuthProvider>().storage);
+    if (!await bloqueo.activado) return true;
+    if (!mounted) return false;
+
+    final l10n = context.l10n;
+    if (await bloqueo.verificar(l10n.biometricReason)) return true;
+    if (!mounted) return false;
+
+    setState(() => _bloqueado = true);
+    return false;
+  }
+
+  /// La biometria fallo o se cancelo: se muestra el boton para reintentar.
+  bool _bloqueado = false;
+
+  Future<void> _reintentarBloqueo() async {
+    setState(() => _bloqueado = false);
+    if (await _pasaElBloqueo()) {
+      if (!mounted) return;
+      context.go('/dashboard');
+    }
+  }
+
+  Future<void> _salirYUsarContrasena() async {
+    await context.read<AuthProvider>().logout();
+    if (!mounted) return;
+    context.go('/login');
   }
 
   @override
@@ -76,6 +115,38 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
     _scaleCtrl.dispose();
     _glowCtrl.dispose();
     super.dispose();
+  }
+
+  List<Widget> _salidasDelBloqueo(BuildContext context) {
+    final l10n = context.l10n;
+    return [
+      const SizedBox(height: 40),
+      Icon(Icons.lock_outline, color: AppColors.warningAmber, size: 34),
+      const SizedBox(height: 10),
+      Text(l10n.biometricFailed,
+          textAlign: TextAlign.center,
+          style: GoogleFonts.inter(
+              fontSize: 13, color: AppColors.textSecondary)),
+      const SizedBox(height: 18),
+      OutlinedButton.icon(
+        onPressed: _reintentarBloqueo,
+        icon: const Icon(Icons.fingerprint, size: 18),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppColors.accent,
+          side: const BorderSide(color: AppColors.accent),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+        label: Text(l10n.biometricRetry,
+            style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+      ),
+      TextButton(
+        onPressed: _salirYUsarContrasena,
+        child: Text(l10n.biometricUsePassword,
+            style: GoogleFonts.inter(
+                fontSize: 13, color: AppColors.textSecondary)),
+      ),
+    ];
   }
 
   @override
@@ -130,6 +201,9 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                     letterSpacing: 3,
                   ),
                 ),
+                // Sin esto la app se quedaba en el splash para siempre si la
+                // biometria fallaba o se cancelaba, sin forma de salir.
+                if (_bloqueado) ..._salidasDelBloqueo(context),
               ],
             ),
           ),

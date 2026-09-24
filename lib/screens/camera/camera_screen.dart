@@ -1843,7 +1843,9 @@ class _ProtocolTag extends StatelessWidget {
     final color = isRtsp
         ? AppColors.safeGreen
         : (protocol == 'HLS' ? AppColors.warningAmber : AppColors.textMuted);
-    final label = fellBack && !isRtsp ? 'HLS ⚠' : protocol;
+    // El respaldo ya se distingue por el color ambar; el simbolo de aviso
+    // rompia la tipografia de la insignia.
+    final label = fellBack && !isRtsp ? 'HLS' : protocol;
     return GestureDetector(
       onTap: onTap,
       child: Tooltip(

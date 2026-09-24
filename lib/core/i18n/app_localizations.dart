@@ -280,6 +280,19 @@ class AppStrings {
   String get cameraSettingsBadCredentials => _(
       'La cámara respondió, pero rechazó el usuario o la contraseña guardados. Corrígelos en Mis cámaras y vuelve a intentarlo.',
       'The camera answered but rejected the saved username or password. Fix them in My cameras and try again.');
+  // Bloqueo biometrico
+  String get biometricReason => _(
+      'Confirma tu identidad para entrar a VigiShield',
+      'Confirm your identity to open VigiShield');
+  String get biometricLock => _('Desbloqueo biométrico', 'Biometric unlock');
+  String get biometricLockHint => _(
+      'Pide tu huella o rostro cada vez que abras la app, aunque la sesión siga iniciada.',
+      'Ask for your fingerprint or face every time you open the app, even if the session is still active.');
+  String get biometricFailed =>
+      _('No se pudo verificar tu identidad', 'Could not verify your identity');
+  String get biometricRetry => _('Reintentar', 'Try again');
+  String get biometricUsePassword =>
+      _('Entrar con contraseña', 'Sign in with password');
   String get applyToCamera => _('Aplicar a la cámara', 'Apply to camera');
   String get settingsApplied =>
       _('Ajustes aplicados a la cámara', 'Settings applied to the camera');

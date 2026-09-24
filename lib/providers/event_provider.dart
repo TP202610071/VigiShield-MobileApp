@@ -2,8 +2,9 @@ import 'package:flutter/foundation.dart';
 import '../data/models/security_event_model.dart';
 import '../data/services/event_service.dart';
 import '../core/network/api_client.dart';
+import 'session_scoped.dart';
 
-class EventProvider extends ChangeNotifier {
+class EventProvider extends ChangeNotifier implements SessionScoped {
   final EventService _service;
 
   EventProvider(this._service);
@@ -140,4 +141,19 @@ class EventProvider extends ChangeNotifier {
     _events = [event, ..._events];
     notifyListeners();
   }
+  /// Borra todo lo de la sesión: eventos, filtros y paginación.
+  @override
+  void clearSession() {
+    _events = [];
+    _isLoading = false;
+    _isLoadingMore = false;
+    _error = null;
+    _page = 1;
+    _totalPages = 1;
+    _activeFilter = null;
+    _activeCameraId = null;
+    _requestVersion++; // invalida cualquier petición en vuelo
+    notifyListeners();
+  }
+
 }

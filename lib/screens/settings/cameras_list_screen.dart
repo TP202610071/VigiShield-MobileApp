@@ -266,17 +266,23 @@ class _CameraCard extends StatelessWidget {
                   ],
                 ]),
                 const SizedBox(height: 3),
-                Text(
-                  isConfigured
-                      ? (ip != null ? '📡 $ip' : 'Configurada')
+                // Iconos Material (Apache-2.0) en lugar de emojis: se pintan
+                // con el color del tema y no dependen de la fuente del sistema.
+                _LineaConIcono(
+                  icono: isConfigured ? Icons.lan_outlined : Icons.link_off,
+                  texto: isConfigured
+                      ? (ip ?? 'Configurada')
                       : 'Sin configurar',
-                  style: GoogleFonts.inter(
-                      color: AppColors.textSecondary, fontSize: 12),
+                  color: AppColors.textSecondary,
+                  tamano: 12,
                 ),
-                Text(
-                  mode == 'RtmpRelay' ? '🔁 Relay RTMP' : '📺 IP Fija RTSP',
-                  style: GoogleFonts.inter(
-                      color: AppColors.textMuted, fontSize: 11),
+                _LineaConIcono(
+                  icono: mode == 'RtmpRelay'
+                      ? Icons.sync_alt_rounded
+                      : Icons.videocam_outlined,
+                  texto: mode == 'RtmpRelay' ? 'Relay RTMP' : 'IP Fija RTSP',
+                  color: AppColors.textMuted,
+                  tamano: 11,
                 ),
               ]),
         ),
@@ -303,4 +309,29 @@ class _CameraCard extends StatelessWidget {
       ]),
     );
   }
+}
+
+/// Una linea de texto precedida por un icono, alineados por su centro.
+class _LineaConIcono extends StatelessWidget {
+  final IconData icono;
+  final String texto;
+  final Color color;
+  final double tamano;
+  const _LineaConIcono({
+    required this.icono,
+    required this.texto,
+    required this.color,
+    required this.tamano,
+  });
+
+  @override
+  Widget build(BuildContext context) => Row(children: [
+        Icon(icono, size: tamano + 2, color: color),
+        const SizedBox(width: 5),
+        Flexible(
+          child: Text(texto,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.inter(color: color, fontSize: tamano)),
+        ),
+      ]);
 }
