@@ -272,11 +272,11 @@ class AppStrings {
   // Camera control sheet
   String get cameraSettings => _('Ajustes de Cámara', 'Camera Settings');
   String get cameraSettingsHint => _(
-      'Valores actuales leídos de la cámara. Mueve y guarda para aplicar en vivo.',
-      'Current values read from the camera. Adjust and save to apply live.');
+      'Valores actuales leídos de la cámara por la red local. Mueve y guarda para aplicar en vivo.',
+      'Current values read from the camera over your local network. Adjust and save to apply live.');
   String get cameraSettingsLanOnly => _(
-      'Los ajustes de imagen de la cámara solo funcionan cuando la app está en la misma red local que la cámara. Con el servidor en la nube no es posible controlarla de forma remota.',
-      'Camera image settings only work when the app is on the same local network as the camera. With the cloud server it cannot be controlled remotely.');
+      'No se pudo contactar con la cámara. Estos ajustes viajan directo del teléfono a la cámara, así que conecta el teléfono al wifi de casa (el mismo de la cámara) e inténtalo de nuevo. Desde fuera de casa no se pueden cambiar.',
+      "Couldn't reach the camera. These settings go straight from your phone to the camera, so connect the phone to your home Wi-Fi (the camera's network) and try again. They can't be changed from outside the house.");
   String get applyToCamera => _('Aplicar a la cámara', 'Apply to camera');
   String get settingsApplied =>
       _('Ajustes aplicados a la cámara', 'Settings applied to the camera');
