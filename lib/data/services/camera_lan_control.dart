@@ -69,6 +69,7 @@ class CameraLanControl {
   /// Lee los ajustes actuales. Lanza si la cámara no contesta nada útil.
   Future<Map<String, String>> read() async {
     final out = <String, String>{};
+    var rechazada = false;
     for (final cmd in [
       'getimageattr',
       'getvencattr&-chn=$_mainChannel',
@@ -77,6 +78,7 @@ class CameraLanControl {
     ]) {
       try {
         final r = await _dio.get<String>(_url(cmd));
+        if (r.statusCode == 401 || r.statusCode == 403) rechazada = true;
         for (final m in _varPattern.allMatches(r.data ?? '')) {
           out[m.group(1)!] = m.group(2)!;
         }
@@ -85,7 +87,8 @@ class CameraLanControl {
       }
     }
     if (out.isEmpty) {
-      throw const CameraLanUnreachable();
+      // La cámara contesta pero rechaza: es usuario/contraseña, no la red.
+      throw rechazada ? const CameraLanAuthFailed() : const CameraLanUnreachable();
     }
     return out;
   }
@@ -116,10 +119,14 @@ class CameraLanControl {
     if (cmds.isEmpty) return;
 
     for (final cmd in cmds) {
+      final Response<String> r;
       try {
-        await _dio.get<String>(_url(cmd));
+        r = await _dio.get<String>(_url(cmd));
       } on DioException {
         throw const CameraLanUnreachable();
+      }
+      if (r.statusCode == 401 || r.statusCode == 403) {
+        throw const CameraLanAuthFailed();
       }
     }
   }
@@ -130,4 +137,13 @@ class CameraLanUnreachable implements Exception {
   const CameraLanUnreachable();
   @override
   String toString() => 'CameraLanUnreachable';
+}
+
+/// La cámara sí contestó, pero rechazó el usuario o la contraseña guardados.
+/// Se distingue de [CameraLanUnreachable] porque la solución es otra: no es
+/// cambiarse de wifi, es corregir las credenciales en los ajustes de la cámara.
+class CameraLanAuthFailed implements Exception {
+  const CameraLanAuthFailed();
+  @override
+  String toString() => 'CameraLanAuthFailed';
 }

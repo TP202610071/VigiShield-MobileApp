@@ -1200,11 +1200,20 @@ class _CameraSettingsSheetState extends State<_CameraSettingsSheet> {
     WidgetsBinding.instance.addPostFrameCallback((_) => _load());
   }
 
+  /// Qué decirle al usuario cuando no se pudo leer la cámara: cambiar de wifi
+  /// y corregir las credenciales son arreglos distintos.
+  bool _credencialesMal = false;
+
   Future<void> _load() async {
-    final m = await context.read<CameraProvider>().loadCameraControls(widget.cameraId);
+    final cams = context.read<CameraProvider>();
+    final m = await cams.loadCameraControls(widget.cameraId);
     if (!mounted) return;
     if (m == null) {
-      setState(() { _loading = false; _error = 'No se pudo leer la cámara'; });
+      setState(() {
+        _loading = false;
+        _credencialesMal = cams.lastControlFailure == CameraControlFailure.badCredentials;
+        _error = 'sin lectura';
+      });
       return;
     }
     double d(String k, double f) => double.tryParse(m[k] ?? '') ?? f;
@@ -1236,11 +1245,17 @@ class _CameraSettingsSheetState extends State<_CameraSettingsSheet> {
       'fps': _fps.toString(),
       'gop': _gop.toString(),
     };
-    final ok = await context.read<CameraProvider>().applyCameraControls(widget.cameraId, settings);
+    final cams = context.read<CameraProvider>();
+    final ok = await cams.applyCameraControls(widget.cameraId, settings);
+    final fallo = cams.lastControlFailure;
     if (!mounted) return;
     setState(() => _saving = false);
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(ok ? context.l10n.settingsApplied : context.l10n.settingsApplyError,
+      content: Text(ok
+              ? context.l10n.settingsApplied
+              : (fallo == CameraControlFailure.badCredentials
+                  ? context.l10n.cameraSettingsBadCredentials
+                  : context.l10n.cameraSettingsLanOnly),
           style: GoogleFonts.inter(color: Colors.white)),
       backgroundColor: ok ? AppColors.safeGreen : AppColors.alertRed,
       behavior: SnackBarBehavior.floating,
@@ -1290,14 +1305,15 @@ class _CameraSettingsSheetState extends State<_CameraSettingsSheet> {
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 30),
               child: Column(children: [
-                const Icon(Icons.cloud_off_outlined, color: AppColors.warningAmber, size: 40),
+                Icon(_credencialesMal ? Icons.lock_outline : Icons.wifi_off_outlined,
+                    color: AppColors.warningAmber, size: 40),
                 const SizedBox(height: 12),
-                Text(l10n.cameraSettingsLanOnly,
+                Text(_credencialesMal ? l10n.cameraSettingsBadCredentials : l10n.cameraSettingsLanOnly,
                     textAlign: TextAlign.center,
                     style: GoogleFonts.inter(color: AppColors.textSecondary, fontSize: 13, height: 1.4)),
                 const SizedBox(height: 16),
                 _ActionChip(icon: Icons.refresh, label: l10n.retry, onTap: () {
-                  setState(() { _loading = true; _error = null; });
+                  setState(() { _loading = true; _error = null; _credencialesMal = false; });
                   _load();
                 }),
               ]),

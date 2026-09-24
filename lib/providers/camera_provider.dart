@@ -166,13 +166,21 @@ class CameraProvider extends ChangeNotifier {
   /// camino que funciona con el backend en la nube: una IP privada no se
   /// alcanza desde la VM) y solo si eso falla prueba por el servidor, que sí
   /// sirve si algún día el backend corre en la misma red que la cámara.
+  /// Motivo del último fallo de control, para que la hoja diga qué hacer.
+  CameraControlFailure lastControlFailure = CameraControlFailure.unreachable;
+
   Future<Map<String, String>?> loadCameraControls(String id) async {
     final lan = await _lanControl(id);
     if (lan != null) {
       try {
         return await lan.read();
+      } on CameraLanAuthFailed catch (e) {
+        _error = e.toString();
+        lastControlFailure = CameraControlFailure.badCredentials;
+        return null; // Reintentar por el servidor daría el mismo rechazo.
       } catch (e) {
         _error = e.toString();
+        lastControlFailure = CameraControlFailure.unreachable;
       }
     }
     try {
@@ -190,8 +198,13 @@ class CameraProvider extends ChangeNotifier {
       try {
         await lan.apply(settings);
         return true;
+      } on CameraLanAuthFailed catch (e) {
+        _error = e.toString();
+        lastControlFailure = CameraControlFailure.badCredentials;
+        return false;
       } catch (e) {
         _error = e.toString();
+        lastControlFailure = CameraControlFailure.unreachable;
       }
     }
     try {
@@ -219,3 +232,6 @@ class CameraProvider extends ChangeNotifier {
     }
   }
 }
+
+/// Por qué no se pudo controlar la cámara. Cada caso se arregla distinto.
+enum CameraControlFailure { unreachable, badCredentials }
