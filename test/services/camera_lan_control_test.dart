@@ -8,10 +8,11 @@ import 'package:vigishield_mobile_app/data/services/camera_lan_control.dart';
 class _FakeCamera extends Interceptor {
   final Map<String, String> respuestas;
   final bool caida;
+  final int estado;
   final List<String> pedidos = [];
   String? autorizacion;
 
-  _FakeCamera(this.respuestas, {this.caida = false});
+  _FakeCamera(this.respuestas, {this.caida = false, this.estado = 200});
 
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
@@ -26,7 +27,7 @@ class _FakeCamera extends Interceptor {
     final clave = cmd.split('&').first;
     handler.resolve(Response<String>(
       requestOptions: options,
-      statusCode: 200,
+      statusCode: estado,
       data: respuestas[clave] ?? '',
     ));
   }
@@ -92,6 +93,23 @@ void main() {
     final camara = _FakeCamera({}, caida: true);
 
     expect(_control(camara).read(), throwsA(isA<CameraLanUnreachable>()));
+  });
+
+  test('un 401 de la cámara se reporta como credenciales, no como red caída', () async {
+    // La cámara real contesta 'WWW-Authenticate: Basic' con 401 si el usuario
+    // o la contraseña guardados no valen. Ese caso se arregla corrigiendo las
+    // credenciales, no cambiando de wifi, así que debe distinguirse.
+    final camara = _FakeCamera({}, estado: 401);
+
+    expect(_control(camara, user: 'admin', pass: 'mala').read(),
+        throwsA(isA<CameraLanAuthFailed>()));
+  });
+
+  test('un 401 al aplicar también se reporta como credenciales', () async {
+    final camara = _FakeCamera({}, estado: 401);
+
+    expect(_control(camara, user: 'admin', pass: 'mala').apply({'brightness': '60'}),
+        throwsA(isA<CameraLanAuthFailed>()));
   });
 
   test('una lectura sin ninguna variable también se trata como inalcanzable', () async {

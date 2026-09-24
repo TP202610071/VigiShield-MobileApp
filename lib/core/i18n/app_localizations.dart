@@ -277,6 +277,9 @@ class AppStrings {
   String get cameraSettingsLanOnly => _(
       'No se pudo contactar con la cámara. Estos ajustes viajan directo del teléfono a la cámara, así que conecta el teléfono al wifi de casa (el mismo de la cámara) e inténtalo de nuevo. Desde fuera de casa no se pueden cambiar.',
       "Couldn't reach the camera. These settings go straight from your phone to the camera, so connect the phone to your home Wi-Fi (the camera's network) and try again. They can't be changed from outside the house.");
+  String get cameraSettingsBadCredentials => _(
+      'La cámara respondió, pero rechazó el usuario o la contraseña guardados. Corrígelos en Mis cámaras y vuelve a intentarlo.',
+      'The camera answered but rejected the saved username or password. Fix them in My cameras and try again.');
   String get applyToCamera => _('Aplicar a la cámara', 'Apply to camera');
   String get settingsApplied =>
       _('Ajustes aplicados a la cámara', 'Settings applied to the camera');
