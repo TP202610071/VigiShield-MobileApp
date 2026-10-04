@@ -2,7 +2,8 @@ class CameraConfigModel {
   final String id;
   final String name;
   final bool isDefault;
-  final String streamMode; // 'DirectRtsp' or 'RtmpRelay'
+  final String streamMode; // DirectRtsp, RtmpRelay or MobileWebRtc
+  final bool notificationsEnabled;
   final String? cameraIp;
   final int cameraPort;
   final String? cameraPath;
@@ -23,6 +24,7 @@ class CameraConfigModel {
     required this.name,
     required this.isDefault,
     required this.streamMode,
+    this.notificationsEnabled = true,
     this.cameraIp,
     required this.cameraPort,
     this.cameraPath,
@@ -40,6 +42,7 @@ class CameraConfigModel {
 
   bool get isDirectRtsp => streamMode == 'DirectRtsp';
   bool get isRtmpRelay => streamMode == 'RtmpRelay';
+  bool get isMobileWebRtc => streamMode == 'MobileWebRtc';
 
   factory CameraConfigModel.fromJson(Map<String, dynamic> json) {
     return CameraConfigModel(
@@ -47,6 +50,7 @@ class CameraConfigModel {
       name: json['name'] as String? ?? 'Cámara',
       isDefault: json['isDefault'] as bool? ?? false,
       streamMode: json['streamMode'] as String? ?? 'DirectRtsp',
+      notificationsEnabled: json['notificationsEnabled'] as bool? ?? true,
       cameraIp: json['cameraIp'] as String?,
       cameraPort: (json['cameraPort'] as int?) ?? 554,
       cameraPath: json['cameraPath'] as String?,

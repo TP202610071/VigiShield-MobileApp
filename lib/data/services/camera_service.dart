@@ -2,10 +2,33 @@ import '../models/camera_config_model.dart';
 import '../models/zone_model.dart';
 import '../../core/network/api_client.dart';
 import 'camera_lan_control.dart';
+import 'mobile_camera_publisher.dart';
+import 'package:dio/dio.dart';
 
-class CameraDataService {
+class CameraDataService implements MobilePublishTransport {
   final ApiClient _api;
   CameraDataService(this._api);
+
+  Future<CameraConfigModel> setNotificationsEnabled(String id, bool enabled) async {
+    try {
+      final response = await _api.dio.patch<Map<String, dynamic>>(
+        '/api/stream/cameras/${Uri.encodeComponent(id)}/notifications', data: {'enabled': enabled});
+      return CameraConfigModel.fromJson(response.data!);
+    } on DioException catch (e) {
+      throw ApiException('No se pudo cambiar las notificaciones.', e.response?.statusCode);
+    }
+  }
+
+  @override
+  Future<MobilePublishAnswer> publish(String cameraId, String sdp) async {
+    final data = await _api.post<Map<String, dynamic>>(
+      '/api/stream/cameras/${Uri.encodeComponent(cameraId)}/publish', body: {'sdp': sdp});
+    return MobilePublishAnswer(data['sessionId'] as String, data['sdp'] as String);
+  }
+
+  @override
+  Future<void> unpublish(String cameraId, String sessionId) => _api.delete(
+    '/api/stream/cameras/${Uri.encodeComponent(cameraId)}/publish/${Uri.encodeComponent(sessionId)}');
 
   /// Guarda las zonas de interés (ROI) dibujadas por el usuario para una cámara.
   /// Una lista vacía borra las zonas (vuelve al comportamiento sin contexto).

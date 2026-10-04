@@ -38,7 +38,6 @@ class _CameraSetupScreenState extends State<CameraSetupScreen> {
 
   // Shown after save — backend generates these
   String? _savedHlsUrl;
-  String? _savedRtmpPushUrl;
   String? _savedStreamKey;
   String? _savedRtspUrl;
   String? _savedMediaMtxRtspUrl;
@@ -75,7 +74,6 @@ class _CameraSetupScreenState extends State<CameraSetupScreen> {
       _hasExistingPassword = cam.hasPassword;
       _isDefault = cam.isDefault;
       _savedHlsUrl = cam.hlsViewUrl;
-      _savedRtmpPushUrl = cam.rtmpPushUrl;
       _savedStreamKey = cam.streamKey;
       _savedRtspUrl = cam.rtspUrl;
       _savedMediaMtxRtspUrl = cam.mediaMtxRtspUrl;
@@ -159,7 +157,6 @@ class _CameraSetupScreenState extends State<CameraSetupScreen> {
 
       setState(() {
         _savedHlsUrl = saved?.hlsViewUrl;
-        _savedRtmpPushUrl = saved?.rtmpPushUrl;
         _savedStreamKey = saved?.streamKey;
         _savedRtspUrl = saved?.rtspUrl;
         _savedMediaMtxRtspUrl = saved?.mediaMtxRtspUrl;
