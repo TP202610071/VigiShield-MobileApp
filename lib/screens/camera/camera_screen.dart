@@ -278,7 +278,9 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
     // (which stays alive in the IndexedStack and would otherwise flash/shimmer).
     await context.read<EventProvider>().refreshSilently();
     if (!mounted || !_isActive) return;
-    final events = context.read<EventProvider>().events;
+    final cameras = context.read<CameraProvider>().cameras;
+    final events = context.read<EventProvider>().events.where((e) =>
+      e.notificationsEnabled && cameras.any((c) => c.id == e.cameraId && c.notificationsEnabled)).toList();
     if (events.isEmpty) return;
 
     final newest = events.first;
