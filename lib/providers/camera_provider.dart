@@ -156,6 +156,24 @@ class CameraProvider extends ChangeNotifier implements SessionScoped {
     }
   }
 
+  Future<bool> setNotificationsEnabled(String id, bool enabled) async {
+    if (_isSaving) return false;
+    _isSaving = true;
+    _error = null;
+    notifyListeners();
+    try {
+      final updated = await _service.setNotificationsEnabled(id, enabled);
+      _cameras = _cameras.map((c) => c.id == id ? updated : c).toList();
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      return false;
+    } finally {
+      _isSaving = false;
+      notifyListeners();
+    }
+  }
+
   void clearError() {
     _error = null;
     notifyListeners();

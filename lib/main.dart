@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:dio/dio.dart';
+import 'providers/validation_provider.dart';
+import 'data/services/validation_platform.dart';
+import 'widgets/validation_overlay.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -89,6 +93,8 @@ class _VigiShieldAppState extends State<VigiShieldApp> {
   late final EventProvider _eventProvider;
   late final SystemProvider _systemProvider;
   late final CameraProvider _cameraProvider;
+  late final ValidationProvider _validationProvider;
+  final Dio _validationDio = Dio(BaseOptions(connectTimeout: const Duration(seconds: 3), receiveTimeout: const Duration(seconds: 3)));
   late final ServerConfigProvider _serverConfigProvider;
   late final LocaleProvider _localeProvider;
   late final DevSettingsProvider _devSettingsProvider;
@@ -106,6 +112,23 @@ class _VigiShieldAppState extends State<VigiShieldApp> {
     _eventProvider = EventProvider(EventService(_api));
     _systemProvider = SystemProvider(SystemService(_api));
     _cameraProvider = CameraProvider(CameraDataService(_api));
+    _validationProvider = ValidationProvider(
+      platform: ValidationPlatform(),
+      canMonitor: () => _authProvider.isAuthenticated && _systemProvider.status?.isMonitoringActive != false,
+      loadPaused: () async => !(await SystemService(_api).getStatus()).isMonitoringActive,
+      loadCameras: CameraDataService(_api).getCameras,
+      loadEvents: (started) async => (await EventService(_api).getEvents(from: started, pageSize: 100)).items,
+      loadStatus: (camera) async {
+        final host = Uri.parse(camera.hlsViewUrl!).host;
+        final token = await _storage.getToken();
+        final response = await _validationDio.get<Map<String, dynamic>>(
+          'https://$host/ai/status/${Uri.encodeComponent(camera.id)}',
+          options: Options(headers: {if (token != null) 'Authorization': 'Bearer $token'}));
+        return response.data ?? {};
+      },
+    );
+    _cameraProvider.addListener(_syncValidationCameras);
+    _systemProvider.addListener(_syncValidationSystem);
     _serverConfigProvider =
         ServerConfigProvider(_storage, _api, widget.initialServerUrl);
     _localeProvider = LocaleProvider(_storage, widget.initialLocale);
@@ -114,9 +137,22 @@ class _VigiShieldAppState extends State<VigiShieldApp> {
     // Al cerrar sesión hay que vaciar estos: viven toda la vida de la app y si
     // no, la siguiente cuenta hereda cámaras, eventos y alertas de la anterior.
     _authProvider.registerSessionScoped(
-        [_eventProvider, _systemProvider, _cameraProvider]);
+        [_eventProvider, _systemProvider, _cameraProvider, _validationProvider]);
     _router = createRouter(_authProvider);
     _initDeepLinks();
+  }
+
+  void _syncValidationCameras() => _validationProvider.updateCameras(_cameraProvider.cameras);
+  void _syncValidationSystem() {
+    if (_systemProvider.status?.isMonitoringActive == false) _validationProvider.stop();
+  }
+  @override
+  void dispose() {
+    _cameraProvider.removeListener(_syncValidationCameras);
+    _systemProvider.removeListener(_syncValidationSystem);
+    _validationProvider.dispose();
+    _validationDio.close(force: true);
+    super.dispose();
   }
 
   /// Abre la app en el destino de un enlace: el evento de una alerta
@@ -181,6 +217,7 @@ class _VigiShieldAppState extends State<VigiShieldApp> {
         ChangeNotifierProvider.value(value: _eventProvider),
         ChangeNotifierProvider.value(value: _systemProvider),
         ChangeNotifierProvider.value(value: _cameraProvider),
+        ChangeNotifierProvider.value(value: _validationProvider),
         ChangeNotifierProvider.value(value: _serverConfigProvider),
         ChangeNotifierProvider.value(value: _localeProvider),
         ChangeNotifierProvider.value(value: _devSettingsProvider),
@@ -207,7 +244,7 @@ class _VigiShieldAppState extends State<VigiShieldApp> {
             builder: (context, child) => _OcultarTeclado(
               child: KeyedSubtree(
                 key: ValueKey(locale.languageCode),
-                child: child ?? const SizedBox.shrink(),
+                child: ValidationOverlay(child: child ?? const SizedBox.shrink()),
               ),
             ),
             routerConfig: router,
