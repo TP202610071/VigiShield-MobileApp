@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'validation_screen.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -152,6 +153,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(height: 24),
               ],
 
+              _SettingsTile(icon: Icons.science_outlined, label: 'Validación en primer plano',
+                onTap: () => Navigator.of(context, rootNavigator: true).push(MaterialPageRoute<void>(builder: (_) => const ValidationScreen()))),
+              const SizedBox(height: 24),
               _SectionLabel(l10n.sectionPreferences),
               const SizedBox(height: 8),
               _LanguageTile(),

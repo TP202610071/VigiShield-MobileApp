@@ -10,6 +10,7 @@ class SecurityEventModel {
   final String? personName;
   final String riskLevel;
   final bool isNighttime;
+  final bool notificationsEnabled;
   final DateTime createdAt;
 
   const SecurityEventModel({
@@ -24,6 +25,7 @@ class SecurityEventModel {
     this.personName,
     required this.riskLevel,
     required this.isNighttime,
+    this.notificationsEnabled = true,
     required this.createdAt,
   });
 
@@ -39,6 +41,7 @@ class SecurityEventModel {
         personName: json['personName'] as String?,
         riskLevel: json['riskLevel'] as String,
         isNighttime: json['isNighttime'] as bool? ?? false,
+        notificationsEnabled: json['notificationsEnabled'] as bool? ?? true,
         createdAt: DateTime.parse(json['createdAt'] as String),
       );
 

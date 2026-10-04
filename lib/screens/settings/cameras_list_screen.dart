@@ -6,6 +6,8 @@ import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/camera_provider.dart';
+import '../../data/models/camera_config_model.dart';
+import '../camera/device_camera_screen.dart';
 
 class CamerasListScreen extends StatefulWidget {
   const CamerasListScreen({super.key});
@@ -42,7 +44,7 @@ class _CamerasListScreenState extends State<CamerasListScreen> {
         actions: [
           if (isPrimary)
             TextButton.icon(
-              onPressed: () => context.push('/settings/cameras/add'),
+              onPressed: () => _showAddOptions(context),
               icon: const Icon(Icons.add, color: AppColors.accent, size: 20),
               label: Text('Agregar',
                   style: GoogleFonts.inter(
@@ -75,7 +77,9 @@ class _CamerasListScreenState extends State<CamerasListScreen> {
                 cam: cam,
                 isPrimary: isPrimary,
                 onEdit: isPrimary
-                    ? () => context.push('/settings/cameras/${cam.id}')
+                    ? () => cam.isMobileWebRtc
+                        ? _openDevice(context, cam)
+                        : context.push('/settings/cameras/${cam.id}')
                     : null,
                 onZones: isPrimary
                     ? () => context.push('/settings/cameras/${cam.id}/zones')
@@ -89,6 +93,22 @@ class _CamerasListScreenState extends State<CamerasListScreen> {
         );
       }),
     );
+  }
+
+  void _openDevice(BuildContext context, [CameraConfigModel? camera]) {
+    Navigator.of(context).push(MaterialPageRoute<void>(
+      builder: (_) => DeviceCameraScreen(camera: camera)));
+  }
+
+  void _showAddOptions(BuildContext context) {
+    showModalBottomSheet<void>(context: context, builder: (sheetContext) => SafeArea(
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
+        ListTile(leading: const Icon(Icons.lan_outlined), title: const Text('Agregar cámara IP'),
+          onTap: () { Navigator.pop(sheetContext); context.push('/settings/cameras/add'); }),
+        ListTile(leading: const Icon(Icons.phone_android), title: const Text('Usar este dispositivo como cámara'),
+          onTap: () { Navigator.pop(sheetContext); _openDevice(context); }),
+      ]),
+    ));
   }
 
   Widget _buildEmpty(BuildContext context, bool isPrimary) {
@@ -106,7 +126,7 @@ class _CamerasListScreenState extends State<CamerasListScreen> {
           const SizedBox(height: 8),
           Text(
             isPrimary
-                ? 'Agrega tu primera cámara IP para comenzar a monitorear.'
+                ? 'Agrega una cámara IP o usa este dispositivo para monitorear.'
                 : 'El residente principal aún no ha configurado cámaras.',
             textAlign: TextAlign.center,
             style: GoogleFonts.inter(
@@ -115,7 +135,7 @@ class _CamerasListScreenState extends State<CamerasListScreen> {
           if (isPrimary) ...[
             const SizedBox(height: 24),
             GestureDetector(
-              onTap: () => context.push('/settings/cameras/add'),
+              onTap: () => _showAddOptions(context),
               child: Container(
                 padding: const EdgeInsets.symmetric(
                     horizontal: 24, vertical: 12),
@@ -184,7 +204,7 @@ class _CamerasListScreenState extends State<CamerasListScreen> {
 }
 
 class _CameraCard extends StatelessWidget {
-  final dynamic cam;
+  final CameraConfigModel cam;
   final bool isPrimary;
   final VoidCallback? onEdit;
   final VoidCallback? onZones;
@@ -200,11 +220,11 @@ class _CameraCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isConfigured = cam.isConfigured as bool;
-    final isDefault = cam.isDefault as bool;
-    final name = cam.name as String;
-    final mode = cam.streamMode as String;
-    final ip = cam.cameraIp as String?;
+    final isConfigured = cam.isConfigured;
+    final isDefault = cam.isDefault;
+    final name = cam.name;
+    final mode = cam.streamMode;
+    final ip = cam.cameraIp;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -280,10 +300,22 @@ class _CameraCard extends StatelessWidget {
                   icono: mode == 'RtmpRelay'
                       ? Icons.sync_alt_rounded
                       : Icons.videocam_outlined,
-                  texto: mode == 'RtmpRelay' ? 'Relay RTMP' : 'IP Fija RTSP',
+                  texto: cam.isMobileWebRtc ? 'Cámara del dispositivo' : mode == 'RtmpRelay' ? 'Relay RTMP' : 'IP Fija RTSP',
                   color: AppColors.textMuted,
                   tamano: 11,
                 ),
+                if (isPrimary) Row(children: [
+                  const Flexible(child: Text('Notificaciones', style: TextStyle(fontSize: 11))),
+                  Switch(value: cam.notificationsEnabled,
+                    onChanged: context.watch<CameraProvider>().isSaving ? null : (enabled) async {
+                      final provider = context.read<CameraProvider>();
+                      final ok = await provider.setNotificationsEnabled(cam.id, enabled);
+                      if (!ok && context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Text(provider.error ?? 'No se pudo guardar el cambio.')));
+                      }
+                    }),
+                ]),
               ]),
         ),
         if (isPrimary) ...[
