@@ -8,6 +8,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/camera_provider.dart';
 import '../../data/models/camera_config_model.dart';
 import '../camera/device_camera_screen.dart';
+import '../../data/services/mobile_camera_publisher.dart';
 
 class CamerasListScreen extends StatefulWidget {
   const CamerasListScreen({super.key});
@@ -95,9 +96,26 @@ class _CamerasListScreenState extends State<CamerasListScreen> {
     );
   }
 
-  void _openDevice(BuildContext context, [CameraConfigModel? camera]) {
-    Navigator.of(context).push(MaterialPageRoute<void>(
+  Future<void> _openDevice(BuildContext context, [CameraConfigModel? camera]) async {
+    final transmitiendo = await Navigator.of(context).push(MaterialPageRoute<bool>(
       builder: (_) => DeviceCameraScreen(camera: camera)));
+    if (transmitiendo != true || !context.mounted) return;
+    // Se acaba de iniciar la transmisión: se dice qué hacer a continuación.
+    final publicador = context.read<MobileCameraPublisher>();
+    final cam = context.read<CameraProvider>().cameras
+        .where((c) => c.id == publicador.cameraId).firstOrNull;
+    final nombre = cam?.name ?? 'La cámara';
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      duration: const Duration(seconds: 8),
+      behavior: SnackBarBehavior.floating,
+      content: Text('$nombre ya está transmitiendo. Ahora dibuja sus zonas de interés y deja el '
+          'teléfono apuntando a la entrada con VigiShield abierta.'),
+      action: cam == null
+          ? null
+          : SnackBarAction(
+              label: 'Dibujar zonas',
+              onPressed: () => context.push('/settings/cameras/${cam.id}/zones')),
+    ));
   }
 
   void _showAddOptions(BuildContext context) {

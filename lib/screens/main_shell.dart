@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import '../core/orientation/orientacion_app.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../providers/ui_provider.dart';
 import '../widgets/vs_bottom_nav.dart';
 
-/// Owns screen orientation: the camera tab is locked landscape, every other tab
-/// is locked portrait — regardless of the phone's physical rotation or the OS
-/// auto-rotate setting. This is the single source of truth (the individual
-/// screens must NOT set orientation themselves, or they fight each other).
+/// Le dice a [OrientacionApp] si la pestaña Cámara es lo que se ve (para
+/// ponerla en horizontal). La decisión final es de OrientacionApp: mientras el
+/// teléfono transmite manda su posición física. Las pantallas no fijan la
+/// orientación por su cuenta, o se pelean entre ellas.
 class MainShell extends StatefulWidget {
   final StatefulNavigationShell navigationShell;
 
@@ -23,27 +23,28 @@ class _MainShellState extends State<MainShell> {
   static const _cameraTabIndex = 1;
 
   @override
-  void initState() {
-    super.initState();
-    _applyOrientation(widget.navigationShell.currentIndex);
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // ModalRoute.of crea una dependencia: esto se vuelve a llamar cuando se
+    // abre o se cierra una pantalla encima de las pestañas.
+    _applyOrientation();
   }
 
   @override
   void didUpdateWidget(covariant MainShell oldWidget) {
     super.didUpdateWidget(oldWidget);
     // Fires whenever the active branch changes (taps and programmatic nav).
-    _applyOrientation(widget.navigationShell.currentIndex);
+    _applyOrientation();
   }
 
-  static void _applyOrientation(int index) {
-    if (index == _cameraTabIndex) {
-      SystemChrome.setPreferredOrientations([
-        DeviceOrientation.landscapeLeft,
-        DeviceOrientation.landscapeRight,
-      ]);
-    } else {
-      SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-    }
+  /// Horizontal solo si la pestaña Cámara es lo que se VE. Antes bastaba con
+  /// que fuera la pestaña de debajo: con Mis cámaras o el editor de zonas
+  /// abiertos encima, cualquier redibujado giraba la app a horizontal (por
+  /// ejemplo al guardar zonas), y la grabación de pantalla se cortaba.
+  void _applyOrientation() {
+    final visible = ModalRoute.of(context)?.isCurrent ?? true;
+    OrientacionApp.instance.setPestanaCamara(
+        visible && widget.navigationShell.currentIndex == _cameraTabIndex);
   }
 
   @override
@@ -58,7 +59,8 @@ class _MainShellState extends State<MainShell> {
           : VsBottomNav(
               currentIndex: widget.navigationShell.currentIndex,
               onTap: (index) {
-                _applyOrientation(index); // snap immediately on tap
+                // Gira en el mismo toque, sin esperar al redibujado.
+                OrientacionApp.instance.setPestanaCamara(index == _cameraTabIndex);
                 widget.navigationShell.goBranch(
                   index,
                   initialLocation: index == widget.navigationShell.currentIndex,

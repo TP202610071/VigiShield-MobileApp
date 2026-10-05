@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:provider/provider.dart';
 import '../../core/network/api_client.dart';
@@ -88,7 +87,8 @@ class _DeviceCameraScreenState extends State<DeviceCameraScreen> with WidgetsBin
     _linterna = _publisher?.torchEnabled ?? false;
     _publisher?.addListener(_changed);
     WidgetsBinding.instance.addObserver(this);
-    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+    // La orientación no se fija aquí: la gestiona OrientacionApp (vertical
+    // mientras no transmite, la posición física del teléfono al transmitir).
     WidgetsBinding.instance.addPostFrameCallback((_) => _restorePreview());
   }
 
@@ -132,16 +132,20 @@ class _DeviceCameraScreenState extends State<DeviceCameraScreen> with WidgetsBin
         await cameras.fetchCameras();
       }
       if (!vigente()) return;
-      if (_renderer == null) {
-        final renderer = RTCVideoRenderer();
-        await renderer.initialize();
-        if (!vigente()) { await renderer.dispose(); return; }
-        _renderer = renderer;
-      }
-      if (!vigente()) return;
+      // La vista previa no bloquea el arranque: si la transmisión sale bien la
+      // pantalla se cierra, y si se reabre la vista se monta sola.
       await _publisher!.start(_camera!.id, front: _front);
+      // Transmitiendo: no queda nada que hacer aquí. Se vuelve a la lista,
+      // que avisa del siguiente paso (dibujar las zonas). Antes el usuario
+      // se quedaba en esta pantalla sin saber qué hacer después.
+      if (mounted && (_publisher?.isPublishing ?? false)) {
+        setState(() => _busy = false);
+        await Navigator.of(context).maybePop(true);
+        return;
+      }
     } catch (e) { if (mounted) _error = e.toString(); }
     finally { if (mounted) setState(() => _busy = false); }
+    unawaited(_restorePreview());
   }
 
   Future<void> _stop() async {
@@ -176,7 +180,6 @@ class _DeviceCameraScreenState extends State<DeviceCameraScreen> with WidgetsBin
   }
 
   @override void dispose() {
-    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     WidgetsBinding.instance.removeObserver(this);
     _publisher?.removeListener(_changed);
     // Solo se desecha si lo creo esta pantalla. El de la app lo gestiona main.
@@ -197,7 +200,11 @@ class _DeviceCameraScreenState extends State<DeviceCameraScreen> with WidgetsBin
           icon: Icon(active ? Icons.stop : Icons.play_arrow),
           label: Text(active ? 'Detener transmisión' : 'Iniciar transmisión')))),
       body: ListView(padding: const EdgeInsets.all(20), children: [
-        const Text('Video sin audio. Mantén esta pantalla abierta y el dispositivo conectado. La transmisión se detiene al salir o pasar a segundo plano.'),
+        Text(active
+            ? 'Este teléfono está transmitiendo. Puedes salir de esta pantalla: la transmisión sigue mientras VigiShield esté abierta en primer plano.'
+            : 'Convierte este teléfono en una cámara de vigilancia (video sin audio). Elige la lente y pulsa Iniciar transmisión. '
+              'Después dibuja las zonas de interés y deja el teléfono apuntando a la entrada con VigiShield abierta: '
+              'si cierras la app, cambias a otra o bloqueas el teléfono, la transmisión se detiene. La pantalla no se apaga sola mientras transmite.'),
         const SizedBox(height: 16),
         // El nombre se puede cambiar también después de crearla: renombrar no
         // toca la clave de transmisión, así que no corta el video.

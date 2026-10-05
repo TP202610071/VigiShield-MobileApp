@@ -140,6 +140,12 @@ class MobileCameraPublisher extends ChangeNotifier
   final MobileCameraCapture capture;
   final Duration iceTimeout;
 
+  /// Se espera antes de abrir la cámara. La app fija aquí la orientación a la
+  /// posición física del teléfono: el video toma la orientación de la pantalla
+  /// en el momento de abrir la cámara, y si la pantalla gira después, el video
+  /// cambia de tamaño a mitad de la transmisión.
+  final Future<void> Function()? antesDeAbrir;
+
   /// El ciclo de vida lo vigila el PUBLICADOR, no la pantalla.
   ///
   /// Cuando lo hacia la pantalla, salir de ella la desmontaba y ya nadie
@@ -150,7 +156,8 @@ class MobileCameraPublisher extends ChangeNotifier
   /// [observarCicloDeVida] se desactiva en las pruebas, que manejan el ciclo
   /// de vida a mano.
   MobileCameraPublisher({required this.transport, MobileCameraCapture? capture,
-    this.iceTimeout = const Duration(seconds: 12), bool observarCicloDeVida = true})
+    this.iceTimeout = const Duration(seconds: 12), bool observarCicloDeVida = true,
+    this.antesDeAbrir})
       : capture = capture ?? WebRtcCameraCapture() {
     if (observarCicloDeVida) {
       _observando = true;
@@ -202,6 +209,8 @@ class MobileCameraPublisher extends ChangeNotifier
       this.front = front;
       hasTorch = false;
       torchEnabled = false;
+      if (antesDeAbrir != null) await antesDeAbrir!();
+      if (generation != _generation) return;
       await capture.open(front: front);
       if (generation != _generation) return;
       if (!front) {
@@ -247,6 +256,21 @@ class MobileCameraPublisher extends ChangeNotifier
     await _cleanup();
     _notify();
   }
+  /// Corta y vuelve a publicar la misma cámara con la misma lente. Se usa al
+  /// girar el teléfono: arrancar una sesión nueva entrega un video limpio con
+  /// el tamaño nuevo, en vez de cambiarlo a mitad de la transmisión.
+  Future<void> reiniciar() async {
+    final camara = _cameraId;
+    if (!isPublishing || camara == null || _disposed) return;
+    final lente = front;
+    final linterna = torchEnabled;
+    await stop();
+    await start(camara, front: lente);
+    if (linterna && isPublishing && hasTorch) {
+      try { await setTorch(true); } catch (_) {}
+    }
+  }
+
   Future<void> setTorch(bool enabled) async {
     if (!isPublishing || front || !hasTorch) {
       throw StateError('La linterna no está disponible en esta cámara.');

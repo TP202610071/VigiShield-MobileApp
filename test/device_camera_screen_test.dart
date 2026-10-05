@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:provider/provider.dart';
 import 'package:vigishield_mobile_app/core/network/api_client.dart';
 import 'package:vigishield_mobile_app/core/storage/auth_storage.dart';
+import 'package:vigishield_mobile_app/data/models/camera_config_model.dart';
 import 'package:vigishield_mobile_app/data/services/camera_service.dart';
 import 'package:vigishield_mobile_app/providers/camera_provider.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -11,21 +12,32 @@ import 'package:vigishield_mobile_app/screens/camera/device_camera_screen.dart';
 import 'mobile_camera_publisher_test.dart' show Capture, Transport;
 import 'package:vigishield_mobile_app/data/services/mobile_camera_publisher.dart';
 void main() {
-  testWidgets('device camera configuration stays portrait', (tester) async {
-    final calls = <MethodCall>[];
-    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-      SystemChannels.platform, (call) async {
-        if (call.method == 'SystemChrome.setPreferredOrientations') calls.add(call);
-        return null;
-      });
-    addTearDown(() => tester.binding.defaultBinaryMessenger
-      .setMockMethodCallHandler(SystemChannels.platform, null));
-    await tester.pumpWidget(ChangeNotifierProvider(
-      create: (_) => MobileCameraPublisher(
-        transport: Transport(), capture: Capture(), observarCicloDeVida: false),
-      child: const MaterialApp(home: DeviceCameraScreen())));
-    await tester.pump();
-    expect(calls.last.arguments, ['DeviceOrientation.portraitUp']);
+  testWidgets('al iniciar la transmisión la pantalla se cierra y avisa a quien la abrió', (tester) async {
+    final capture = Capture();
+    final publisher = MobileCameraPublisher(
+      transport: Transport(), capture: capture, observarCicloDeVida: false);
+    final camara = CameraConfigModel(id: 'camera', name: 'Entrada', isDefault: true,
+      streamMode: 'MobileWebRtc', cameraPort: 0, hasPassword: false, isConfigured: true);
+    bool? resultado;
+    final api = ApiClient(AuthStorage());
+    await tester.pumpWidget(MultiProvider(providers: [
+      Provider<ApiClient>.value(value: api),
+      ChangeNotifierProvider(create: (_) => CameraProvider(CameraDataService(api))),
+    ], child: MaterialApp(home: Builder(builder: (context) => TextButton(
+      onPressed: () async {
+        resultado = await Navigator.of(context).push<bool>(MaterialPageRoute(
+          builder: (_) => DeviceCameraScreen(camera: camara, publisher: publisher)));
+      },
+      child: const Text('abrir'))))));
+    await tester.tap(find.text('abrir'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Iniciar transmisión'));
+    await tester.pumpAndSettle();
+    // Abrió la cámara y publicó; la pantalla se cerró sola avisando del éxito.
+    // (El publicador inyectado lo libera la propia pantalla al cerrarse.)
+    expect(capture.events.first, 'open:false');
+    expect(find.byType(DeviceCameraScreen), findsNothing);
+    expect(resultado, isTrue);
   });
   testWidgets('reopening configuration reflects active front publication', (tester) async {
     final publisher = MobileCameraPublisher(
