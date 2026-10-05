@@ -89,7 +89,7 @@ class _DeviceCameraScreenState extends State<DeviceCameraScreen> with WidgetsBin
     _publisher?.addListener(_changed);
     WidgetsBinding.instance.addObserver(this);
     // La orientación no se fija aquí: la gestiona OrientacionApp (vertical
-    // mientras no transmite, la posición física del teléfono al transmitir).
+    // siempre; la posición física del teléfono solo fija la rotación del video).
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _restorePreview();
       // Se pide al entrar, con su explicación: es el momento en que el usuario

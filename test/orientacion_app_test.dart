@@ -35,41 +35,56 @@ void main() {
     expect(aplicadas.last, ['DeviceOrientation.portraitUp']);
   });
 
-  test('transmitiendo manda la posición física, aunque sea la pestaña Cámara', () async {
-    o.setPestanaCamara(true);
-    final inicio = o.iniciarTransmision(esperaGiro: Duration.zero);
-    o.muestra(0.3, 9.7, 0.5); // teléfono de pie
+  test('transmitiendo, la interfaz sigue en vertical aunque el teléfono esté acostado', () async {
+    final inicio = o.iniciarTransmision();
+    o.muestra(9.6, 0.4, 0.5); // acostado, girado a la izquierda
     await inicio;
     expect(o.deseada(), [DeviceOrientation.portraitUp]);
+    expect(aplicadas.every((a) => a.length == 1 && a.first == 'DeviceOrientation.portraitUp'), isTrue);
+    // La posición física solo fija la rotación del video.
+    expect(o.gradosFisicos, 90);
+    // La pestaña Cámara sí va en horizontal, y al salir vuelve la vertical.
+    o.setPestanaCamara(true);
+    expect(aplicadas.last, ['DeviceOrientation.landscapeLeft', 'DeviceOrientation.landscapeRight']);
+    o.setPestanaCamara(false);
     expect(aplicadas.last, ['DeviceOrientation.portraitUp']);
     o.finTransmision();
-    expect(aplicadas.last, ['DeviceOrientation.landscapeLeft', 'DeviceOrientation.landscapeRight']);
   });
 
-  test('un giro físico sostenido cambia la pantalla y pide reiniciar la sesión', () async {
+  test('un giro físico sostenido pide reiniciar la sesión sin girar la pantalla', () async {
     DeviceOrientation? reiniciada;
     o.alCambiarFisicaTransmitiendo = (n) => reiniciada = n;
-    final inicio = o.iniciarTransmision(esperaGiro: Duration.zero);
+    final inicio = o.iniciarTransmision();
     o.muestra(0.2, 9.8, 0.3);
     await inicio;
+    expect(o.gradosFisicos, 0);
     final t0 = DateTime(2026, 10, 5, 12);
     // Un movimiento breve no cuenta.
-    o.muestra(9.6, 0.4, 0.5, ahora: t0);
+    o.muestra(-9.6, 0.4, 0.5, ahora: t0);
     o.muestra(0.2, 9.8, 0.3, ahora: t0.add(const Duration(milliseconds: 300)));
     expect(reiniciada, isNull);
     // Girado y quieto: a los 0.8 s se adopta.
-    o.muestra(9.6, 0.4, 0.5, ahora: t0.add(const Duration(seconds: 1)));
-    o.muestra(9.6, 0.4, 0.5, ahora: t0.add(const Duration(milliseconds: 1900)));
-    expect(o.deseada(), [DeviceOrientation.landscapeLeft]);
-    expect(reiniciada, DeviceOrientation.landscapeLeft);
+    o.muestra(-9.6, 0.4, 0.5, ahora: t0.add(const Duration(seconds: 1)));
+    o.muestra(-9.6, 0.4, 0.5, ahora: t0.add(const Duration(milliseconds: 1900)));
+    expect(reiniciada, DeviceOrientation.landscapeRight);
+    expect(o.gradosFisicos, 270);
+    expect(o.deseada(), [DeviceOrientation.portraitUp]);
   });
 
   test('sobre la mesa no se cambia nada', () async {
-    final inicio = o.iniciarTransmision(esperaGiro: Duration.zero);
+    final inicio = o.iniciarTransmision();
     o.muestra(0.1, 9.8, 0.2);
     await inicio;
     o.muestra(0.2, 0.3, 9.8, ahora: DateTime(2026));
     o.muestra(0.2, 0.3, 9.8, ahora: DateTime(2026, 1, 1, 0, 0, 5));
+    expect(o.gradosFisicos, 0);
     expect(o.deseada(), [DeviceOrientation.portraitUp]);
+  });
+
+  test('el clip a pantalla completa va en horizontal y al cerrarlo vuelve la vertical', () {
+    o.setVideoCompleto(true);
+    expect(o.deseada(), [DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight]);
+    o.setVideoCompleto(false);
+    expect(aplicadas.last, ['DeviceOrientation.portraitUp']);
   });
 }

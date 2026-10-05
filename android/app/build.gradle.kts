@@ -69,6 +69,9 @@ kotlin {
 
 dependencies {
     testImplementation("junit:junit:4.13.2")
+    // Solo para compilar RotacionCamara: la librería la trae flutter_webrtc
+    // (misma versión), pero como dependencia interna no la expone a la app.
+    compileOnly("io.github.webrtc-sdk:android:150.7871.01")
 }
 
 flutter {

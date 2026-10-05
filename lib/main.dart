@@ -134,8 +134,9 @@ class _VigiShieldAppState extends State<VigiShieldApp> {
     );
     _capturas = CapturaCamara(_storage);
     _mobilePublisher.addListener(_alCambiarTransmision);
-    // Teléfono girado mientras transmite: la pantalla ya giró con él; se
-    // reinicia la sesión para que el video siga derecho y con tamaño estable.
+    // Teléfono girado mientras transmite: se reinicia la sesión para que el
+    // video arranque con la rotación nueva y un tamaño estable (la interfaz
+    // sigue en vertical; la rotación del video se fija aparte).
     OrientacionApp.instance.alCambiarFisicaTransmitiendo = (_) => Future<void>.delayed(
         const Duration(milliseconds: 1200), _mobilePublisher.reiniciar);
     _validationProvider = ValidationProvider(

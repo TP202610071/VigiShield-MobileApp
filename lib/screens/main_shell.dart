@@ -6,9 +6,8 @@ import '../providers/ui_provider.dart';
 import '../widgets/vs_bottom_nav.dart';
 
 /// Le dice a [OrientacionApp] si la pestaña Cámara es lo que se ve (para
-/// ponerla en horizontal). La decisión final es de OrientacionApp: mientras el
-/// teléfono transmite manda su posición física. Las pantallas no fijan la
-/// orientación por su cuenta, o se pelean entre ellas.
+/// ponerla en horizontal; todo lo demás va en vertical, transmita o no). Las
+/// pantallas no fijan la orientación por su cuenta, o se pelean entre ellas.
 class MainShell extends StatefulWidget {
   final StatefulNavigationShell navigationShell;
 

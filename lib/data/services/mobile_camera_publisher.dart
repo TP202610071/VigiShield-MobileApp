@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import '../../providers/session_scoped.dart';
+import '../../core/orientation/orientacion_app.dart';
+import 'rotacion_camara.dart';
 
 class MobilePublishAnswer {
   final String sessionId;
@@ -67,6 +69,12 @@ class WebRtcCameraCapture implements MobileCameraCapture {
         'width': {'ideal': 1280, 'min': 640}, 'height': {'ideal': 720, 'min': 360},
         'frameRate': {'ideal': 24, 'max': 30}},
     });
+    // La interfaz se queda en vertical aunque el teléfono esté acostado: la
+    // rotación del video se fija con la posición física, no con la pantalla.
+    for (final track in _stream!.getVideoTracks()) {
+      await RotacionCamara.fijar(track,
+          grados: OrientacionApp.instance.gradosFisicos, frontal: front);
+    }
     _peer = await createPeerConnection({'sdpSemantics': 'unified-plan', 'iceServers': []});
     final capabilities = await getRtpSenderCapabilities('video');
     final codecs = (capabilities.codecs ?? <RTCRtpCodecCapability>[])
