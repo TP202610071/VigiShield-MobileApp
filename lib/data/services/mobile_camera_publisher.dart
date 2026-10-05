@@ -8,6 +8,33 @@ class MobilePublishAnswer {
   const MobilePublishAnswer(this.sessionId, this.sdp);
 }
 
+/// Comprueba que la oferta sea exactamente una pista de video y nada más.
+///
+/// Devuelve el problema encontrado, o null si la oferta sirve. El servidor
+/// aplica la misma regla, pero fallar aquí ahorra un viaje y, sobre todo, deja
+/// un mensaje que se entiende: antes el teléfono solo decía que no se pudo.
+///
+/// La garantía de "sin audio" es parte del trato con los participantes de la
+/// validación: la cámara de su casa no puede acabar grabando conversaciones.
+String? problemaDeOferta(String sdp) {
+  if (!sdp.startsWith('v=0\r\n') && !sdp.startsWith('v=0\n')) {
+    return 'La oferta de video no tiene el formato esperado.';
+  }
+  final medios = sdp
+      .replaceAll('\r\n', '\n')
+      .split('\n')
+      .where((l) => l.startsWith('m='))
+      .toList();
+  if (medios.any((m) => m.startsWith('m=audio'))) {
+    return 'La oferta incluye audio y esta cámara solo debe enviar video.';
+  }
+  if (medios.length != 1 || !medios.first.startsWith('m=video ')) {
+    return 'La oferta debe llevar una sola pista de video '
+        '(lleva ${medios.length}).';
+  }
+  return null;
+}
+
 abstract interface class MobilePublishTransport {
   Future<MobilePublishAnswer> publish(String cameraId, String sdp);
   Future<void> unpublish(String cameraId, String sessionId);
@@ -55,12 +82,21 @@ class WebRtcCameraCapture implements MobileCameraCapture {
       if (state == RTCIceGatheringState.RTCIceGatheringStateComplete && !gathered.isCompleted) gathered.complete();
     };
     try {
-      await peer.setLocalDescription(await peer.createOffer());
+      // Sin constraints, flutter_webrtc usa OfferToReceiveAudio/Video = true y
+      // añade dos líneas de recepción (una de ellas de AUDIO) encima de nuestro
+      // transceptor sendonly. La oferta salía con tres m= y el servidor la
+      // rechazaba con "Solo se permite video.". Esto solo publica: no recibe nada.
+      await peer.setLocalDescription(await peer.createOffer(const {
+        'mandatory': {'OfferToReceiveAudio': false, 'OfferToReceiveVideo': false},
+        'optional': <dynamic>[],
+      }));
       if (peer.iceGatheringState != RTCIceGatheringState.RTCIceGatheringStateComplete) {
         await gathered.future.timeout(timeout, onTimeout: () => throw TimeoutException('No se completó ICE. Revisa la red e intenta de nuevo.'));
       }
       final description = await peer.getLocalDescription();
       if (description?.sdp == null || description!.sdp!.isEmpty) throw StateError('Oferta SDP vacía.');
+      final problema = problemaDeOferta(description.sdp!);
+      if (problema != null) throw StateError(problema);
       return description.sdp!;
     } finally { peer.onIceGatheringState = null; }
   }
