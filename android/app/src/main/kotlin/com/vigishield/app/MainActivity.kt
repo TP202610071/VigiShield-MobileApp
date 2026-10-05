@@ -66,6 +66,21 @@ class MainActivity : FlutterFragmentActivity() {
                         val service = checkNotNull(ScreenBufferService.instance) { "Screen buffer not running" }
                         service.mark(id) { metadata, error -> if (error != null) result.error("screen_event", error, null) else result.success(metadata) }
                     }
+                    // Grabacion continua: del boton de grabar al de detener, para
+                    // dejar evidencia de una sesion de validacion entera.
+                    "startScreenRecording" -> {
+                        val id = call.argument<String>("eventId") ?: "sesion"
+                        val service = checkNotNull(ScreenBufferService.instance) { "Screen buffer not running" }
+                        service.startContinuous(id) { metadata, error ->
+                            if (error != null) result.error("screen_recording", error, null) else result.success(metadata)
+                        }
+                    }
+                    "stopScreenRecording" -> {
+                        val service = checkNotNull(ScreenBufferService.instance) { "Screen buffer not running" }
+                        service.stopContinuous { metadata, error ->
+                            if (error != null) result.error("screen_recording", error, null) else result.success(metadata)
+                        }
+                    }
                     "listScreenClips" -> result.success(ScreenBufferService.list(this))
                     "deleteScreenClip" -> {
                         val file = ClipPaths.owned(ScreenBufferService.directory(this), requireNotNull(call.argument<String>("path")))

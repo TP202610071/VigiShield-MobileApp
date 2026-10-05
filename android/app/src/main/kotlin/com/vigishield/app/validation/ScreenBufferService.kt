@@ -31,6 +31,11 @@ class ScreenBufferService : Service() {
          * arranque ya encolado seguia adelante tras cancelar.
          */
         val gate = CaptureSessionGate()
+        /** Tope de un clip de evento (ventana de 20 s). */
+        const val LIMITE_CLIP = 32L * 1024 * 1024
+        /** Tope de una grabacion continua: ~1 h a 720p, sin llenar el telefono. */
+        const val LIMITE_CONTINUO = 512L * 1024 * 1024
+
         fun directory(context: Context) = File(context.filesDir, "validation_screen_clips").apply { mkdirs() }
         fun list(context: Context): List<Map<String, Any?>> = directory(context).listFiles().orEmpty()
             .filter { it.extension == "json" }.mapNotNull { file -> runCatching {
@@ -60,7 +65,14 @@ class ScreenBufferService : Service() {
             if (w != sourceWidth || h != sourceHeight) shutdown("display_resized")
         }
     }
-    private inner class PendingClip(val eventId: String, val eventUs: Long, samples: List<EncodedSample>) {
+    /**
+     * Un clip en curso. Con [continuo] no se cierra solo a los 10 s: sigue
+     * grabando hasta que el usuario pulse detener, que es lo que hace falta
+     * para dejar evidencia de una sesion de validacion entera.
+     */
+    private inner class PendingClip(val eventId: String, val eventUs: Long,
+                                    samples: List<EncodedSample>,
+                                    val continuo: Boolean = false) {
         val file = File(directory(this@ScreenBufferService), "${UUID.randomUUID()}.mp4")
         val createdAtMs = System.currentTimeMillis()
         val muxer = MediaMuxer(file.absolutePath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
@@ -165,8 +177,11 @@ class ScreenBufferService : Service() {
                                 ring.add(sample)
                                 clips.toList().forEach { clip ->
                                     if (sample.ptsUs > clip.lastUs) clip.write(sample)
-                                    if (sample.ptsUs >= clip.eventUs + 10_000_000) finish(clip, null)
-                                    else if (clip.bytes > 32 * 1024 * 1024) finish(clip, "size_limit")
+                                    // El tope de tamano se respeta siempre: sin el, una
+                                    // sesion larga llenaria el almacenamiento del telefono.
+                                    val tope = if (clip.continuo) LIMITE_CONTINUO else LIMITE_CLIP
+                                    if (clip.bytes > tope) finish(clip, "size_limit")
+                                    else if (!clip.continuo && sample.ptsUs >= clip.eventUs + 10_000_000) finish(clip, null)
                                 }
                             }
                         } finally { codec.releaseOutputBuffer(index, false) }
@@ -191,6 +206,39 @@ class ScreenBufferService : Service() {
             } catch (e: Exception) { main.post { callback(null, e.message) } }
         }
     }
+    /**
+     * Empieza una grabacion continua de la pantalla.
+     *
+     * Arranca con lo que haya en el anillo, asi que incluye unos segundos
+     * previos a pulsar el boton. Solo puede haber una a la vez.
+     */
+    fun startContinuous(eventId: String, callback: (Map<String, Any?>?, String?) -> Unit) {
+        worker.post {
+            try {
+                require(running && !closing && format != null) { "Screen buffer is not ready" }
+                require(clips.none { it.continuo }) { "Ya hay una grabacion en curso" }
+                require(clips.size < 3) { "At most three simultaneous screen clips" }
+                val ahora = System.nanoTime() / 1000
+                val samples = ring.before(ahora)
+                require(samples.isNotEmpty()) { "Waiting for first screen keyframe" }
+                val clip = PendingClip(eventId, ahora, samples, continuo = true)
+                clips.add(clip)
+                main.post { callback(clip.metadata("recording", null), null) }
+            } catch (e: Exception) { main.post { callback(null, e.message) } }
+        }
+    }
+
+    /** Cierra la grabacion continua y devuelve su ficha. */
+    fun stopContinuous(callback: (Map<String, Any?>?, String?) -> Unit) {
+        worker.post {
+            val clip = clips.firstOrNull { it.continuo }
+            if (clip == null) { main.post { callback(null, "No hay ninguna grabacion en curso") }; return@post }
+            val ficha = clip.metadata("complete", null)
+            finish(clip, null)
+            main.post { callback(ficha, null) }
+        }
+    }
+
     private fun finish(clip: PendingClip, reason: String?) {
         clips.remove(clip)
         runCatching { clip.finish(reason) }.onFailure { lastStopReason = "clip_write_failed: ${it.message}" }
