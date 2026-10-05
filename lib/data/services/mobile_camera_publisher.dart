@@ -1,6 +1,7 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
+import '../../providers/session_scoped.dart';
 
 class MobilePublishAnswer {
   final String sessionId;
@@ -120,12 +121,42 @@ class WebRtcCameraCapture implements MobileCameraCapture {
 }
 
 /// Serializes startup/teardown; a late HTTP answer is still deleted after stop.
-class MobileCameraPublisher extends ChangeNotifier {
+class MobileCameraPublisher extends ChangeNotifier
+    with WidgetsBindingObserver
+    implements SessionScoped {
   final MobilePublishTransport transport;
   final MobileCameraCapture capture;
   final Duration iceTimeout;
+
+  /// El ciclo de vida lo vigila el PUBLICADOR, no la pantalla.
+  ///
+  /// Cuando lo hacia la pantalla, salir de ella la desmontaba y ya nadie
+  /// paraba la transmision: la sesion quedaba viva en el servidor y bloqueaba
+  /// la camara durante dos horas con un 409. Aqui se detiene siempre que la
+  /// app deja de estar en primer plano, haya la pantalla que haya encima.
+  ///
+  /// [observarCicloDeVida] se desactiva en las pruebas, que manejan el ciclo
+  /// de vida a mano.
   MobileCameraPublisher({required this.transport, MobileCameraCapture? capture,
-    this.iceTimeout = const Duration(seconds: 12)}) : capture = capture ?? WebRtcCameraCapture();
+    this.iceTimeout = const Duration(seconds: 12), bool observarCicloDeVida = true})
+      : capture = capture ?? WebRtcCameraCapture() {
+    if (observarCicloDeVida) {
+      _observando = true;
+      WidgetsBinding.instance.addObserver(this);
+    }
+  }
+  bool _observando = false;
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // `inactive` llega tambien al girar la pantalla o al bajar el panel de
+    // notificaciones; solo se corta cuando la app se va de verdad.
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.hidden ||
+        state == AppLifecycleState.detached) {
+      unawaited(stop());
+    }
+  }
   String? _cameraId, _sessionId;
   String? error;
   bool isPublishing = false;
@@ -191,7 +222,13 @@ class MobileCameraPublisher extends ChangeNotifier {
     await _cleanup();
     _notify();
   }
+  /// Cerrar sesion corta la transmision: la camara de una cuenta no puede
+  /// seguir publicando cuando entra otra.
+  @override
+  void clearSession() { unawaited(stop()); }
+
   @override void dispose() {
+    if (_observando) WidgetsBinding.instance.removeObserver(this);
     _disposed = true;
     unawaited(stop());
     super.dispose();

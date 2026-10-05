@@ -143,7 +143,8 @@ class _VigiShieldAppState extends State<VigiShieldApp> {
     // Al cerrar sesión hay que vaciar estos: viven toda la vida de la app y si
     // no, la siguiente cuenta hereda cámaras, eventos y alertas de la anterior.
     _authProvider.registerSessionScoped(
-        [_eventProvider, _systemProvider, _cameraProvider, _validationProvider]);
+        [_eventProvider, _systemProvider, _cameraProvider, _validationProvider,
+          _mobilePublisher]);
     _router = createRouter(_authProvider);
     _initDeepLinks();
   }

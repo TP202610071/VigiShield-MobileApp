@@ -42,7 +42,7 @@ void main() {
   test('permission failure closes capture without publishing', () async {
     final capture = Capture()..openError = StateError('permission denied');
     final transport = Transport();
-    final publisher = MobileCameraPublisher(transport: transport, capture: capture);
+    final publisher = MobileCameraPublisher(transport: transport, capture: capture, observarCicloDeVida: false);
     await publisher.start('camera', front: false);
     expect(publisher.error, contains('permission denied'));
     expect(capture.events.last, 'close');
@@ -53,7 +53,7 @@ void main() {
     final capture = Capture()..offerError = TimeoutException('ICE');
     final transport = Transport();
     final publisher = MobileCameraPublisher(transport: transport, capture: capture,
-      iceTimeout: const Duration(milliseconds: 50));
+      iceTimeout: const Duration(milliseconds: 50), observarCicloDeVida: false);
     await publisher.start('camera', front: false);
     expect(capture.offeredTimeout, const Duration(milliseconds: 50));
     expect(publisher.error, contains('ICE'));
@@ -64,7 +64,7 @@ void main() {
   test('remote answer failure deletes the allocated session', () async {
     final capture = Capture()..answerError = StateError('bad SDP');
     final transport = Transport();
-    final publisher = MobileCameraPublisher(transport: transport, capture: capture);
+    final publisher = MobileCameraPublisher(transport: transport, capture: capture, observarCicloDeVida: false);
     await publisher.start('camera', front: false);
     expect(publisher.isPublishing, isFalse);
     expect(publisher.error, contains('bad SDP'));
@@ -74,7 +74,7 @@ void main() {
   test('dispose while permission pending closes late capture without signaling', () async {
     final capture = Capture()..opening = Completer<void>();
     final transport = Transport();
-    final publisher = MobileCameraPublisher(transport: transport, capture: capture);
+    final publisher = MobileCameraPublisher(transport: transport, capture: capture, observarCicloDeVida: false);
     final starting = publisher.start('camera', front: false);
     publisher.dispose();
     capture.opening!.complete();
@@ -88,7 +88,7 @@ void main() {
   });
   test('failed deletion blocks a new camera until old session is cleaned', () async {
     final transport = Transport();
-    final publisher = MobileCameraPublisher(transport: transport, capture: Capture());
+    final publisher = MobileCameraPublisher(transport: transport, capture: Capture(), observarCicloDeVida: false);
     await publisher.start('old', front: false);
     transport.failDelete = true;
     await publisher.stop();
@@ -106,7 +106,7 @@ void main() {
   test('stop during signaling deletes late session without applying answer', () async {
     final capture = Capture();
     final transport = Transport()..pending = Completer<MobilePublishAnswer>();
-    final publisher = MobileCameraPublisher(transport: transport, capture: capture);
+    final publisher = MobileCameraPublisher(transport: transport, capture: capture, observarCicloDeVida: false);
     final starting = publisher.start('camera', front: true);
     await Future<void>.delayed(Duration.zero);
     final stopping = publisher.stop();
@@ -120,7 +120,7 @@ void main() {
   });
   test('explicit start publishes and stop releases capture and server session', () async {
     final capture = Capture(); final transport = Transport();
-    final publisher = MobileCameraPublisher(transport: transport, capture: capture);
+    final publisher = MobileCameraPublisher(transport: transport, capture: capture, observarCicloDeVida: false);
     expect(capture.events, isEmpty);
     await publisher.start('camera', front: false);
     expect(publisher.isPublishing, isTrue);
