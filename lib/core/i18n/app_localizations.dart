@@ -496,6 +496,37 @@ class AppStrings {
   String minutesAgo(int m) => _('Hace $m min', '$m min ago');
   String hoursAgo(int h) => _('Hace $h h', '$h h ago');
 
+  // ── Alerta de emergencia ────────────────────────────────────────────────────
+  String get emergencyAlert => _('Alerta de emergencia', 'Emergency alert');
+  String get emergencyAlertHint => _(
+      'Si una cámara detecta riesgo de intrusión sostenido, la app ocupa la pantalla, suena y vibra. Si no la desactivas a tiempo, llama al número que indiques.',
+      'If a camera detects sustained intrusion risk, the app takes over the screen, sounds and vibrates. If you do not dismiss it in time, it calls the number you set.');
+  String get emergencyEnabled => _('Activar alerta de emergencia', 'Enable emergency alert');
+  String get emergencyForegroundNote => _(
+      'Funciona mientras la app está abierta.',
+      'Works while the app is open.');
+  String get emergencyPhone => _('Número a llamar', 'Number to call');
+  String get emergencyPhoneHint => _('Ej. +51 999 999 999', 'E.g. +1 555 123 4567');
+  String get emergencyPhoneInvalid => _(
+      'Introduce un teléfono personal completo (7 a 15 dígitos). No se permiten números cortos de emergencia.',
+      'Enter a full personal phone number (7 to 15 digits). Short emergency numbers are not allowed.');
+  String get emergencyAutoCall => _('Llamar si no se desactiva', 'Call if not dismissed');
+  String get emergencyIosCallNote => _(
+      'En iPhone el sistema pide confirmar la llamada con un toque: iOS no permite que una app llame sola.',
+      'On iPhone the system asks you to confirm the call with one tap: iOS does not let apps place calls on their own.');
+  String get emergencyVolume => _('Volumen de la alarma', 'Alarm volume');
+  String get emergencySustain => _('Riesgo sostenido antes de alertar', 'Sustained risk before alerting');
+  String get emergencyCountdown => _('Tiempo para desactivarla', 'Time to dismiss');
+  String seconds(int s) => _('$s s', '$s s');
+  String get emergencyTest => _('Probar alerta (no llama)', 'Test alert (no call)');
+  String get emergencyTitle => _('ALERTA DE EMERGENCIA', 'EMERGENCY ALERT');
+  String get emergencyTestTitle => _('PRUEBA DE ALERTA', 'ALERT TEST');
+  String get emergencyRisk => _('Riesgo de intrusión detectado', 'Intrusion risk detected');
+  String emergencyWillCall(String n) => _('Al llegar a cero se llamará a $n', 'At zero it will call $n');
+  String get emergencyNoCall => _('No se llamará a nadie', 'Nobody will be called');
+  String get emergencyDismiss => _('DESACTIVAR ALERTA', 'DISMISS ALERT');
+  String get emergencyCallFailed => _('No se pudo iniciar la llamada.', 'The call could not be started.');
+
   // ── Date formats (intl patterns + locale tag) ───────────────────────────────
   String get localeCode => en ? 'en' : 'es';
   String get dateFormatLong => en ? 'EEEE, MMMM d' : "EEEE d 'de' MMMM";

@@ -1,9 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
-    <!-- Build de tienda: fuera las herramientas de validacion del OE4 (llamada
-         de prueba y grabacion de pantalla). No se esconden, no se distribuyen:
+    <!-- Build de tienda: fuera las herramientas de validacion del OE4 (grabacion
+         de pantalla). CALL_PHONE se queda: la alerta de emergencia la usa
+         con el numero que pone el usuario. No se esconden, no se distribuyen:
          la pantalla de validacion tampoco existe sin VIGISHIELD_VALIDATION. -->
-    <uses-permission android:name="android.permission.CALL_PHONE" tools:node="remove"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" tools:node="remove"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" tools:node="remove"/>
     <!-- Lo declara flutter_webrtc, pero la camara del telefono transmite sin

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'validation_screen.dart';
+import 'emergency_settings_screen.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -160,6 +161,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ],
               _SectionLabel(l10n.sectionPreferences),
               const SizedBox(height: 8),
+              // De cada teléfono, no del hogar: la ve también un secundario.
+              _SettingsTile(
+                icon: Icons.notifications_active_outlined,
+                label: l10n.emergencyAlert,
+                onTap: () => Navigator.of(context, rootNavigator: true).push(
+                    MaterialPageRoute<void>(builder: (_) => const EmergencySettingsScreen())),
+              ),
+              const SizedBox(height: 16),
               _LanguageTile(),
               const SizedBox(height: 24),
 

@@ -30,6 +30,7 @@ class MainActivity : FlutterFragmentActivity() {
     }
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        emergencyChannel(flutterEngine)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "vigishield/validation").setMethodCallHandler { call, result ->
             try {
                 when (call.method) {
@@ -112,6 +113,39 @@ class MainActivity : FlutterFragmentActivity() {
                 if (screenResult === result) screenResult = null
                 if (permissionResult === result) permissionResult = null
                 result.error("validation_error", e.message, null)
+            }
+        }
+    }
+    /**
+     * Alerta de emergencia del producto. A diferencia de la llamada de prueba
+     * de validacion, el numero lo pone el usuario; aun asi se rechazan los
+     * numeros cortos (105, 911, 112...): ninguna app debe llamarlos sola.
+     * Sin permiso CALL_PHONE se abre el marcador con el numero puesto.
+     */
+    private fun emergencyChannel(flutterEngine: FlutterEngine) {
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "vigishield/emergency").setMethodCallHandler { call, result ->
+            try {
+                when (call.method) {
+                    "requestCallPermission" -> {
+                        if (callPermission()) result.success(true)
+                        else if (permissionResult != null) result.success(false)
+                        else { permissionResult = result; requestPermissions(arrayOf(Manifest.permission.CALL_PHONE), 7403) }
+                    }
+                    "placeCall" -> {
+                        val raw = requireNotNull(call.argument<String>("number"))
+                        val digits = raw.filter { it.isDigit() }
+                        check(digits.length in 7..15) { "Invalid number" }
+                        val number = (if (raw.trim().startsWith("+")) "+" else "") + digits
+                        check(packageManager.hasSystemFeature(PackageManager.FEATURE_TELEPHONY)) { "Telephony unavailable" }
+                        val action = if (callPermission()) Intent.ACTION_CALL else Intent.ACTION_DIAL
+                        startActivity(Intent(action, Uri.fromParts("tel", number, null)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                        result.success(true)
+                    }
+                    else -> result.notImplemented()
+                }
+            } catch (e: Exception) {
+                if (permissionResult === result) permissionResult = null
+                result.error("emergency_error", e.message, null)
             }
         }
     }
