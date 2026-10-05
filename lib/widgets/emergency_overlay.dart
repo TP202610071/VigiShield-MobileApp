@@ -45,7 +45,7 @@ class EmergencyOverlay extends StatelessWidget {
                               color: Colors.white, height: 1)),
                       const SizedBox(height: 16),
                       Text(
-                        p.testing || number == null
+                        number == null
                             ? l10n.emergencyNoCall
                             : l10n.emergencyWillCall(number),
                         textAlign: TextAlign.center,

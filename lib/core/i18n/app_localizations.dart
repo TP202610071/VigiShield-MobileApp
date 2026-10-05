@@ -518,7 +518,10 @@ class AppStrings {
   String get emergencySustain => _('Riesgo sostenido antes de alertar', 'Sustained risk before alerting');
   String get emergencyCountdown => _('Tiempo para desactivarla', 'Time to dismiss');
   String seconds(int s) => _('$s s', '$s s');
-  String get emergencyTest => _('Probar alerta (no llama)', 'Test alert (no call)');
+  String get emergencyTest => _('Probar alerta', 'Test alert');
+  String get emergencyTestHint => _(
+      'Muestra la alerta 10 segundos con sonido y vibración. Si activaste la llamada, al terminar llamará a tu número.',
+      'Shows the alert for 10 seconds with sound and vibration. If calling is on, it calls your number at the end.');
   String get emergencyTitle => _('ALERTA DE EMERGENCIA', 'EMERGENCY ALERT');
   String get emergencyTestTitle => _('PRUEBA DE ALERTA', 'ALERT TEST');
   String get emergencyRisk => _('Riesgo de intrusión detectado', 'Intrusion risk detected');

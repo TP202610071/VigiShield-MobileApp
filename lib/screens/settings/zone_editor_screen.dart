@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
@@ -14,7 +15,7 @@ import '../../providers/camera_provider.dart';
 
 /// Editor de Zonas de Interés (ROI): el usuario dibuja polígonos (puerta, reja,
 /// calle…) sobre un frame real de su cámara. Las coordenadas se guardan
-/// NORMALIZADAS (0..1). El backend de IA (CAIEE) usa estas zonas como contexto
+/// NORMALIZADAS (0..1). El motor de evaluación contextual usa estas zonas como contexto
 /// para estimar intención con mayor precisión y menos falsos positivos.
 class ZoneEditorScreen extends StatefulWidget {
   final String cameraId;
@@ -67,34 +68,64 @@ class _ZoneEditorScreenState extends State<ZoneEditorScreen> {
     return null;
   }
 
-  /// Intenta traer UN frame anotado del backend de IA como fondo. Best-effort:
-  /// si no hay frame (cámara sin actividad / sin permiso), se dibuja sobre un
-  /// lienzo oscuro — las zonas funcionan igual.
+  Timer? _refresco;
+  bool _pidiendo = false;
+  int _intentos = 0;
+
+  /// Fondo del editor: el cuadro anotado más reciente de la IA, refrescado
+  /// cada 1.5 s mientras se dibuja.
+  ///
+  /// El servidor solo guarda cuadros de las cámaras que alguien está mirando,
+  /// así que la primera petición llega vacía (pero marca la cámara como
+  /// mirada). Antes se pedía una sola vez y el fondo no aparecía hasta pasar
+  /// por la pestaña Cámara.
   Future<void> _loadBackground(CameraConfigModel? cam) async {
-    try {
-      final hls = cam?.hlsViewUrl;
-      if (hls == null || hls.isEmpty) {
-        setState(() => _loadingBg = false);
-        return;
-      }
-      final host = Uri.parse(hls).host;
-      final token = await AuthStorage().getToken();
-      final resp = await Dio().get<List<int>>(
-        'https://$host/ai/frame/${widget.cameraId}',
-        options: Options(
-          responseType: ResponseType.bytes,
-          headers: token != null ? {'Authorization': 'Bearer $token'} : null,
-          receiveTimeout: const Duration(seconds: 8),
-        ),
-      );
-      if (mounted && resp.statusCode == 200 && resp.data != null) {
-        setState(() => _bg = Uint8List.fromList(resp.data!));
-      }
-    } catch (_) {
-      // sin fondo → lienzo oscuro
-    } finally {
+    final hls = cam?.hlsViewUrl;
+    if (hls == null || hls.isEmpty) {
       if (mounted) setState(() => _loadingBg = false);
+      return;
     }
+    final host = Uri.parse(hls).host;
+    final token = await AuthStorage().getToken();
+    final dio = Dio(BaseOptions(
+      connectTimeout: const Duration(seconds: 5),
+      receiveTimeout: const Duration(seconds: 8),
+      responseType: ResponseType.bytes,
+      headers: token != null ? {'Authorization': 'Bearer $token'} : null,
+      validateStatus: (_) => true,
+    ));
+    Future<void> pedir() async {
+      if (_pidiendo || !mounted) return;
+      _pidiendo = true;
+      try {
+        final resp = await dio.get<List<int>>('https://$host/ai/frame/${widget.cameraId}');
+        if (mounted && resp.statusCode == 200 && (resp.data?.isNotEmpty ?? false)) {
+          setState(() {
+            _bg = Uint8List.fromList(resp.data!);
+            _loadingBg = false;
+          });
+        }
+      } catch (_) {
+        // sin red momentánea: se reintenta en el siguiente ciclo
+      } finally {
+        _pidiendo = false;
+        _intentos++;
+        // ~15 s sin imagen: la cámara no está transmitiendo; lienzo oscuro.
+        if (mounted && _bg == null && _intentos >= 10 && _loadingBg) {
+          setState(() => _loadingBg = false);
+        }
+      }
+    }
+
+    await pedir();
+    if (!mounted) return;
+    _refresco = Timer.periodic(const Duration(milliseconds: 1500), (_) => pedir());
+  }
+
+  @override
+  void dispose() {
+    _refresco?.cancel();
+    super.dispose();
   }
 
   void _onTapDown(TapDownDetails d, Size box) {
@@ -288,15 +319,21 @@ class _ZoneEditorScreenState extends State<ZoneEditorScreen> {
                   onTapDown: (d) => _onTapDown(d, box),
                   child: Stack(fit: StackFit.expand, children: [
                     if (_bg != null)
-                      Image.memory(_bg!, fit: BoxFit.fill)
+                      Image.memory(_bg!, fit: BoxFit.fill, gaplessPlayback: true)
                     else if (_loadingBg)
                       const Center(
                           child: CircularProgressIndicator(
                               color: AppColors.accent, strokeWidth: 2))
                     else
-                      const Center(
-                          child: Icon(Icons.videocam_off_outlined,
-                              color: AppColors.textMuted, size: 40)),
+                      Center(
+                          child: Column(mainAxisSize: MainAxisSize.min, children: [
+                        const Icon(Icons.videocam_off_outlined,
+                            color: AppColors.textMuted, size: 40),
+                        const SizedBox(height: 8),
+                        Text('Sin imagen: verifica que la cámara esté transmitiendo.',
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.inter(color: AppColors.textMuted, fontSize: 11)),
+                      ])),
                     CustomPaint(
                       painter: _ZonePainter(_zones, _current),
                       size: box,

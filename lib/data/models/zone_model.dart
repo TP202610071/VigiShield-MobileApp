@@ -23,7 +23,8 @@ class Zone {
         'polygon': points.map((p) => [p.dx, p.dy]).toList(),
       };
 
-  factory Zone.fromJson(Map<String, dynamic> j) {
+  factory Zone.fromJson(Map<String, dynamic> original) {
+    final j = _minusculas(original);
     final rawPoly = (j['polygon'] ?? j['points']) as List<dynamic>? ?? const [];
     final pts = <Offset>[];
     for (final p in rawPoly) {
@@ -46,14 +47,20 @@ class Zone {
   }
 }
 
+/// Claves en minúsculas. El backend guardó un tiempo las zonas en PascalCase
+/// ({"Type", "Polygon"}) y aquí se leían en minúsculas: la zona se guardaba
+/// pero al volver al editor aparecía vacía.
+Map<String, dynamic> _minusculas(Map<String, dynamic> m) =>
+    {for (final e in m.entries) e.key.toLowerCase(): e.value};
+
 /// Parsea el JSON crudo guardado en `CameraConfig.zonesJson`.
 /// Acepta `{version, zones:[...]}` o una lista directa. Nunca lanza.
 List<Zone> parseZonesJson(String? raw) {
   if (raw == null || raw.trim().isEmpty) return [];
   try {
     final decoded = jsonDecode(raw);
-    final List<dynamic> items = decoded is Map
-        ? (decoded['zones'] as List<dynamic>? ?? const [])
+    final List<dynamic> items = decoded is Map<String, dynamic>
+        ? (_minusculas(decoded)['zones'] as List<dynamic>? ?? const [])
         : (decoded is List ? decoded : const []);
     return items
         .whereType<Map<String, dynamic>>()

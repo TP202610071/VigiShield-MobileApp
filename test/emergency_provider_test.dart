@@ -23,8 +23,23 @@ void main() {
 
   late double now;
   late String state;
+  late int persons;
+  late bool offline;
   late _FakeEffects fx;
   late EmergencyProvider p;
+
+  EmergencyProvider crear(EmergencySettings s) => EmergencyProvider(
+        readSettings: () async => s.encode(),
+        writeSettings: (_) async {},
+        effects: fx,
+        canMonitor: () => true,
+        loadCameras: () async => [_cam],
+        loadStatus: (_) async {
+          if (offline) throw Exception('sin datos');
+          return {'state': 'ok', 'ts': now, 'persons': persons, 'intent': {'state': state}};
+        },
+        clock: () => now,
+      );
 
   Future<void> step(double seconds) async {
     now += seconds;
@@ -36,17 +51,10 @@ void main() {
   setUp(() {
     now = 1000;
     state = 'calm';
+    persons = 1;
+    offline = false;
     fx = _FakeEffects();
-    p = EmergencyProvider(
-      readSettings: () async => const EmergencySettings(
-          phone: '+51 999 888 777', sustainSeconds: 5, countdownSeconds: 15).encode(),
-      writeSettings: (_) async {},
-      effects: fx,
-      canMonitor: () => true,
-      loadCameras: () async => [_cam],
-      loadStatus: (_) async => {'state': 'ok', 'ts': now, 'persons': 1, 'intent': {'state': state}},
-      clock: () => now,
-    );
+    p = crear(const EmergencySettings(phone: '+51 900 000 001', sustainSeconds: 5, countdownSeconds: 15));
   });
   tearDown(() => p.dispose());
 
@@ -59,10 +67,24 @@ void main() {
     expect(p.cameraName, 'Entrada');
     expect(fx.log, contains('start ${EmergencySettings.minVolume}'));
     for (var i = 0; i < 16; i++) { await step(1); }
-    expect(fx.calls, ['+51999888777']);
+    expect(fx.calls, ['+51900000001']);
     expect(p.counting, isFalse);
     // Sigue en riesgo pero ya llamó: no repite hasta volver a la calma.
     for (var i = 0; i < 30; i++) { await step(1); }
+    expect(fx.calls, hasLength(1));
+  });
+
+  test('si dejan de llegar datos, la cuenta atrás sigue hasta llamar', () async {
+    await p.load();
+    state = 'suspect';
+    for (var i = 0; i < 7; i++) { await step(1); }
+    expect(p.counting, isTrue);
+    final antes = p.remaining;
+    offline = true; // la cámara deja de responder
+    await step(3);
+    expect(p.counting, isTrue);
+    expect(p.remaining, lessThan(antes)); // el número sigue bajando, no se congela
+    for (var i = 0; i < 15; i++) { await step(1); }
     expect(fx.calls, hasLength(1));
   });
 
@@ -77,26 +99,28 @@ void main() {
     expect(fx.log.last, 'stop');
   });
 
-  test('una prueba suena pero nunca llama', () async {
+  test('la prueba dura 10 s y llama al terminar si la llamada está activa', () async {
     await p.load();
-    p.test();
+    await p.test();
     expect(p.counting, isTrue);
-    for (var i = 0; i < 12; i++) { await step(1); }
+    expect(p.remaining, EmergencyProvider.testSeconds);
+    for (var i = 0; i < 11; i++) { await step(1); }
     expect(p.counting, isFalse);
+    expect(fx.calls, ['+51900000001']);
+  });
+
+  test('la prueba no llama si la llamada está desactivada', () async {
+    p.dispose();
+    p = crear(const EmergencySettings(phone: '+51 900 000 001', autoCall: false));
+    await p.load();
+    await p.test();
+    for (var i = 0; i < 11; i++) { await step(1); }
     expect(fx.calls, isEmpty);
   });
 
   test('sin persona en cuadro no hay alerta', () async {
-    p.dispose();
-    p = EmergencyProvider(
-      readSettings: () async => const EmergencySettings(sustainSeconds: 5).encode(),
-      writeSettings: (_) async {},
-      effects: fx,
-      canMonitor: () => true,
-      loadCameras: () async => [_cam],
-      loadStatus: (_) async => {'state': 'ok', 'ts': now, 'persons': 0, 'intent': {'state': 'high_risk'}},
-      clock: () => now,
-    );
+    persons = 0;
+    state = 'high_risk';
     await p.load();
     for (var i = 0; i < 20; i++) { await step(1); }
     expect(p.counting, isFalse);

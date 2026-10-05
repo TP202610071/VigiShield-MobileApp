@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:vibration/vibration.dart';
@@ -34,13 +35,18 @@ class DeviceEmergencyEffects implements EmergencyEffects {
     _running = true;
     unawaited(WakelockPlus.enable());
     try {
-      // respectSilence:false — una alarma debe oírse aunque el iPhone tenga
-      // el interruptor de silencio puesto. El volumen lo decide el ajuste.
+      // respectSilence:false: una alarma debe oírse aunque el teléfono esté
+      // en silencio. stayAwake:false porque exige el permiso WAKE_LOCK, y sin
+      // él el reproductor no llegaba a arrancar (vibraba pero no sonaba); la
+      // pantalla ya se mantiene encendida con WakelockPlus.
       await _player.setAudioContext(
-          AudioContextConfig(respectSilence: false, stayAwake: true).build());
+          AudioContextConfig(respectSilence: false, stayAwake: false).build());
       await _player.setReleaseMode(ReleaseMode.loop);
       await _player.play(AssetSource('sounds/alarma.wav'), volume: volume);
-    } catch (_) {/* sin audio la alerta sigue: pantalla y vibración */}
+    } catch (e) {
+      // Sin audio la alerta sigue (pantalla y vibración), pero queda registrado.
+      debugPrint('[VS-EMERG] no se pudo reproducir la alarma: $e');
+    }
     if (await Vibration.hasVibrator()) {
       // Un pulso por segundo en vez de un patrón con repetición: iOS ignora la
       // repetición de patrones y así vibra igual en las dos plataformas.
