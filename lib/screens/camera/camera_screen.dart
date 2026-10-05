@@ -78,6 +78,9 @@ class _CameraScreenState extends State<CameraScreen>
   // Cámara cuyo video está abierto. Si la lista cambia y la seleccionada deja
   // de ser esta (por ejemplo, porque se borró), se cierra o se cambia.
   String? _camaraAbierta;
+  // El video de ejemplo conserva su cámara al pedir «Otro video»: lo que
+  // cambia es el stream. Sin comparar la clave seguía el video anterior.
+  String? _claveAbierta;
   bool _reabrirAlVolver = false;
   CameraProvider? _camaras;
   int _openGeneration = 0;
@@ -228,13 +231,14 @@ class _CameraScreenState extends State<CameraScreen>
       _gridControllers.remove(id);
     }
     final sel = provider.selectedCamera;
-    if (sel?.id == _camaraAbierta) return;
+    if (sel?.id == _camaraAbierta && sel?.streamKey == _claveAbierta) return;
     _log('camera list changed: $_camaraAbierta -> ${sel?.id}');
     _cancelRecoveryTimers();
     _stopAiFramePoller();
     unawaited(_player?.stop());
     setState(() {
       _camaraAbierta = null;
+      _claveAbierta = null;
       _aiFrame = null;
       _aiStatus = null;
       _hasVideo = false;
@@ -246,7 +250,15 @@ class _CameraScreenState extends State<CameraScreen>
       _reabrirAlVolver = true; // pestaña oculta: se abre al volver
       return;
     }
+    // Recién pedido el video de ejemplo: se abre en modo IA para ver qué
+    // detecta el motor (el video en vivo solo mostraría la escena).
+    if (sel.isSample && provider.abrirEnModoIa) {
+      provider.abrirEnModoIa = false;
+      if (_viewMode != _ViewMode.ai) setState(() => _viewMode = _ViewMode.ai);
+    }
     if (_viewMode == _ViewMode.ai) {
+      _camaraAbierta = sel.id;
+      _claveAbierta = sel.streamKey;
       _startAiFramePoller();
     } else if (_viewMode == _ViewMode.single) {
       _resetStreamRecovery(forceRtsp: true);
@@ -368,8 +380,9 @@ class _CameraScreenState extends State<CameraScreen>
         .events
         .where(
           (e) =>
-              e.notificationsEnabled &&
-              cameras.any((c) => c.id == e.cameraId && c.notificationsEnabled),
+              cameras.any((c) => c.id == e.cameraId && c.isSample) ||
+              (e.notificationsEnabled &&
+                  cameras.any((c) => c.id == e.cameraId && c.notificationsEnabled)),
         )
         .toList();
     if (events.isEmpty) return;
@@ -582,6 +595,7 @@ class _CameraScreenState extends State<CameraScreen>
     if (!mounted || generation != _openGeneration || _opening) return;
     final url = overrideUrl ?? _resolveStreamUrl();
     _camaraAbierta = context.read<CameraProvider>().selectedCamera?.id;
+    _claveAbierta = context.read<CameraProvider>().selectedCamera?.streamKey;
     if (url == null || url.isEmpty) {
       if (mounted)
         setState(() {
@@ -1244,7 +1258,11 @@ class _CameraScreenState extends State<CameraScreen>
 
   Widget _buildTopBar(bool isLandscape, {bool aiMode = false}) {
     final provider = context.watch<CameraProvider>();
-    final camName = provider.selectedCamera?.name;
+    final sel = provider.selectedCamera;
+    final esEjemplo = sel?.isSample ?? false;
+    final camName = esEjemplo
+        ? '${context.l10n.sampleVideo}: ${sel!.sampleTitleFor(english: context.l10n.localeCode == 'en') ?? ''}'
+        : sel?.name;
     final hasMultiple = provider.cameras.length > 1;
 
     return Positioned(
@@ -1312,7 +1330,7 @@ class _CameraScreenState extends State<CameraScreen>
               )
             else
               const Spacer(),
-            if (hasMultiple && !aiMode) ...[
+            if (hasMultiple && !aiMode && !esEjemplo) ...[
               const SizedBox(width: 8),
               _IconBtn(
                 icon: Icons.grid_view_rounded,
@@ -1321,10 +1339,28 @@ class _CameraScreenState extends State<CameraScreen>
               ),
               const SizedBox(width: 8),
             ],
+            if (esEjemplo) ...[
+              const SizedBox(width: 8),
+              _IconBtn(
+                icon: Icons.skip_next_rounded,
+                tooltip: context.l10n.sampleAnother,
+                onTap: _otroEjemplo,
+              ),
+              const SizedBox(width: 8),
+              _IconBtn(
+                icon: Icons.stop_rounded,
+                tooltip: context.l10n.sampleStop,
+                onTap: () => context.read<CameraProvider>().terminarEjemplo(),
+              ),
+              const SizedBox(width: 10),
+            ],
             StreamBuilder(
               stream: _clock,
+              // En el video de ejemplo, el tiempo que le queda a la sesión.
               builder: (_, __) => Text(
-                DateFormat('HH:mm:ss').format(DateTime.now()),
+                esEjemplo
+                    ? _mmss(sel!.sampleRemaining)
+                    : DateFormat('HH:mm:ss').format(DateTime.now()),
                 style: GoogleFonts.robotoMono(
                   color: Colors.white,
                   fontSize: 16,
@@ -1336,6 +1372,18 @@ class _CameraScreenState extends State<CameraScreen>
         ),
       ),
     );
+  }
+
+  static String _mmss(Duration d) =>
+      '${d.inMinutes}:${(d.inSeconds % 60).toString().padLeft(2, '0')}';
+
+  Future<void> _otroEjemplo() async {
+    final ok = await context.read<CameraProvider>().iniciarEjemplo(otro: true);
+    if (!ok && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.sampleError)),
+      );
+    }
   }
 
   // ── Bottom bar ──────────────────────────────────────────────────────────────
@@ -1399,13 +1447,15 @@ class _CameraScreenState extends State<CameraScreen>
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(
-                                Icons.videocam_outlined,
+                                cameras[i].isSample
+                                    ? Icons.movie_outlined
+                                    : Icons.videocam_outlined,
                                 color: selected ? Colors.black : Colors.white70,
                                 size: 13,
                               ),
                               const SizedBox(width: 5),
                               Text(
-                                cameras[i].name,
+                                cameras[i].isSample ? l10n.sampleVideo : cameras[i].name,
                                 style: GoogleFonts.inter(
                                   color: selected
                                       ? Colors.black
@@ -1472,7 +1522,8 @@ class _CameraScreenState extends State<CameraScreen>
                 onTap: _alternarLinterna,
               ),
               const SizedBox(width: 8),
-            ] else if (!(camSeleccionada?.isMobileWebRtc ?? false)) ...[
+            ] else if (!(camSeleccionada?.isMobileWebRtc ?? false) &&
+                !(camSeleccionada?.isSample ?? false)) ...[
               _IconBtn(
                 icon: Icons.tune_outlined,
                 tooltip: l10n.tipCameraSettings,

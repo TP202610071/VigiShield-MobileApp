@@ -51,7 +51,7 @@ class _CameraSetupScreenState extends State<CameraSetupScreen> {
 
   void _loadExisting() {
     if (!widget.isEditing) {
-      final count = context.read<CameraProvider>().cameras.length;
+      final count = context.read<CameraProvider>().misCamaras.length;
       _nameCtrl.text = count == 0 ? 'Entrada principal' : 'Cámara ${count + 1}';
       setState(() => _isDefault = count == 0);
       return;

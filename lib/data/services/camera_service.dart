@@ -72,6 +72,17 @@ class CameraDataService implements MobilePublishTransport {
     await _api.delete('/api/stream/cameras/$id');
   }
 
+  /// Reproduce un video de ejemplo unos minutos. Con [otro] cambia al
+  /// siguiente aunque haya uno en curso.
+  Future<SampleVideoSession> startSampleVideo({bool otro = false}) async {
+    final data = await _api.post<Map<String, dynamic>>(
+      '/api/stream/sample-video${otro ? '?otro=true' : ''}',
+    );
+    return SampleVideoSession.fromJson(data);
+  }
+
+  Future<void> stopSampleVideo() => _api.delete('/api/stream/sample-video');
+
   /// Read live image/video settings from the camera (hi3510 CGI via backend).
   Future<Map<String, String>> getCameraControls(String id) async {
     final data = await _api.get<Map<String, dynamic>>('/api/stream/cameras/$id/control');

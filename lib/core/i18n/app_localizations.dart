@@ -529,6 +529,25 @@ class AppStrings {
   String get consentError => _('No se pudo guardar tu aceptación. Revisa tu conexión.',
       'Could not save your acceptance. Check your connection.');
 
+  // ── Video de ejemplo ────────────────────────────────────────────────────────
+  String get sampleVideo => _('Video de ejemplo', 'Sample video');
+  String get sampleCardTitle => _('¿Nadie pasó frente a tu cámara?', 'Nobody walked past your camera?');
+  String get sampleCardBody => _(
+      'Mira cómo VigiShield detecta a un desconocido y evalúa el riesgo con un video de ejemplo de '
+      '3 minutos. Sus eventos quedan en tu historial, sin avisos por WhatsApp.',
+      'See how VigiShield detects a stranger and assesses the risk with a 3-minute sample video. '
+      'Its events go to your history, without WhatsApp alerts.');
+  String get sampleCardAction => _('Ver video de ejemplo', 'Watch sample video');
+  String get sampleRunning => _('Video de ejemplo en curso', 'Sample video playing');
+  String get sampleWatch => _('Ver', 'Watch');
+  String get sampleAnother => _('Otro video', 'Another video');
+  String get sampleStop => _('Terminar', 'Stop');
+  String get sampleError => _('No se pudo iniciar el video de ejemplo. Inténtalo de nuevo.',
+      'Could not start the sample video. Please try again.');
+  String get samplePaused => _(
+      'La vigilancia está en pausa: reanúdala para que se registren los eventos del video.',
+      'Monitoring is paused: resume it so the video events are recorded.');
+
   // ── Alerta de emergencia ────────────────────────────────────────────────────
   String get emergencyAlert => _('Alerta de emergencia', 'Emergency alert');
   String get emergencyAlertHint => _(
