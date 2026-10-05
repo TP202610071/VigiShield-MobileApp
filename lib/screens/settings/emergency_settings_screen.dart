@@ -33,6 +33,14 @@ class _EmergencySettingsScreenState extends State<EmergencySettingsScreen> {
 
   Future<void> _save(EmergencySettings next) => context.read<EmergencyProvider>().update(next);
 
+  /// Al poner un número válido con la llamada activada se pide ya el permiso:
+  /// sin él Android solo abre el marcador y no llama.
+  Future<void> _guardarNumero(EmergencySettings s, String valor) async {
+    final next = s.copyWith(phone: valor.trim());
+    await _save(next);
+    if (next.willCall && mounted) await context.read<EmergencyProvider>().requestCallPermission();
+  }
+
   Future<void> _setAutoCall(EmergencySettings s, bool value) async {
     // En Android se pide el permiso al activarlo, no en mitad de una alerta.
     if (value) await context.read<EmergencyProvider>().requestCallPermission();
@@ -74,9 +82,9 @@ class _EmergencySettingsScreenState extends State<EmergencySettingsScreen> {
             errorMaxLines: 3,
           ),
           onChanged: (_) => setState(() {}),
-          onSubmitted: (v) => _save(s.copyWith(phone: v.trim())),
+          onSubmitted: (v) => _guardarNumero(s, v),
           onTapOutside: (_) {
-            if (_phone.text.trim() != s.phone) _save(s.copyWith(phone: _phone.text.trim()));
+            if (_phone.text.trim() != s.phone) _guardarNumero(s, _phone.text);
           },
         ),
         SwitchListTile(
@@ -121,8 +129,18 @@ class _EmergencySettingsScreenState extends State<EmergencySettingsScreen> {
         OutlinedButton.icon(
           icon: const Icon(Icons.notifications_active_outlined),
           label: Text(l10n.emergencyTest),
-          onPressed: p.test,
+          onPressed: () {
+            // Un número escrito pero aún sin guardar también cuenta.
+            if (_phone.text.trim() != s.phone) {
+              _guardarNumero(s, _phone.text).then((_) => p.test());
+            } else {
+              p.test();
+            }
+          },
         ),
+        const SizedBox(height: 6),
+        Text(l10n.emergencyTestHint,
+            style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
       ]),
     );
   }
