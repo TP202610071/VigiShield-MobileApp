@@ -176,12 +176,22 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                 value: l10n.riskLabel(ev.riskLevel),
                 valueColor: _riskColor(ev.riskLevel),
               ),
-              if (ev.confidenceScore != null)
-                _Row(
-                  label: l10n.confidence,
-                  value: '${(ev.confidenceScore! * 100).toStringAsFixed(1)}%',
-                ),
+              // La confianza del modelo no se muestra: es un numero interno que
+              // no ayuda a decidir nada. "71.0%" no dice si hay que preocuparse
+              // -de eso ya habla el nivel de riesgo- y encima invita a leerlo
+              // como una probabilidad de que algo pase, que no es.
               _Row(label: l10n.eventType, value: l10n.eventTypeLabel(ev.eventType)),
+              // Lo que sí importa: de qué cámara vino y si avisó.
+              if (ev.cameraName != null && ev.cameraName!.isNotEmpty)
+                _Row(label: l10n.camera, value: ev.cameraName!),
+              _Row(
+                label: l10n.momentOfDay,
+                value: ev.isNighttime ? l10n.nighttime : l10n.daytime,
+              ),
+              _Row(
+                label: l10n.notified,
+                value: ev.notificationsEnabled ? l10n.yes : l10n.noAlertsMuted,
+              ),
             ],
           ),
           if (ev.imageCapturePath != null) ...[

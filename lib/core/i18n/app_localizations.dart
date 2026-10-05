@@ -334,6 +334,16 @@ class AppStrings {
   String get details => _('Detalles', 'Details');
   String get person => _('Persona', 'Person');
   String get riskLevel => _('Nivel de riesgo', 'Risk level');
+  // Detalles del evento que sí ayudan a decidir, a diferencia de la confianza
+  // del modelo, que es un numero interno.
+  String get camera => _('Cámara', 'Camera');
+  String get momentOfDay => _('Momento', 'Time of day');
+  String get nighttime => _('De noche', 'Night');
+  String get daytime => _('De día', 'Daytime');
+  String get notified => _('Aviso enviado', 'Alert sent');
+  String get yes => _('Sí', 'Yes');
+  String get noAlertsMuted =>
+      _('No, avisos silenciados', 'No, alerts muted');
   String get confidence => _('Confianza', 'Confidence');
   String get eventType => _('Tipo de evento', 'Event type');
   String get imageCapture => _('Captura de imagen', 'Image capture');
