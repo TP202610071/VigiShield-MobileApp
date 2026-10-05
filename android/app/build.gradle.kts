@@ -43,6 +43,13 @@ android {
         }
     }
 
+    // El release por defecto es el de tienda. Para un APK de validacion (OE4):
+    // flutter build apk --release --dart-define=VIGISHIELD_VALIDATION=true
+    //   --android-project-arg=validation=true
+    if (project.findProperty("validation") != "true") {
+        sourceSets.getByName("release").manifest.srcFile("src/store/AndroidManifest.xml")
+    }
+
     buildTypes {
         release {
             signingConfig = if (keystorePropertiesFile.exists()) {

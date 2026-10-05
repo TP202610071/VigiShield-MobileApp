@@ -28,29 +28,22 @@ class _DeviceCameraScreenState extends State<DeviceCameraScreen> with WidgetsBin
   /// La linterna solo existe en la cámara trasera y no en todos los equipos.
   bool _linternaDisponible = false, _linterna = false;
 
-  MediaStreamTrack? get _pista {
-    final pistas = _publisher?.stream?.getVideoTracks();
-    return (pistas == null || pistas.isEmpty) ? null : pistas.first;
-  }
 
   /// Pregunta al equipo si tiene linterna. Se consulta tras abrir la cámara
   /// porque depende de la lente escogida.
   Future<void> _revisarLinterna() async {
-    final pista = _pista;
-    var disponible = false;
-    if (pista != null) {
-      try { disponible = await pista.hasTorch(); } catch (_) { disponible = false; }
-    }
+    final disponible = _publisher?.hasTorch ?? false;
     if (!mounted || disponible == _linternaDisponible) return;
-    setState(() { _linternaDisponible = disponible; if (!disponible) _linterna = false; });
+    setState(() {
+      _linternaDisponible = disponible;
+      _linterna = disponible && (_publisher?.torchEnabled ?? false);
+    });
   }
 
   Future<void> _cambiarLinterna() async {
-    final pista = _pista;
-    if (pista == null) return;
     final valor = !_linterna;
     try {
-      await pista.setTorch(valor);
+      await _publisher?.setTorch(valor);
       if (mounted) setState(() => _linterna = valor);
     } catch (e) {
       if (mounted) setState(() => _error = 'No se pudo encender la linterna: $e');
@@ -90,13 +83,22 @@ class _DeviceCameraScreenState extends State<DeviceCameraScreen> with WidgetsBin
     // transmision sigue viva al salir de esta pantalla.
     _propio = widget.publisher != null;
     _publisher = widget.publisher ?? context.read<MobileCameraPublisher>();
+    _front = _publisher?.front ?? false;
+    _linternaDisponible = _publisher?.hasTorch ?? false;
+    _linterna = _publisher?.torchEnabled ?? false;
     _publisher?.addListener(_changed);
     WidgetsBinding.instance.addObserver(this);
-    // Se captura en apaisado a proposito. Una camara de vigilancia encuadra en
-    // horizontal, y el visor en vivo gira a apaisado: publicando en vertical el
-    // video salia con franjas negras a los lados.
-    SystemChrome.setPreferredOrientations(
-        [DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight]);
+    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _restorePreview());
+  }
+
+  Future<void> _restorePreview() async {
+    if (!mounted || _publisher?.stream == null || _renderer != null) return;
+    final renderer = RTCVideoRenderer();
+    await renderer.initialize();
+    if (!mounted) { await renderer.dispose(); return; }
+    renderer.srcObject = _publisher!.stream;
+    setState(() => _renderer = renderer);
   }
 
   void _changed() {
@@ -174,8 +176,7 @@ class _DeviceCameraScreenState extends State<DeviceCameraScreen> with WidgetsBin
   }
 
   @override void dispose() {
-    // Se devuelve la libertad de giro al resto de la app.
-    SystemChrome.setPreferredOrientations(DeviceOrientation.values);
+    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     WidgetsBinding.instance.removeObserver(this);
     _publisher?.removeListener(_changed);
     // Solo se desecha si lo creo esta pantalla. El de la app lo gestiona main.

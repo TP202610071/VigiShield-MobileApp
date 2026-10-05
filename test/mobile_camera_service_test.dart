@@ -61,4 +61,23 @@ void main() {
     expect(calls.last.method, 'DELETE');
     expect(calls.last.path, '/api/stream/cameras/c/publish/s');
   });
+  test('reloading cameras preserves the selected camera by id', () async {
+    final api = ApiClient(AuthStorage());
+    var requestCount = 0;
+    api.dio.interceptors.clear();
+    api.dio.interceptors.add(InterceptorsWrapper(onRequest: (options, handler) {
+      requestCount++;
+      final cameras = requestCount == 1
+        ? [{'id':'first'}, {'id':'second'}]
+        : [{'id':'second'}, {'id':'first'}];
+      handler.resolve(Response(requestOptions: options, statusCode: 200, data: cameras));
+    }));
+    final provider = CameraProvider(CameraDataService(api));
+    await provider.fetchCameras();
+    provider.selectCameraById('second');
+    await provider.fetchCameras();
+    expect(provider.selectedCamera?.id, 'second');
+    provider.dispose();
+    api.dio.close();
+  });
 }

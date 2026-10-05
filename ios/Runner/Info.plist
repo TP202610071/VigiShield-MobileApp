@@ -4,19 +4,31 @@
 <dict>
 	<key>NSAppTransportSecurity</key>
 	<dict>
-		<key>NSAllowsArbitraryLoads</key>
+		<!-- Solo la red local (control de la camara IP desde el wifi de casa)
+		     y el servidor de video, que aun sirve HLS por http en :8888. -->
+		<key>NSAllowsLocalNetworking</key>
 		<true/>
+		<key>NSExceptionDomains</key>
+		<dict>
+			<key>api-ai.vigishield.app</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+			</dict>
+		</dict>
 	</dict>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>VigiShield se conecta a tus cámaras IP en tu red wifi para cambiar sus ajustes de imagen.</string>
 	<key>NSFaceIDUsageDescription</key>
-	<string>VigiShield usa Face ID para desbloquear la app y proteger el acceso a tus camaras.</string>
+	<string>VigiShield usa Face ID para desbloquear la app y proteger el acceso a tus cámaras.</string>
 	<key>NSCameraUsageDescription</key>
-	<string>VigiShield necesita acceso a la cámara para registrar rostros autorizados.</string>
+	<string>VigiShield usa la cámara para registrar rostros autorizados y para que este teléfono funcione como cámara de vigilancia si tú lo activas.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>VigiShield necesita acceso a tus fotos para registrar rostros autorizados.</string>
+	<string>VigiShield usa tus fotos solo si eliges una para registrar un rostro autorizado o tu foto de perfil.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>VigiShield necesita guardar capturas de pantalla en tu galería.</string>
+	<string>VigiShield guarda en tu galería las capturas y clips de eventos que decidas descargar.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>VigiShield necesita acceso al micrófono para la transmisión de video.</string>
+	<string>VigiShield transmite video sin audio. El micrófono no se usa salvo que actives audio en una transmisión.</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

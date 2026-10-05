@@ -225,9 +225,13 @@ class _CameraCard extends StatelessWidget {
     final name = cam.name;
     final mode = cam.streamMode;
     final ip = cam.cameraIp;
+    final saving = context.watch<CameraProvider>().isSaving;
 
-    return Container(
-      padding: const EdgeInsets.all(16),
+    return LayoutBuilder(builder: (context, constraints) {
+      final showInlineActions = constraints.maxWidth >= 300;
+      return Container(
+      key: ValueKey('camera-card-${cam.id}'),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
@@ -238,11 +242,11 @@ class _CameraCard extends StatelessWidget {
       ),
       child: Row(children: [
         Container(
-          width: 44, height: 44,
+          width: 38, height: 38,
           decoration: BoxDecoration(
             color: (isConfigured ? AppColors.accent : AppColors.textMuted)
                 .withAlpha(26),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(10),
           ),
           child: Icon(
             // La cámara del teléfono se distingue de un vistazo: no es una
@@ -255,10 +259,10 @@ class _CameraCard extends StatelessWidget {
             color: isConfigured
                 ? AppColors.accent
                 : AppColors.textSecondary,
-            size: 22,
+            size: 20,
           ),
         ),
-        const SizedBox(width: 14),
+        const SizedBox(width: 10),
         Expanded(
           child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -332,10 +336,9 @@ class _CameraCard extends StatelessWidget {
                 // Desactivar una camara es lo unico que ahorra recursos de
                 // verdad: el motor analiza cada camara configurada la vea
                 // alguien o no, y eso cuesta ~80% de un nucleo por camara.
-                if (isPrimary) Row(children: [
-                  const Flexible(child: Text('Activa', style: TextStyle(fontSize: 11))),
-                  Switch(value: cam.isActive,
-                    onChanged: context.watch<CameraProvider>().isSaving ? null : (activa) async {
+                if (isPrimary) Wrap(spacing: 8, runSpacing: 0, children: [
+                  _CompactSwitch(label: 'Activa', value: cam.isActive,
+                    onChanged: saving ? null : (activa) async {
                       final provider = context.read<CameraProvider>();
                       final ok = await provider.setActive(cam.id, activa);
                       if (!ok && context.mounted) {
@@ -343,11 +346,8 @@ class _CameraCard extends StatelessWidget {
                           content: Text(provider.error ?? 'No se pudo guardar el cambio.')));
                       }
                     }),
-                ]),
-                if (isPrimary) Row(children: [
-                  const Flexible(child: Text('Notificaciones', style: TextStyle(fontSize: 11))),
-                  Switch(value: cam.notificationsEnabled,
-                    onChanged: context.watch<CameraProvider>().isSaving ? null : (enabled) async {
+                  _CompactSwitch(label: 'Notificaciones', value: cam.notificationsEnabled,
+                    onChanged: saving ? null : (enabled) async {
                       final provider = context.read<CameraProvider>();
                       final ok = await provider.setNotificationsEnabled(cam.id, enabled);
                       if (!ok && context.mounted) {
@@ -358,10 +358,12 @@ class _CameraCard extends StatelessWidget {
                 ]),
               ]),
         ),
-        // Un solo menú en vez de tres botones: los tres ocupaban casi 150 px
-        // fijos y en pantallas estrechas ahogaban el nombre de la cámara, que
-        // se partía en varias líneas. En un móvil grande no se notaba.
-        if (isPrimary)
+        if (isPrimary && showInlineActions) ...[
+          _CardAction(icon: Icons.crop_free, tooltip: 'Zonas de interés', onTap: onZones),
+          _CardAction(icon: Icons.edit_outlined, tooltip: 'Editar', onTap: onEdit),
+          _CardAction(icon: Icons.delete_outline, tooltip: 'Eliminar',
+              color: AppColors.alertRed, onTap: onDelete),
+        ] else if (isPrimary)
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert,
                 color: AppColors.textSecondary, size: 20),
@@ -411,7 +413,35 @@ class _CameraCard extends StatelessWidget {
           ),
       ]),
     );
+    });
   }
+}
+
+class _CompactSwitch extends StatelessWidget {
+  final String label;
+  final bool value;
+  final ValueChanged<bool>? onChanged;
+  const _CompactSwitch({required this.label, required this.value, this.onChanged});
+  @override Widget build(BuildContext context) => SizedBox(height: 30,
+    child: Row(mainAxisSize: MainAxisSize.min, children: [
+      Text(label, style: const TextStyle(fontSize: 11)),
+      SizedBox(width: 36, height: 28, child: Transform.scale(
+        scale: 0.68, child: Switch(value: value, onChanged: onChanged))),
+    ]));
+}
+
+class _CardAction extends StatelessWidget {
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback? onTap;
+  final Color color;
+  const _CardAction({required this.icon, required this.tooltip,
+    required this.onTap, this.color = AppColors.textSecondary});
+  @override Widget build(BuildContext context) => IconButton(
+    tooltip: tooltip, onPressed: onTap,
+    icon: Icon(icon, color: color, size: 18), padding: EdgeInsets.zero,
+    visualDensity: VisualDensity.compact,
+    constraints: const BoxConstraints.tightFor(width: 30, height: 34));
 }
 
 /// Una linea de texto precedida por un icono, alineados por su centro.

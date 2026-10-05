@@ -8,11 +8,22 @@ class Capture implements MobileCameraCapture {
   Completer<void>? opening;
   Object? openError, offerError, answerError;
   Duration? offeredTimeout;
+  bool torchAvailable = true;
+  bool torch = false;
+  Object? torchProbeError;
   @override MediaStream? get stream => null;
   @override Future<void> open({required bool front}) async {
     events.add('open:$front');
     if (opening != null) await opening!.future;
     if (openError != null) throw openError!;
+  }
+  @override Future<bool> hasTorch() async {
+    if (torchProbeError != null) throw torchProbeError!;
+    return torchAvailable;
+  }
+  @override Future<void> setTorch(bool enabled) async {
+    torch = enabled;
+    events.add('torch:$enabled');
   }
   @override Future<String> offer(Duration timeout) async {
     offeredTimeout = timeout;
@@ -130,6 +141,34 @@ void main() {
     expect(publisher.isPublishing, isFalse);
     expect(capture.events.last, 'close');
     expect(transport.events.last, 'delete:camera:session');
+    publisher.dispose();
+  });
+  test('publisher restores lens state and only exposes torch on rear camera', () async {
+    final capture = Capture();
+    final publisher = MobileCameraPublisher(
+      transport: Transport(), capture: capture, observarCicloDeVida: false);
+    await publisher.start('camera', front: false);
+    expect(publisher.front, isFalse);
+    expect(publisher.hasTorch, isTrue);
+    await publisher.setTorch(true);
+    expect(publisher.torchEnabled, isTrue);
+    expect(capture.events, contains('torch:true'));
+    await publisher.stop();
+    await publisher.start('camera', front: true);
+    expect(publisher.front, isTrue);
+    expect(publisher.hasTorch, isFalse);
+    await expectLater(publisher.setTorch(true), throwsStateError);
+    publisher.dispose();
+  });
+  test('torch capability failure does not abort camera publication', () async {
+    final capture = Capture()..torchProbeError = StateError('unsupported probe');
+    final publisher = MobileCameraPublisher(
+      transport: Transport(), capture: capture, observarCicloDeVida: false);
+    await publisher.start('camera', front: false);
+    expect(publisher.isPublishing, isTrue);
+    expect(publisher.hasTorch, isFalse);
+    expect(publisher.error, isNull);
+    await publisher.stop();
     publisher.dispose();
   });
 }

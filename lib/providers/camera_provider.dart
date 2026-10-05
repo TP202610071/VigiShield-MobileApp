@@ -48,14 +48,21 @@ class CameraProvider extends ChangeNotifier implements SessionScoped {
   }
 
   Future<void> fetchCameras() async {
+    final selectedId = selectedCamera?.id;
     _isLoading = true;
     _error = null;
     notifyListeners();
     try {
       _cameras = await _service.getCameras();
-      // Auto-select the default camera
-      final defaultIdx = _cameras.indexWhere((c) => c.isDefault);
-      _selectedIndex = defaultIdx >= 0 ? defaultIdx : 0;
+      final previousIdx = selectedId == null
+          ? -1
+          : _cameras.indexWhere((c) => c.id == selectedId);
+      if (previousIdx >= 0) {
+        _selectedIndex = previousIdx;
+      } else {
+        final defaultIdx = _cameras.indexWhere((c) => c.isDefault);
+        _selectedIndex = defaultIdx >= 0 ? defaultIdx : 0;
+      }
     } catch (e) {
       _error = e.toString();
     } finally {
