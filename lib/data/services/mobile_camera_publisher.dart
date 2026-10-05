@@ -165,6 +165,8 @@ class MobileCameraPublisher extends ChangeNotifier
   int _generation = 0;
   Future<void>? _starting, _stopping;
   MediaStream? get stream => capture.stream;
+  /// Camara que se esta publicando, para saber si es la que se esta viendo.
+  String? get cameraId => _cameraId;
   void _notify() { if (!_disposed) notifyListeners(); }
 
   Future<void> start(String cameraId, {required bool front}) {
