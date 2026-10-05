@@ -297,7 +297,14 @@ class _CameraCard extends StatelessWidget {
                 //
                 // Una cámara de teléfono no tiene IP, así que mostrar
                 // "Configurada" no decía nada: se indica de dónde sale el video.
-                if (cam.isMobileWebRtc)
+                if (!cam.isActive)
+                  const _LineaConIcono(
+                    icono: Icons.pause_circle_outline,
+                    texto: 'Desactivada: no se analiza',
+                    color: AppColors.warningAmber,
+                    tamano: 12,
+                  )
+                else if (cam.isMobileWebRtc)
                   const _LineaConIcono(
                     icono: Icons.phone_android,
                     texto: 'Cámara de este teléfono',
@@ -322,6 +329,21 @@ class _CameraCard extends StatelessWidget {
                     tamano: 11,
                   ),
                 ],
+                // Desactivar una camara es lo unico que ahorra recursos de
+                // verdad: el motor analiza cada camara configurada la vea
+                // alguien o no, y eso cuesta ~80% de un nucleo por camara.
+                if (isPrimary) Row(children: [
+                  const Flexible(child: Text('Activa', style: TextStyle(fontSize: 11))),
+                  Switch(value: cam.isActive,
+                    onChanged: context.watch<CameraProvider>().isSaving ? null : (activa) async {
+                      final provider = context.read<CameraProvider>();
+                      final ok = await provider.setActive(cam.id, activa);
+                      if (!ok && context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Text(provider.error ?? 'No se pudo guardar el cambio.')));
+                      }
+                    }),
+                ]),
                 if (isPrimary) Row(children: [
                   const Flexible(child: Text('Notificaciones', style: TextStyle(fontSize: 11))),
                   Switch(value: cam.notificationsEnabled,

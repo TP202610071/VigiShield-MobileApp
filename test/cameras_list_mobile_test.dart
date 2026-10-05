@@ -30,7 +30,13 @@ void main() {
         ChangeNotifierProvider<CameraProvider>(create: (_) => TestCameras()),
       ], child: const MaterialApp(home: CamerasListScreen())));
       await tester.pumpAndSettle();
-      expect(find.byType(Switch), role == 'Secondary' ? findsNothing : findsOneWidget);
+      // Dos interruptores por camara: "Activa" (si la IA la procesa, que es
+      // lo unico que ahorra recursos) y "Notificaciones".
+      expect(find.byType(Switch), role == 'Secondary' ? findsNothing : findsNWidgets(2));
+      if (role != 'Secondary') {
+        expect(find.text('Activa'), findsOneWidget);
+        expect(find.text('Notificaciones'), findsOneWidget);
+      }
       // La fila dice de donde sale el video, no una IP que una camara de
       // telefono no tiene, y lleva su propio icono.
       expect(find.text('Cámara de este teléfono'), findsOneWidget);

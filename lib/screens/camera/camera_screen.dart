@@ -21,6 +21,7 @@ import '../../data/models/security_event_model.dart';
 import '../../providers/camera_provider.dart';
 import '../../providers/event_provider.dart';
 import '../../providers/ui_provider.dart';
+import '../../data/services/mobile_camera_publisher.dart';
 
 enum _ViewMode { single, grid, ai }
 
@@ -753,6 +754,38 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
     );
   }
 
+  /// Cámara seleccionada ahora mismo (puede ser null si aún no hay ninguna).
+  CameraConfigModel? get camSeleccionada =>
+      context.read<CameraProvider>().selectedCamera;
+
+  /// ¿La cámara que se está viendo la publica ESTE teléfono?
+  ///
+  /// Solo entonces se puede tocar su linterna: desde otro dispositivo no hay
+  /// forma de alcanzar ese hardware.
+  bool get _esCamaraDeEsteDispositivo {
+    final cam = camSeleccionada;
+    if (cam == null || !cam.isMobileWebRtc) return false;
+    final pub = context.read<MobileCameraPublisher>();
+    return pub.isPublishing && pub.cameraId == cam.id;
+  }
+
+  bool _linterna = false;
+
+  Future<void> _alternarLinterna() async {
+    final pistas = context.read<MobileCameraPublisher>().stream?.getVideoTracks();
+    if (pistas == null || pistas.isEmpty) return;
+    final valor = !_linterna;
+    try {
+      await pistas.first.setTorch(valor);
+      if (mounted) setState(() => _linterna = valor);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Este dispositivo no tiene linterna en esta cámara.')));
+      }
+    }
+  }
+
   void _showCameraSettings() {
     final camId = context.read<CameraProvider>().selectedCamera?.id;
     if (camId == null) return;
@@ -1063,12 +1096,25 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
             ),
             const SizedBox(width: 8),
           ],
-          _IconBtn(
-            icon: Icons.tune_outlined,
-            tooltip: l10n.tipCameraSettings,
-            onTap: _showCameraSettings,
-          ),
-          const SizedBox(width: 8),
+          // Una camara de telefono no tiene ajustes de imagen por CGI. Si es
+          // ESTE dispositivo el que transmite, en su lugar va la linterna; si
+          // transmite otro, no se muestra nada: desde aqui no hay forma de
+          // tocar su hardware.
+          if (_esCamaraDeEsteDispositivo) ...[
+            _IconBtn(
+              icon: _linterna ? Icons.flashlight_on : Icons.flashlight_off,
+              tooltip: _linterna ? 'Apagar linterna' : 'Encender linterna',
+              onTap: _alternarLinterna,
+            ),
+            const SizedBox(width: 8),
+          ] else if (!(camSeleccionada?.isMobileWebRtc ?? false)) ...[
+            _IconBtn(
+              icon: Icons.tune_outlined,
+              tooltip: l10n.tipCameraSettings,
+              onTap: _showCameraSettings,
+            ),
+            const SizedBox(width: 8),
+          ],
           _IconBtn(icon: Icons.refresh, tooltip: l10n.tipReconnect, onTap: _retry),
         ]),
       ),

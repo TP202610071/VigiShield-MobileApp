@@ -4,6 +4,8 @@ class CameraConfigModel {
   final bool isDefault;
   final String streamMode; // DirectRtsp, RtmpRelay or MobileWebRtc
   final bool notificationsEnabled;
+  /// false = la IA no la procesa. Es lo unico que ahorra recursos de verdad.
+  final bool isActive;
   final String? cameraIp;
   final int cameraPort;
   final String? cameraPath;
@@ -25,6 +27,7 @@ class CameraConfigModel {
     required this.isDefault,
     required this.streamMode,
     this.notificationsEnabled = true,
+    this.isActive = true,
     this.cameraIp,
     required this.cameraPort,
     this.cameraPath,
@@ -51,6 +54,7 @@ class CameraConfigModel {
       isDefault: json['isDefault'] as bool? ?? false,
       streamMode: json['streamMode'] as String? ?? 'DirectRtsp',
       notificationsEnabled: json['notificationsEnabled'] as bool? ?? true,
+      isActive: json['isActive'] as bool? ?? true,
       cameraIp: json['cameraIp'] as String?,
       cameraPort: (json['cameraPort'] as int?) ?? 554,
       cameraPath: json['cameraPath'] as String?,

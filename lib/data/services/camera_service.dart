@@ -19,6 +19,13 @@ class CameraDataService implements MobilePublishTransport {
     }
   }
 
+  /// Enciende o apaga el procesamiento de IA de una cámara.
+  Future<CameraConfigModel> setActive(String id, bool enabled) async {
+    final data = await _api.patch<Map<String, dynamic>>(
+      '/api/stream/cameras/${Uri.encodeComponent(id)}/active', body: {'enabled': enabled});
+    return CameraConfigModel.fromJson(data);
+  }
+
   @override
   Future<MobilePublishAnswer> publish(String cameraId, String sdp) async {
     final data = await _api.post<Map<String, dynamic>>(
