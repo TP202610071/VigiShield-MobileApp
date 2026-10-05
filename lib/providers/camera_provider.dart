@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import '../data/models/camera_config_model.dart';
 import '../data/models/zone_model.dart';
@@ -16,7 +18,24 @@ class CameraProvider extends ChangeNotifier implements SessionScoped {
   bool _isSaving = false;
   String? _error;
 
+  /// Todas las que se pueden ver, incluido el video de ejemplo en curso.
   List<CameraConfigModel> get cameras => _cameras;
+
+  /// Solo las cámaras del usuario (sin el video de ejemplo): «Mis cámaras»,
+  /// filtros del historial y todo lo que se configura.
+  List<CameraConfigModel> get misCamaras =>
+      cameras.where((c) => !c.isSample).toList();
+
+  /// Video de ejemplo en curso, si hay.
+  CameraConfigModel? get ejemplo =>
+      cameras.where((c) => c.isSample).firstOrNull;
+
+  /// Lo pide quien inicia el video de ejemplo: la pestaña Cámara lo abre en
+  /// modo IA para que se vea lo que detecta. Se consume una vez.
+  bool abrirEnModoIa = false;
+
+  /// Videos distintos que ya vio el hogar, de cuántos (para «Otro video»).
+  int ejemplosVistos = 0, ejemplosTotal = 0;
   bool get isLoading => _isLoading;
   bool get isSaving => _isSaving;
   String? get error => _error;
@@ -54,6 +73,7 @@ class CameraProvider extends ChangeNotifier implements SessionScoped {
     notifyListeners();
     try {
       _cameras = await _service.getCameras();
+      _programarFinEjemplo();
       final previousIdx = selectedId == null
           ? -1
           : _cameras.indexWhere((c) => c.id == selectedId);
@@ -209,6 +229,71 @@ class CameraProvider extends ChangeNotifier implements SessionScoped {
     notifyListeners();
   }
 
+  // ── Video de ejemplo ────────────────────────────────────────────────────────
+
+  Timer? _finEjemplo;
+  bool _iniciandoEjemplo = false;
+  bool get iniciandoEjemplo => _iniciandoEjemplo;
+
+  /// Pide un video de ejemplo y lo deja seleccionado.
+  Future<bool> iniciarEjemplo({bool otro = false}) async {
+    if (_iniciandoEjemplo) return false;
+    _iniciandoEjemplo = true;
+    _error = null;
+    notifyListeners();
+    try {
+      final sesion = await _service.startSampleVideo(otro: otro);
+      ejemplosVistos = sesion.seen;
+      ejemplosTotal = sesion.total;
+      _cameras = [
+        ..._cameras.where((c) => !c.isSample && c.id != sesion.camera.id),
+        sesion.camera,
+      ];
+      _selectedIndex = _cameras.length - 1;
+      abrirEnModoIa = true;
+      _programarFinEjemplo();
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      return false;
+    } finally {
+      _iniciandoEjemplo = false;
+      notifyListeners();
+    }
+  }
+
+  /// Termina el video de ejemplo antes de tiempo.
+  Future<void> terminarEjemplo() async {
+    try {
+      await _service.stopSampleVideo();
+    } catch (_) {
+      // Si falla, igual vence solo en unos minutos.
+    }
+    _quitarEjemplo();
+  }
+
+  /// Al vencer la sesión se quita de la lista: el backend ya no la devuelve
+  /// y la IA deja de analizarla.
+  void _programarFinEjemplo() {
+    _finEjemplo?.cancel();
+    final cam = ejemplo;
+    if (cam == null) return;
+    _finEjemplo = Timer(cam.sampleRemaining + const Duration(seconds: 1), _quitarEjemplo);
+  }
+
+  void _quitarEjemplo() {
+    _finEjemplo?.cancel();
+    final eraSeleccionado = selectedCamera?.isSample ?? false;
+    if (!_cameras.any((c) => c.isSample)) return;
+    _cameras = _cameras.where((c) => !c.isSample).toList();
+    if (eraSeleccionado || _selectedIndex >= _cameras.length) {
+      final principal = _cameras.indexWhere((c) => c.isDefault);
+      _selectedIndex = principal >= 0 ? principal : 0;
+    }
+    abrirEnModoIa = false;
+    notifyListeners();
+  }
+
   // ── Live camera image/video controls (hi3510 CGI via backend) ───────────────
 
   /// Lee los ajustes de la cámara. Intenta primero por la red local (el único
@@ -284,6 +369,8 @@ class CameraProvider extends ChangeNotifier implements SessionScoped {
   /// visibles al entrar con otra.
   @override
   void clearSession() {
+    _finEjemplo?.cancel();
+    abrirEnModoIa = false;
     _cameras = [];
     _selectedIndex = 0;
     _isLoading = false;
@@ -294,6 +381,12 @@ class CameraProvider extends ChangeNotifier implements SessionScoped {
     notifyListeners();
   }
 
+
+  @override
+  void dispose() {
+    _finEjemplo?.cancel();
+    super.dispose();
+  }
 }
 
 /// Por qué no se pudo controlar la cámara. Cada caso se arregla distinto.

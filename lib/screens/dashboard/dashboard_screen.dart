@@ -6,11 +6,13 @@ import 'package:intl/intl.dart';
 import '../../core/i18n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/camera_provider.dart';
 import '../../providers/dev_settings_provider.dart';
 import '../../providers/event_provider.dart';
 import '../../providers/system_provider.dart';
 import '../../widgets/event_card.dart';
 import '../../widgets/user_avatar.dart';
+import '../../widgets/video_ejemplo.dart';
 import '../../widgets/vs_button.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -42,6 +44,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     await Future.wait([
       context.read<SystemProvider>().fetchStatus(),
       context.read<EventProvider>().refreshSilently(),
+      context.read<CameraProvider>().fetchCameras(),
     ]);
   }
 
@@ -106,6 +109,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   _StatusCard(system: system),
                   const SizedBox(height: 16),
                   _StatsRow(system: system),
+                  const SizedBox(height: 16),
+                  const TarjetaVideoEjemplo(),
                   const SizedBox(height: 24),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,

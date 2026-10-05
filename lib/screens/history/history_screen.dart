@@ -69,7 +69,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<EventProvider>();
-    final cameras = context.watch<CameraProvider>().cameras;
+    final cameras = context.watch<CameraProvider>().misCamaras;
     final l10n = context.l10n;
 
     return Scaffold(

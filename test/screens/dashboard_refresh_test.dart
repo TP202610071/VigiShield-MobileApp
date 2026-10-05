@@ -9,8 +9,11 @@ import 'package:vigishield_mobile_app/core/network/api_client.dart';
 import 'package:vigishield_mobile_app/core/storage/auth_storage.dart';
 import 'package:vigishield_mobile_app/data/models/system_status_model.dart';
 import 'package:vigishield_mobile_app/data/services/auth_service.dart';
+import 'package:vigishield_mobile_app/data/models/camera_config_model.dart';
+import 'package:vigishield_mobile_app/data/services/camera_service.dart';
 import 'package:vigishield_mobile_app/data/services/system_service.dart';
 import 'package:vigishield_mobile_app/providers/auth_provider.dart';
+import 'package:vigishield_mobile_app/providers/camera_provider.dart';
 import 'package:vigishield_mobile_app/providers/dev_settings_provider.dart';
 import 'package:vigishield_mobile_app/providers/event_provider.dart';
 import 'package:vigishield_mobile_app/providers/system_provider.dart';
@@ -31,6 +34,13 @@ class _SystemService implements SystemService {
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _CameraService extends CameraDataService {
+  _CameraService(super.api);
+
+  @override
+  Future<List<CameraConfigModel>> getCameras() async => [];
 }
 
 void main() {
@@ -64,6 +74,7 @@ void main() {
       providers: [
         ChangeNotifierProvider.value(value: events),
         ChangeNotifierProvider(create: (_) => SystemProvider(statusService)),
+        ChangeNotifierProvider(create: (_) => CameraProvider(_CameraService(client))),
         ChangeNotifierProvider(create: (_) => AuthProvider(AuthService(client), storage)),
         ChangeNotifierProvider(create: (_) => DevSettingsProvider(storage, null)),
         ChangeNotifierProvider(create: (_) => ServerConfigProvider(storage, client, 'http://localhost')),

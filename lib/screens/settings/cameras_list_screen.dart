@@ -60,7 +60,7 @@ class _CamerasListScreenState extends State<CamerasListScreen> {
                   color: AppColors.accent, strokeWidth: 2));
         }
 
-        if (provider.cameras.isEmpty) {
+        if (provider.misCamaras.isEmpty) {
           return _buildEmpty(context, isPrimary);
         }
 
@@ -70,10 +70,10 @@ class _CamerasListScreenState extends State<CamerasListScreen> {
           onRefresh: provider.fetchCameras,
           child: ListView.separated(
             padding: const EdgeInsets.all(20),
-            itemCount: provider.cameras.length,
+            itemCount: provider.misCamaras.length,
             separatorBuilder: (_, __) => const SizedBox(height: 12),
             itemBuilder: (_, i) {
-              final cam = provider.cameras[i];
+              final cam = provider.misCamaras[i];
               return _CameraCard(
                 cam: cam,
                 isPrimary: isPrimary,
