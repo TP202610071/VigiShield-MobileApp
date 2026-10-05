@@ -1,7 +1,7 @@
 name: vigishield_mobile_app
 description: "VigiShield — Sistema Inteligente de Seguridad Doméstica"
 publish_to: 'none'
-version: 0.15.1+18
+version: 0.16.0+19
 
 environment:
   sdk: ^3.8.1
@@ -68,6 +68,9 @@ dependencies:
   google_mlkit_face_detection: ^0.13.1
   package_info_plus: ^9.0.1
   local_auth: ^3.0.2
+  audioplayers: ^6.8.1
+  vibration: ^3.2.1
+  url_launcher: ^6.3.3
 
 dev_dependencies:
   flutter_test:
@@ -87,3 +90,5 @@ flutter_launcher_icons:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/sounds/alarma.wav

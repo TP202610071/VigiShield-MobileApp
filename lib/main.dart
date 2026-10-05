@@ -29,6 +29,9 @@ import 'package:go_router/go_router.dart';
 import 'core/utils/deep_links.dart';
 import 'router/app_router.dart';
 import 'data/services/mobile_camera_publisher.dart';
+import 'data/services/emergency_effects.dart';
+import 'providers/emergency_provider.dart';
+import 'widgets/emergency_overlay.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -96,6 +99,8 @@ class _VigiShieldAppState extends State<VigiShieldApp> {
   late final CameraProvider _cameraProvider;
   late final MobileCameraPublisher _mobilePublisher;
   late final ValidationProvider _validationProvider;
+  late final EmergencyProvider _emergencyProvider;
+  static const _emergencyKey = 'emergency_settings';
   final Dio _validationDio = Dio(BaseOptions(connectTimeout: const Duration(seconds: 3), receiveTimeout: const Duration(seconds: 3)));
   late final ServerConfigProvider _serverConfigProvider;
   late final LocaleProvider _localeProvider;
@@ -133,8 +138,18 @@ class _VigiShieldAppState extends State<VigiShieldApp> {
         return response.data ?? {};
       },
     );
+    _emergencyProvider = EmergencyProvider(
+      readSettings: () => _storage.readValue(_emergencyKey),
+      writeSettings: (v) => _storage.writeValue(_emergencyKey, v),
+      effects: DeviceEmergencyEffects(),
+      canMonitor: () => _authProvider.isAuthenticated && _systemProvider.status?.isMonitoringActive != false,
+      loadCameras: CameraDataService(_api).getCameras,
+      loadStatus: _validationProvider.loadStatus,
+    )..load();
     _cameraProvider.addListener(_syncValidationCameras);
     _systemProvider.addListener(_syncValidationSystem);
+    _authProvider.addListener(_emergencyProvider.reconcile);
+    _systemProvider.addListener(_emergencyProvider.reconcile);
     _serverConfigProvider =
         ServerConfigProvider(_storage, _api, widget.initialServerUrl);
     _localeProvider = LocaleProvider(_storage, widget.initialLocale);
@@ -144,7 +159,7 @@ class _VigiShieldAppState extends State<VigiShieldApp> {
     // no, la siguiente cuenta hereda cámaras, eventos y alertas de la anterior.
     _authProvider.registerSessionScoped(
         [_eventProvider, _systemProvider, _cameraProvider, _validationProvider,
-          _mobilePublisher]);
+          _mobilePublisher, _emergencyProvider]);
     _router = createRouter(_authProvider);
     _initDeepLinks();
   }
@@ -157,6 +172,9 @@ class _VigiShieldAppState extends State<VigiShieldApp> {
   void dispose() {
     _cameraProvider.removeListener(_syncValidationCameras);
     _systemProvider.removeListener(_syncValidationSystem);
+    _authProvider.removeListener(_emergencyProvider.reconcile);
+    _systemProvider.removeListener(_emergencyProvider.reconcile);
+    _emergencyProvider.dispose();
     _validationProvider.dispose();
     _validationDio.close(force: true);
     super.dispose();
@@ -226,6 +244,7 @@ class _VigiShieldAppState extends State<VigiShieldApp> {
         ChangeNotifierProvider.value(value: _cameraProvider),
         ChangeNotifierProvider.value(value: _mobilePublisher),
         ChangeNotifierProvider.value(value: _validationProvider),
+        ChangeNotifierProvider.value(value: _emergencyProvider),
         ChangeNotifierProvider.value(value: _serverConfigProvider),
         ChangeNotifierProvider.value(value: _localeProvider),
         ChangeNotifierProvider.value(value: _devSettingsProvider),
@@ -252,7 +271,9 @@ class _VigiShieldAppState extends State<VigiShieldApp> {
             builder: (context, child) => _OcultarTeclado(
               child: KeyedSubtree(
                 key: ValueKey(locale.languageCode),
-                child: ValidationOverlay(child: child ?? const SizedBox.shrink()),
+                child: EmergencyOverlay(
+                  child: ValidationOverlay(child: child ?? const SizedBox.shrink()),
+                ),
               ),
             ),
             routerConfig: router,
