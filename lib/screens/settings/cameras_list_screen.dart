@@ -245,7 +245,13 @@ class _CameraCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(
-            isConfigured ? Icons.videocam : Icons.videocam_off_outlined,
+            // La cámara del teléfono se distingue de un vistazo: no es una
+            // cámara IP y no se configura igual.
+            cam.isMobileWebRtc
+                ? Icons.phone_android
+                : isConfigured
+                    ? Icons.videocam
+                    : Icons.videocam_off_outlined,
             color: isConfigured
                 ? AppColors.accent
                 : AppColors.textSecondary,
@@ -288,22 +294,34 @@ class _CameraCard extends StatelessWidget {
                 const SizedBox(height: 3),
                 // Iconos Material (Apache-2.0) en lugar de emojis: se pintan
                 // con el color del tema y no dependen de la fuente del sistema.
-                _LineaConIcono(
-                  icono: isConfigured ? Icons.lan_outlined : Icons.link_off,
-                  texto: isConfigured
-                      ? (ip ?? 'Configurada')
-                      : 'Sin configurar',
-                  color: AppColors.textSecondary,
-                  tamano: 12,
-                ),
-                _LineaConIcono(
-                  icono: mode == 'RtmpRelay'
-                      ? Icons.sync_alt_rounded
-                      : Icons.videocam_outlined,
-                  texto: cam.isMobileWebRtc ? 'Cámara del dispositivo' : mode == 'RtmpRelay' ? 'Relay RTMP' : 'IP Fija RTSP',
-                  color: AppColors.textMuted,
-                  tamano: 11,
-                ),
+                //
+                // Una cámara de teléfono no tiene IP, así que mostrar
+                // "Configurada" no decía nada: se indica de dónde sale el video.
+                if (cam.isMobileWebRtc)
+                  const _LineaConIcono(
+                    icono: Icons.phone_android,
+                    texto: 'Cámara de este teléfono',
+                    color: AppColors.textSecondary,
+                    tamano: 12,
+                  )
+                else ...[
+                  _LineaConIcono(
+                    icono: isConfigured ? Icons.lan_outlined : Icons.link_off,
+                    texto: isConfigured
+                        ? (ip ?? 'Configurada')
+                        : 'Sin configurar',
+                    color: AppColors.textSecondary,
+                    tamano: 12,
+                  ),
+                  _LineaConIcono(
+                    icono: mode == 'RtmpRelay'
+                        ? Icons.sync_alt_rounded
+                        : Icons.videocam_outlined,
+                    texto: mode == 'RtmpRelay' ? 'Relay RTMP' : 'IP Fija RTSP',
+                    color: AppColors.textMuted,
+                    tamano: 11,
+                  ),
+                ],
                 if (isPrimary) Row(children: [
                   const Flexible(child: Text('Notificaciones', style: TextStyle(fontSize: 11))),
                   Switch(value: cam.notificationsEnabled,
@@ -318,26 +336,57 @@ class _CameraCard extends StatelessWidget {
                 ]),
               ]),
         ),
-        if (isPrimary) ...[
-          IconButton(
-            icon: const Icon(Icons.crop_free,
-                color: AppColors.accent, size: 18),
-            onPressed: onZones,
-            tooltip: 'Zonas de interés',
+        // Un solo menú en vez de tres botones: los tres ocupaban casi 150 px
+        // fijos y en pantallas estrechas ahogaban el nombre de la cámara, que
+        // se partía en varias líneas. En un móvil grande no se notaba.
+        if (isPrimary)
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert,
+                color: AppColors.textSecondary, size: 20),
+            tooltip: 'Opciones de la cámara',
+            color: AppColors.surfaceElevated,
+            onSelected: (opcion) {
+              switch (opcion) {
+                case 'zonas':
+                  onZones?.call();
+                case 'editar':
+                  onEdit?.call();
+                case 'eliminar':
+                  onDelete?.call();
+              }
+            },
+            itemBuilder: (_) => [
+              const PopupMenuItem(
+                value: 'zonas',
+                child: ListTile(
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(Icons.crop_free, color: AppColors.accent, size: 18),
+                  title: Text('Zonas de interés'),
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'editar',
+                child: ListTile(
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(Icons.edit_outlined,
+                      color: AppColors.textSecondary, size: 18),
+                  title: Text('Editar'),
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'eliminar',
+                child: ListTile(
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(Icons.delete_outline,
+                      color: AppColors.alertRed, size: 18),
+                  title: Text('Eliminar'),
+                ),
+              ),
+            ],
           ),
-          IconButton(
-            icon: const Icon(Icons.edit_outlined,
-                color: AppColors.textSecondary, size: 18),
-            onPressed: onEdit,
-            tooltip: 'Editar',
-          ),
-          IconButton(
-            icon: const Icon(Icons.delete_outline,
-                color: AppColors.alertRed, size: 18),
-            onPressed: onDelete,
-            tooltip: 'Eliminar',
-          ),
-        ],
       ]),
     );
   }

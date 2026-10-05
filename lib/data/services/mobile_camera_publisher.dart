@@ -58,8 +58,10 @@ class WebRtcCameraCapture implements MobileCameraCapture {
   Future<void> open({required bool front}) async {
     _stream = await navigator.mediaDevices.getUserMedia({
       'audio': false,
+      // 16:9 apaisado: es el encuadre de una camara de vigilancia y el que
+      // espera el visor en vivo, que gira a horizontal.
       'video': {'facingMode': front ? 'user' : 'environment',
-        'width': {'ideal': 1280}, 'height': {'ideal': 720},
+        'width': {'ideal': 1280, 'min': 640}, 'height': {'ideal': 720, 'min': 360},
         'frameRate': {'ideal': 24, 'max': 30}},
     });
     _peer = await createPeerConnection({'sdpSemantics': 'unified-plan', 'iceServers': []});

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:provider/provider.dart';
 import '../../core/network/api_client.dart';
@@ -21,21 +22,90 @@ class _DeviceCameraScreenState extends State<DeviceCameraScreen> with WidgetsBin
   RTCVideoRenderer? _renderer;
   CameraConfigModel? _camera;
   bool _front = false, _busy = false, _foreground = true;
+  /// Cierto si el publicador lo creo esta pantalla (solo en pruebas).
+  bool _propio = false;
   String? _error;
+  /// La linterna solo existe en la cámara trasera y no en todos los equipos.
+  bool _linternaDisponible = false, _linterna = false;
+
+  MediaStreamTrack? get _pista {
+    final pistas = _publisher?.stream?.getVideoTracks();
+    return (pistas == null || pistas.isEmpty) ? null : pistas.first;
+  }
+
+  /// Pregunta al equipo si tiene linterna. Se consulta tras abrir la cámara
+  /// porque depende de la lente escogida.
+  Future<void> _revisarLinterna() async {
+    final pista = _pista;
+    var disponible = false;
+    if (pista != null) {
+      try { disponible = await pista.hasTorch(); } catch (_) { disponible = false; }
+    }
+    if (!mounted || disponible == _linternaDisponible) return;
+    setState(() { _linternaDisponible = disponible; if (!disponible) _linterna = false; });
+  }
+
+  Future<void> _cambiarLinterna() async {
+    final pista = _pista;
+    if (pista == null) return;
+    final valor = !_linterna;
+    try {
+      await pista.setTorch(valor);
+      if (mounted) setState(() => _linterna = valor);
+    } catch (e) {
+      if (mounted) setState(() => _error = 'No se pudo encender la linterna: $e');
+    }
+  }
+
+  /// Guarda el nombre de una cámara ya creada. Renombrar no toca la clave de
+  /// transmisión, así que puede hacerse en caliente sin cortar el video.
+  Future<void> _guardarNombre() async {
+    final camara = _camera;
+    final nombre = _name.text.trim();
+    if (camara == null || nombre.isEmpty || nombre == camara.name) return;
+    setState(() => _busy = true);
+    final cameras = context.read<CameraProvider>();
+    final ok = await cameras.updateCamera(camara.id,
+        SaveCameraRequest(name: nombre, streamMode: 'MobileWebRtc'));
+    if (!mounted) return;
+    setState(() {
+      _busy = false;
+      if (ok) {
+        // El provider ya guarda el modelo actualizado; se relee de ahí en vez
+        // de reconstruirlo a mano.
+        final i = cameras.cameras.indexWhere((c) => c.id == camara.id);
+        if (i >= 0) _camera = cameras.cameras[i];
+        _error = null;
+      } else {
+        _error = cameras.error ?? 'No se pudo guardar el nombre.';
+      }
+    });
+  }
 
   @override void initState() {
     super.initState();
     _camera = widget.camera;
     if (_camera != null) _name.text = _camera!.name;
-    _publisher = widget.publisher;
+    // Si no se inyecta uno (los tests lo hacen), se usa el de la app: asi la
+    // transmision sigue viva al salir de esta pantalla.
+    _propio = widget.publisher != null;
+    _publisher = widget.publisher ?? context.read<MobileCameraPublisher>();
     _publisher?.addListener(_changed);
     WidgetsBinding.instance.addObserver(this);
+    // Se captura en apaisado a proposito. Una camara de vigilancia encuadra en
+    // horizontal, y el visor en vivo gira a apaisado: publicando en vertical el
+    // video salia con franjas negras a los lados.
+    SystemChrome.setPreferredOrientations(
+        [DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight]);
   }
 
   void _changed() {
     if (!mounted) return;
     _renderer?.srcObject = _publisher?.stream;
     setState(() {});
+    // La linterna depende de la lente abierta, así que se revisa cada vez que
+    // cambia el stream y no una sola vez al entrar.
+    unawaited(_revisarLinterna());
   }
 
   /// Sube cada vez que la app pasa a segundo plano. Un arranque que quedó a
@@ -60,7 +130,6 @@ class _DeviceCameraScreenState extends State<DeviceCameraScreen> with WidgetsBin
         await cameras.fetchCameras();
       }
       if (!vigente()) return;
-      _publisher ??= MobileCameraPublisher(transport: service)..addListener(_changed);
       if (_renderer == null) {
         final renderer = RTCVideoRenderer();
         await renderer.initialize();
@@ -104,9 +173,12 @@ class _DeviceCameraScreenState extends State<DeviceCameraScreen> with WidgetsBin
   }
 
   @override void dispose() {
+    // Se devuelve la libertad de giro al resto de la app.
+    SystemChrome.setPreferredOrientations(DeviceOrientation.values);
     WidgetsBinding.instance.removeObserver(this);
     _publisher?.removeListener(_changed);
-    _publisher?.dispose();
+    // Solo se desecha si lo creo esta pantalla. El de la app lo gestiona main.
+    if (_propio) _publisher?.dispose();
     final renderer = _renderer;
     if (renderer != null) { renderer.srcObject = null; unawaited(renderer.dispose()); }
     _name.dispose();
@@ -125,13 +197,41 @@ class _DeviceCameraScreenState extends State<DeviceCameraScreen> with WidgetsBin
       body: ListView(padding: const EdgeInsets.all(20), children: [
         const Text('Video sin audio. Mantén esta pantalla abierta y el dispositivo conectado. La transmisión se detiene al salir o pasar a segundo plano.'),
         const SizedBox(height: 16),
-        TextField(controller: _name, enabled: _camera == null && !_busy,
-          decoration: const InputDecoration(labelText: 'Nombre de la cámara')),
+        // El nombre se puede cambiar también después de crearla: renombrar no
+        // toca la clave de transmisión, así que no corta el video.
+        TextField(
+          controller: _name,
+          enabled: !_busy,
+          textInputAction: TextInputAction.done,
+          onSubmitted: (_) => _guardarNombre(),
+          onChanged: (_) => setState(() {}),
+          decoration: InputDecoration(
+            labelText: 'Nombre de la cámara',
+            suffixIcon: _camera != null && _name.text.trim().isNotEmpty &&
+                    _name.text.trim() != _camera!.name
+                ? IconButton(
+                    icon: const Icon(Icons.check),
+                    tooltip: 'Guardar nombre',
+                    onPressed: _busy ? null : _guardarNombre)
+                : null,
+          ),
+        ),
         const SizedBox(height: 16),
         SegmentedButton<bool>(segments: const [
           ButtonSegment(value: false, label: Text('Trasera'), icon: Icon(Icons.camera_rear)),
           ButtonSegment(value: true, label: Text('Frontal'), icon: Icon(Icons.camera_front)),
         ], selected: {_front}, onSelectionChanged: _busy ? null : (values) => _switchLens(values.single)),
+        if (_linternaDisponible) ...[
+          const SizedBox(height: 8),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            value: _linterna,
+            onChanged: _busy ? null : (_) => _cambiarLinterna(),
+            secondary: Icon(_linterna ? Icons.flashlight_on : Icons.flashlight_off),
+            title: const Text('Linterna'),
+            subtitle: const Text('Para zonas oscuras. Consume más batería.'),
+          ),
+        ],
         const SizedBox(height: 16),
         AspectRatio(aspectRatio: 3 / 4, child: ColoredBox(color: Colors.black,
           child: _renderer != null && _publisher?.stream != null

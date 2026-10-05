@@ -34,6 +34,8 @@ void main() {
     await tester.pumpWidget(MultiProvider(providers: [
       Provider<ApiClient>.value(value: api),
       ChangeNotifierProvider(create: (_) => CameraProvider(CameraDataService(api))),
+      ChangeNotifierProvider(create: (_) => MobileCameraPublisher(
+          transport: CameraDataService(api), capture: Capture())),
     ], child: const MaterialApp(home: DeviceCameraScreen())));
     await tester.tap(find.text('Iniciar transmisión'));
     await tester.pumpAndSettle();
@@ -100,7 +102,9 @@ void main() {
     expect(transport.events.last, 'delete:camera:session');
   });
   testWidgets('device screen requires explicit start and offers both lenses', (tester) async {
-    await tester.pumpWidget(const MaterialApp(home: DeviceCameraScreen()));
+    await tester.pumpWidget(ChangeNotifierProvider(
+        create: (_) => MobileCameraPublisher(transport: Transport(), capture: Capture()),
+        child: const MaterialApp(home: DeviceCameraScreen())));
     expect(find.text('Iniciar transmisión'), findsOneWidget);
     expect(find.text('Trasera'), findsOneWidget);
     expect(find.text('Frontal'), findsOneWidget);

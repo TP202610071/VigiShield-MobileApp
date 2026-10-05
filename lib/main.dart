@@ -28,6 +28,7 @@ import 'package:app_links/app_links.dart';
 import 'package:go_router/go_router.dart';
 import 'core/utils/deep_links.dart';
 import 'router/app_router.dart';
+import 'data/services/mobile_camera_publisher.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -93,6 +94,7 @@ class _VigiShieldAppState extends State<VigiShieldApp> {
   late final EventProvider _eventProvider;
   late final SystemProvider _systemProvider;
   late final CameraProvider _cameraProvider;
+  late final MobileCameraPublisher _mobilePublisher;
   late final ValidationProvider _validationProvider;
   final Dio _validationDio = Dio(BaseOptions(connectTimeout: const Duration(seconds: 3), receiveTimeout: const Duration(seconds: 3)));
   late final ServerConfigProvider _serverConfigProvider;
@@ -112,6 +114,10 @@ class _VigiShieldAppState extends State<VigiShieldApp> {
     _eventProvider = EventProvider(EventService(_api));
     _systemProvider = SystemProvider(SystemService(_api));
     _cameraProvider = CameraProvider(CameraDataService(_api));
+    // El publicador vive aqui, no dentro de la pantalla: si lo tuviera la
+    // pantalla, retroceder para ver la camara en vivo cortaria la propia
+    // transmision que se quiere ver.
+    _mobilePublisher = MobileCameraPublisher(transport: CameraDataService(_api));
     _validationProvider = ValidationProvider(
       platform: ValidationPlatform(),
       canMonitor: () => _authProvider.isAuthenticated && _systemProvider.status?.isMonitoringActive != false,
@@ -217,6 +223,7 @@ class _VigiShieldAppState extends State<VigiShieldApp> {
         ChangeNotifierProvider.value(value: _eventProvider),
         ChangeNotifierProvider.value(value: _systemProvider),
         ChangeNotifierProvider.value(value: _cameraProvider),
+        ChangeNotifierProvider.value(value: _mobilePublisher),
         ChangeNotifierProvider.value(value: _validationProvider),
         ChangeNotifierProvider.value(value: _serverConfigProvider),
         ChangeNotifierProvider.value(value: _localeProvider),
