@@ -32,6 +32,9 @@ import 'data/services/mobile_camera_publisher.dart';
 import 'data/services/emergency_effects.dart';
 import 'providers/emergency_provider.dart';
 import 'widgets/emergency_overlay.dart';
+import 'core/orientation/orientacion_app.dart';
+import 'core/utils/pantalla_encendida.dart';
+import 'data/services/captura_camara.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -98,6 +101,8 @@ class _VigiShieldAppState extends State<VigiShieldApp> {
   late final SystemProvider _systemProvider;
   late final CameraProvider _cameraProvider;
   late final MobileCameraPublisher _mobilePublisher;
+  late final CapturaCamara _capturas;
+  bool _transmitia = false;
   late final ValidationProvider _validationProvider;
   late final EmergencyProvider _emergencyProvider;
   static const _emergencyKey = 'emergency_settings';
@@ -122,7 +127,16 @@ class _VigiShieldAppState extends State<VigiShieldApp> {
     // El publicador vive aqui, no dentro de la pantalla: si lo tuviera la
     // pantalla, retroceder para ver la camara en vivo cortaria la propia
     // transmision que se quiere ver.
-    _mobilePublisher = MobileCameraPublisher(transport: CameraDataService(_api));
+    _mobilePublisher = MobileCameraPublisher(
+      transport: CameraDataService(_api),
+      antesDeAbrir: OrientacionApp.instance.iniciarTransmision,
+    );
+    _capturas = CapturaCamara(_storage);
+    _mobilePublisher.addListener(_alCambiarTransmision);
+    // Teléfono girado mientras transmite: la pantalla ya giró con él; se
+    // reinicia la sesión para que el video siga derecho y con tamaño estable.
+    OrientacionApp.instance.alCambiarFisicaTransmitiendo = (_) => Future<void>.delayed(
+        const Duration(milliseconds: 1200), _mobilePublisher.reiniciar);
     _validationProvider = ValidationProvider(
       platform: ValidationPlatform(),
       canMonitor: () => _authProvider.isAuthenticated && _systemProvider.status?.isMonitoringActive != false,
@@ -168,8 +182,35 @@ class _VigiShieldAppState extends State<VigiShieldApp> {
   void _syncValidationSystem() {
     if (_systemProvider.status?.isMonitoringActive == false) _validationProvider.stop();
   }
+  /// Lo que pasa alrededor de la transmisión del teléfono:
+  /// - la pantalla no se apaga (si se apagara, la app pasaría a segundo plano
+  ///   y la transmisión se cortaría);
+  /// - al terminar, cada vista recupera su orientación;
+  /// - al empezar, se toma una captura para el editor de zonas de interés.
+  void _alCambiarTransmision() {
+    final p = _mobilePublisher;
+    final activo = p.isPublishing || p.isStarting;
+    if (activo) {
+      PantallaEncendida.pedir('transmision');
+    } else {
+      PantallaEncendida.soltar('transmision');
+      OrientacionApp.instance.finTransmision();
+    }
+    if (p.isPublishing && !_transmitia) {
+      final id = p.cameraId;
+      Future<void>.delayed(const Duration(seconds: 4), () async {
+        if (!_mobilePublisher.isPublishing || _mobilePublisher.cameraId != id) return;
+        if (_cameraProvider.cameras.every((c) => c.id != id)) await _cameraProvider.fetchCameras();
+        final cam = _cameraProvider.cameras.where((c) => c.id == id).firstOrNull;
+        if (cam != null) await _capturas.tomar(cam);
+      });
+    }
+    _transmitia = p.isPublishing;
+  }
+
   @override
   void dispose() {
+    _mobilePublisher.removeListener(_alCambiarTransmision);
     _cameraProvider.removeListener(_syncValidationCameras);
     _systemProvider.removeListener(_syncValidationSystem);
     _authProvider.removeListener(_emergencyProvider.reconcile);
@@ -238,6 +279,7 @@ class _VigiShieldAppState extends State<VigiShieldApp> {
     return MultiProvider(
       providers: [
         Provider<ApiClient>.value(value: _api),
+        Provider<CapturaCamara>.value(value: _capturas),
         ChangeNotifierProvider.value(value: _authProvider),
         ChangeNotifierProvider.value(value: _eventProvider),
         ChangeNotifierProvider.value(value: _systemProvider),

@@ -1,3 +1,4 @@
+import '../../core/utils/pantalla_encendida.dart';
 import 'dart:async';
 
 import 'package:dio/dio.dart';
@@ -10,7 +11,6 @@ import 'package:intl/intl.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import 'package:provider/provider.dart';
-import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../../core/i18n/app_localizations.dart';
 import '../../core/network/api_client.dart';
@@ -158,7 +158,7 @@ class _CameraScreenState extends State<CameraScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    WakelockPlus.enable();
+    PantallaEncendida.pedir('camara');
     // Orientation is owned by MainShell (camera tab = landscape). This screen
     // must NOT set orientation itself — it lives in an IndexedStack and stays
     // alive on other tabs, so forcing landscape here rotates the other tabs.
@@ -258,7 +258,7 @@ class _CameraScreenState extends State<CameraScreen>
   void dispose() {
     _isActive = false;
     WidgetsBinding.instance.removeObserver(this);
-    WakelockPlus.disable();
+    PantallaEncendida.soltar('camara');
     _cancelRecoveryTimers();
     _stopAiFramePoller();
     _eventPollTimer?.cancel();

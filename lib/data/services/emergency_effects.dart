@@ -1,3 +1,4 @@
+import '../../core/utils/pantalla_encendida.dart';
 import 'dart:async';
 import 'dart:io';
 
@@ -6,7 +7,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:vibration/vibration.dart';
-import 'package:wakelock_plus/wakelock_plus.dart';
 
 /// Lo que la alerta hace en el teléfono. Es una interfaz para poder probar la
 /// lógica de la alerta sin sonar ni llamar de verdad.
@@ -33,7 +33,7 @@ class DeviceEmergencyEffects implements EmergencyEffects {
   Future<void> start(double volume) async {
     if (_running) return setVolume(volume);
     _running = true;
-    unawaited(WakelockPlus.enable());
+    PantallaEncendida.pedir('alerta');
     try {
       // respectSilence:false: una alarma debe oírse aunque el teléfono esté
       // en silencio. stayAwake:false porque exige el permiso WAKE_LOCK, y sin
@@ -65,7 +65,7 @@ class DeviceEmergencyEffects implements EmergencyEffects {
     _vibration?.cancel();
     _vibration = null;
     unawaited(Vibration.cancel());
-    unawaited(WakelockPlus.disable());
+    PantallaEncendida.soltar('alerta');
     try { await _player.stop(); } catch (_) {}
   }
 
