@@ -107,8 +107,12 @@ class OrientacionApp {
   /// Clasifica una lectura del acelerómetro. El eje que apunta hacia arriba
   /// marca +9.8: +y vertical, −y vertical invertido, +x girado a la izquierda
   /// (landscapeLeft), −x girado a la derecha. Sobre la mesa (domina z) no se
-  /// cambia nada. Solo se acepta un cambio estable durante 0.8 s, para que un
-  /// movimiento brusco no reinicie la transmisión.
+  /// cambia nada. Solo se acepta un cambio estable durante [estable], para que
+  /// manipular el teléfono no reinicie la transmisión: con la app en vertical,
+  /// la gente lo usa de pie y luego lo acuesta, y con 0.8 s un tester reinició
+  /// siete veces en tres minutos (cada reinicio corta el video y la IA).
+  static const estable = Duration(milliseconds: 2500);
+
   @visibleForTesting
   void muestra(double x, double y, double z, {DateTime? ahora}) {
     final t = ahora ?? DateTime.now();
@@ -134,7 +138,7 @@ class OrientacionApp {
       _candidataDesde = t;
       return;
     }
-    if (t.difference(_candidataDesde!) >= const Duration(milliseconds: 800)) {
+    if (t.difference(_candidataDesde!) >= estable) {
       _fisica = o;
       _candidata = null;
       if (_publicando) alCambiarFisicaTransmitiendo?.call(o);

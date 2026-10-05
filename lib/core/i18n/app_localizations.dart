@@ -107,9 +107,12 @@ class AppStrings {
   String get passwordMin => _('Mínimo 8 caracteres', 'At least 8 characters');
 
   // ── Contraseña segura (checklist en vivo) ───────────────────────────────────
-  String get passwordWeak =>
-      _('La contraseña no cumple los requisitos', 'The password does not meet the requirements');
-  String pwRuleLength(int n) => _('Al menos $n caracteres', 'At least $n characters');
+  String get passwordWeak => _(
+    'La contraseña no cumple los requisitos',
+    'The password does not meet the requirements',
+  );
+  String pwRuleLength(int n) =>
+      _('Al menos $n caracteres', 'At least $n characters');
   String get pwRuleUpper => _('Una letra mayúscula', 'One uppercase letter');
   String get pwRuleLower => _('Una letra minúscula', 'One lowercase letter');
   String get pwRuleDigit => _('Un número', 'One number');
@@ -117,65 +120,83 @@ class AppStrings {
   // ── Restablecer contraseña / invitación (enlaces de correo) ─────────────────
   String get resetTitle => _('Nueva contraseña', 'New password');
   String get resetSubtitle => _(
-      'Elige una contraseña nueva para tu cuenta.',
-      'Choose a new password for your account.');
+    'Elige una contraseña nueva para tu cuenta.',
+    'Choose a new password for your account.',
+  );
   String get resetDone => _(
-      'Listo. Ya puedes iniciar sesión con tu contraseña nueva.',
-      'Done. You can now sign in with your new password.');
+    'Listo. Ya puedes iniciar sesión con tu contraseña nueva.',
+    'Done. You can now sign in with your new password.',
+  );
   String get resetLinkInvalid => _(
-      'Este enlace ya caducó o fue utilizado. Solicita uno nuevo desde "¿Olvidaste tu contraseña?".',
-      'This link has expired or was already used. Request a new one from "Forgot your password?".');
+    'Este enlace ya caducó o fue utilizado. Solicita uno nuevo desde "¿Olvidaste tu contraseña?".',
+    'This link has expired or was already used. Request a new one from "Forgot your password?".',
+  );
   String get repeatPassword => _('Repite la contraseña', 'Repeat the password');
-  String get passwordsDoNotMatch => _('Las contraseñas no coinciden', 'The passwords do not match');
+  String get passwordsDoNotMatch =>
+      _('Las contraseñas no coinciden', 'The passwords do not match');
   String get savePassword => _('Guardar contraseña', 'Save password');
   String get backToLogin => _('Volver a iniciar sesión', 'Back to sign in');
 
   String get connectionError => _(
-      'No se pudo conectar con el servidor. Revisa tu conexión.',
-      'Could not reach the server. Check your connection.');
-  String get inviteTitle => _('Invitación a una vivienda', 'Household invitation');
+    'No se pudo conectar con el servidor. Revisa tu conexión.',
+    'Could not reach the server. Check your connection.',
+  );
+  String get inviteTitle =>
+      _('Invitación a una vivienda', 'Household invitation');
   String invitedBy(String quien) => _(
-      '$quien te invitó a la vigilancia de su vivienda.',
-      '$quien invited you to monitor their home.');
+    '$quien te invitó a la vigilancia de su vivienda.',
+    '$quien invited you to monitor their home.',
+  );
   String get inviteSubtitle => _(
-      'Crea tu cuenta para unirte. Tendrás acceso de solo lectura: video en vivo, historial y evidencias.',
-      'Create your account to join. You will have read-only access: live video, history and evidence.');
+    'Crea tu cuenta para unirte. Tendrás acceso de solo lectura: video en vivo, historial y evidencias.',
+    'Create your account to join. You will have read-only access: live video, history and evidence.',
+  );
   String get inviteAccept => _('Unirme a la vivienda', 'Join the household');
   String get inviteDone => _(
-      'Listo. Ya formas parte de la vivienda.',
-      'Done. You are now part of the household.');
+    'Listo. Ya formas parte de la vivienda.',
+    'Done. You are now part of the household.',
+  );
   String get inviteInvalid => _(
-      'Este enlace de invitación no es válido.',
-      'This invitation link is not valid.');
+    'Este enlace de invitación no es válido.',
+    'This invitation link is not valid.',
+  );
   String get inviteUsed => _(
-      'Esta invitación ya fue utilizada. Si ya tienes cuenta, inicia sesión.',
-      'This invitation was already used. If you already have an account, sign in.');
+    'Esta invitación ya fue utilizada. Si ya tienes cuenta, inicia sesión.',
+    'This invitation was already used. If you already have an account, sign in.',
+  );
   String get inviteExpired => _(
-      'Esta invitación caducó. Pide al residente principal que te envíe una nueva.',
-      'This invitation has expired. Ask the primary resident to send you a new one.');
+    'Esta invitación caducó. Pide al residente principal que te envíe una nueva.',
+    'This invitation has expired. Ask the primary resident to send you a new one.',
+  );
   String get yourEmail => _('Tu correo', 'Your email');
   String get yourName => _('Tu nombre', 'Your name');
-  String get createYourPassword => _('Crea tu contraseña', 'Create your password');
+  String get createYourPassword =>
+      _('Crea tu contraseña', 'Create your password');
 
   // ── Usuarios de la vivienda ─────────────────────────────────────────────────
   String get householdUsers => _('Usuarios', 'Users');
   String get householdUsersHint => _(
-      'Personas con acceso de solo lectura a tu vivienda: pueden ver el video y el historial, pero no cambiar la configuración.',
-      'People with read-only access to your home: they can see the video and history, but cannot change settings.');
+    'Personas con acceso de solo lectura a tu vivienda: pueden ver el video y el historial, pero no cambiar la configuración.',
+    'People with read-only access to your home: they can see the video and history, but cannot change settings.',
+  );
   String get inviteUser => _('Invitar', 'Invite');
   String get inviteUserTitle => _('Invitar a alguien', 'Invite someone');
   String get inviteUserHint => _(
-      'Le enviaremos un correo con un enlace para crear su cuenta. Caduca en 7 días.',
-      'We will email them a link to create their account. It expires in 7 days.');
+    'Le enviaremos un correo con un enlace para crear su cuenta. Caduca en 7 días.',
+    'We will email them a link to create their account. It expires in 7 days.',
+  );
   String get inviteSent => _('Invitación enviada', 'Invitation sent');
-  String get noSecondaryUsers => _('Sin usuarios invitados', 'No invited users');
+  String get noSecondaryUsers =>
+      _('Sin usuarios invitados', 'No invited users');
   String get noSecondaryUsersHint => _(
-      'Invita a alguien de confianza para que pueda vigilar la vivienda contigo.',
-      'Invite someone you trust so they can watch over the home with you.');
+    'Invita a alguien de confianza para que pueda vigilar la vivienda contigo.',
+    'Invite someone you trust so they can watch over the home with you.',
+  );
   String get revokeAccess => _('Revocar acceso', 'Revoke access');
   String revokeAccessConfirm(String nombre) => _(
-      '¿Quitar el acceso de $nombre? Dejará de poder ver tu vivienda de inmediato.',
-      'Remove $nombre\'s access? They will immediately lose access to your home.');
+    '¿Quitar el acceso de $nombre? Dejará de poder ver tu vivienda de inmediato.',
+    'Remove $nombre\'s access? They will immediately lose access to your home.',
+  );
   String get accessRevoked => _('Acceso revocado', 'Access revoked');
   String memberSinceShort(String fecha) => _('Desde $fecha', 'Since $fecha');
 
@@ -185,8 +206,9 @@ class AppStrings {
   String get passwordUpdated => _('Contraseña actualizada', 'Password updated');
   String get configureAlerts => _('Configurar alertas', 'Configure alerts');
   String get configureAlertsHint => _(
-      'Elige qué situaciones quieres que te avisen. Las que apagues se seguirán registrando en el historial, pero sin notificarte.',
-      'Choose which situations you want to be alerted about. The ones you turn off are still recorded in the history, just without notifying you.');
+    'Elige qué situaciones quieres que te avisen. Las que apagues se seguirán registrando en el historial, pero sin notificarte.',
+    'Choose which situations you want to be alerted about. The ones you turn off are still recorded in the history, just without notifying you.',
+  );
   String get disableAllAlerts => _('Desactivar todas', 'Turn all off');
   String get enableAllAlerts => _('Activar todas', 'Turn all on');
   String get myCameras => _('Mis cámaras', 'My cameras');
@@ -207,11 +229,11 @@ class AppStrings {
   String get rolePrimary => _('Residente principal', 'Primary resident');
   String get roleSecondary => _('Residente secundario', 'Secondary resident');
   String roleLabel(String role) => switch (role) {
-        'Admin' => roleAdmin,
-        'Primary' => rolePrimary,
-        'Secondary' => roleSecondary,
-        _ => role,
-      };
+    'Admin' => roleAdmin,
+    'Primary' => rolePrimary,
+    'Secondary' => roleSecondary,
+    _ => role,
+  };
 
   // ── Profile ─────────────────────────────────────────────────────────────────
   String get profile => _('Perfil', 'Profile');
@@ -245,32 +267,39 @@ class AppStrings {
   // su casa, y no tiene forma de saber qué es un "backend Python" ni de
   // encenderlo. Solo se le dice qué ocurre y cuánto puede tardar.
   String get aiHint => _(
-      'La detección tarda unos segundos en empezar.\nSi la cámara acaba de encenderse, puede demorar un poco más.',
-      'Detection takes a few seconds to start.\nIf the camera just came online it may take a little longer.');
+    'La detección tarda unos segundos en empezar.\nSi la cámara acaba de encenderse, puede demorar un poco más.',
+    'Detection takes a few seconds to start.\nIf the camera just came online it may take a little longer.',
+  );
   String get aiDisabledTitle =>
       _('La detección está desactivada', 'Detection is turned off');
   String get aiDisabledBody => _(
-      'Esta cámara se sigue viendo en vivo, pero la IA no la analiza ni genera alertas. Actívala para ver la detección.',
-      'This camera still streams live, but the AI is not analyzing it or raising alerts. Turn it on to see detection.');
+    'Esta cámara se sigue viendo en vivo, pero la IA no la analiza ni genera alertas. Actívala para ver la detección.',
+    'This camera still streams live, but the AI is not analyzing it or raising alerts. Turn it on to see detection.',
+  );
   String get aiDisabledAction => _('Activar cámara', 'Turn camera on');
   String get aiDisabledAskPrimary => _(
-      'Pide al residente principal que la active desde Mis cámaras.',
-      'Ask the primary resident to turn it on from My cameras.');
+    'Pide al residente principal que la active desde Mis cámaras.',
+    'Ask the primary resident to turn it on from My cameras.',
+  );
   String get aiEnableFailed =>
       _('No se pudo activar la cámara.', 'Could not turn the camera on.');
   String get noCameras =>
       _('No hay cámaras configuradas', 'No cameras configured');
   String get noCamerasHint => _(
-      'Ve a Ajustes → Mis Cámaras para agregar tu cámara IP.',
-      'Go to Settings → My Cameras to add your IP camera.');
+    'Ve a Ajustes → Mis Cámaras para agregar tu cámara IP.',
+    'Go to Settings → My Cameras to add your IP camera.',
+  );
   String get addCamera => _('Agregar cámara', 'Add camera');
-  String get streamUnavailable => _('Stream no disponible', 'Stream unavailable');
+  String get streamUnavailable =>
+      _('Stream no disponible', 'Stream unavailable');
   String get streamUnavailableHint => _(
-      'Verifica que MediaMTX esté corriendo y la cámara accesible.',
-      'Check that MediaMTX is running and the camera is reachable.');
+    'Verifica que MediaMTX esté corriendo y la cámara accesible.',
+    'Check that MediaMTX is running and the camera is reachable.',
+  );
   String get allCameras => _('Todas las cámaras', 'All cameras');
   String get tipFullscreen => _('Pantalla completa', 'Fullscreen');
-  String get tipExitFullscreen => _('Salir de pantalla completa', 'Exit fullscreen');
+  String get tipExitFullscreen =>
+      _('Salir de pantalla completa', 'Exit fullscreen');
   String get tipScreenshot => _('Captura de pantalla', 'Screenshot');
   String get tipCameraSettings => _('Ajustes de cámara', 'Camera settings');
   String get tipReconnect => _('Reconectar', 'Reconnect');
@@ -280,28 +309,38 @@ class AppStrings {
   String get tipExitGrid => _('Salir del modo cuadrícula', 'Exit grid mode');
   String get screenshotSaved =>
       _('Captura guardada en galería', 'Screenshot saved to gallery');
+  String get screenshotNoFrame => _(
+      'Espera a que cargue el video para capturar.',
+      'Wait for the video to load before taking a screenshot.');
+  String get aiReconnecting =>
+      _('Reconectando con la cámara…', 'Reconnecting to the camera…');
   String screenshotError(String e) =>
       _('Error al guardar: $e', 'Save failed: $e');
 
   // Camera control sheet
   String get cameraSettings => _('Ajustes de Cámara', 'Camera Settings');
   String get cameraSettingsHint => _(
-      'Valores actuales leídos de la cámara por la red local. Mueve y guarda para aplicar en vivo.',
-      'Current values read from the camera over your local network. Adjust and save to apply live.');
+    'Valores actuales leídos de la cámara por la red local. Mueve y guarda para aplicar en vivo.',
+    'Current values read from the camera over your local network. Adjust and save to apply live.',
+  );
   String get cameraSettingsLanOnly => _(
-      'No se pudo contactar con la cámara. Estos ajustes viajan directo del teléfono a la cámara, así que conecta el teléfono al wifi de casa (el mismo de la cámara) e inténtalo de nuevo. Desde fuera de casa no se pueden cambiar.',
-      "Couldn't reach the camera. These settings go straight from your phone to the camera, so connect the phone to your home Wi-Fi (the camera's network) and try again. They can't be changed from outside the house.");
+    'No se pudo contactar con la cámara. Estos ajustes viajan directo del teléfono a la cámara, así que conecta el teléfono al wifi de casa (el mismo de la cámara) e inténtalo de nuevo. Desde fuera de casa no se pueden cambiar.',
+    "Couldn't reach the camera. These settings go straight from your phone to the camera, so connect the phone to your home Wi-Fi (the camera's network) and try again. They can't be changed from outside the house.",
+  );
   String get cameraSettingsBadCredentials => _(
-      'La cámara respondió, pero rechazó el usuario o la contraseña guardados. Corrígelos en Mis cámaras y vuelve a intentarlo.',
-      'The camera answered but rejected the saved username or password. Fix them in My cameras and try again.');
+    'La cámara respondió, pero rechazó el usuario o la contraseña guardados. Corrígelos en Mis cámaras y vuelve a intentarlo.',
+    'The camera answered but rejected the saved username or password. Fix them in My cameras and try again.',
+  );
   // Bloqueo biometrico
   String get biometricReason => _(
-      'Confirma tu identidad para entrar a VigiShield',
-      'Confirm your identity to open VigiShield');
+    'Confirma tu identidad para entrar a VigiShield',
+    'Confirm your identity to open VigiShield',
+  );
   String get biometricLock => _('Desbloqueo biométrico', 'Biometric unlock');
   String get biometricLockHint => _(
-      'Pide tu huella o rostro cada vez que abras la app, aunque la sesión siga iniciada.',
-      'Ask for your fingerprint or face every time you open the app, even if the session is still active.');
+    'Pide tu huella o rostro cada vez que abras la app, aunque la sesión siga iniciada.',
+    'Ask for your fingerprint or face every time you open the app, even if the session is still active.',
+  );
   String get biometricFailed =>
       _('No se pudo verificar tu identidad', 'Could not verify your identity');
   String get biometricRetry => _('Reintentar', 'Try again');
@@ -334,11 +373,11 @@ class AppStrings {
   // se llamara de una forma en el filtro y de otra en la ficha del historial.
   String get filterAll => _('Todos', 'All');
   String get filterAllCameras => _('Todas las cámaras', 'All cameras');
-  String get noEventsLogged =>
-      _('Sin eventos registrados', 'No events logged');
+  String get noEventsLogged => _('Sin eventos registrados', 'No events logged');
   String get eventsWillAppear => _(
-      'Los eventos detectados aparecerán aquí',
-      'Detected events will appear here');
+    'Los eventos detectados aparecerán aquí',
+    'Detected events will appear here',
+  );
 
   // ── Event detail ────────────────────────────────────────────────────────────
   String get eventDetail => _('Detalle del evento', 'Event detail');
@@ -353,13 +392,11 @@ class AppStrings {
   String get daytime => _('De día', 'Daytime');
   String get notified => _('Aviso enviado', 'Alert sent');
   String get yes => _('Sí', 'Yes');
-  String get noAlertsMuted =>
-      _('No, avisos silenciados', 'No, alerts muted');
+  String get noAlertsMuted => _('No, avisos silenciados', 'No, alerts muted');
   String get confidence => _('Confianza', 'Confidence');
   String get eventType => _('Tipo de evento', 'Event type');
   String get imageCapture => _('Captura de imagen', 'Image capture');
-  String get imageUnavailable =>
-      _('Imagen no disponible', 'Image unavailable');
+  String get imageUnavailable => _('Imagen no disponible', 'Image unavailable');
   String get videoClip => _('Clip de video', 'Video clip');
   String get fullscreen => _('Pantalla completa', 'Fullscreen');
   String get share => _('Compartir', 'Share');
@@ -368,23 +405,23 @@ class AppStrings {
   String get nightActivity => _('Actividad nocturna', 'Nighttime activity');
   String get deleteEvent => _('Eliminar evento', 'Delete event');
   String get deleteEventConfirm => _(
-      '¿Estás seguro de que deseas eliminar este evento?',
-      'Are you sure you want to delete this event?');
+    '¿Estás seguro de que deseas eliminar este evento?',
+    'Are you sure you want to delete this event?',
+  );
   String get eventNotFound => _('Evento no encontrado', 'Event not found');
 
   // ── Risk labels ─────────────────────────────────────────────────────────────
   String riskLabel(String risk) => switch (risk) {
-        'None' => _('Ninguno', 'None'),
-        'Low' => _('Bajo', 'Low'),
-        'Medium' => _('Medio', 'Medium'),
-        'High' => _('Alto', 'High'),
-        'Critical' => _('Crítico', 'Critical'),
-        _ => risk,
-      };
+    'None' => _('Ninguno', 'None'),
+    'Low' => _('Bajo', 'Low'),
+    'Medium' => _('Medio', 'Medium'),
+    'High' => _('Alto', 'High'),
+    'Critical' => _('Crítico', 'Critical'),
+    _ => risk,
+  };
 
   // ── Alert config ────────────────────────────────────────────────────────────
-  String get alertUnknownPerson =>
-      _('Persona desconocida', 'Unknown person');
+  String get alertUnknownPerson => _('Persona desconocida', 'Unknown person');
   String get alertForcedAccess => _('Acceso forzado', 'Forced access');
   String get alertLoiterer => _('Merodeo', 'Loitering');
   String get alertClimbing => _('Escalamiento', 'Climbing');
@@ -393,14 +430,14 @@ class AppStrings {
   // ── Auth ────────────────────────────────────────────────────────────────────
   String get welcome => _('Bienvenido', 'Welcome');
   String get loginSubtitle => _(
-      'Inicia sesión para acceder a tu sistema de seguridad',
-      'Sign in to access your security system');
+    'Inicia sesión para acceder a tu sistema de seguridad',
+    'Sign in to access your security system',
+  );
   String get emailField => _('CORREO ELECTRÓNICO', 'EMAIL');
   String get passwordField => _('CONTRASEÑA', 'PASSWORD');
   String get invalidEmail => _('Correo inválido', 'Invalid email');
   String get login => _('Iniciar sesión', 'Sign in');
-  String get loginError =>
-      _('Error al iniciar sesión', 'Sign-in failed');
+  String get loginError => _('Error al iniciar sesión', 'Sign-in failed');
   String get forgotPassword =>
       _('¿Olvidaste tu contraseña?', 'Forgot your password?');
   String get noAccount => _('¿No tienes cuenta? ', "Don't have an account? ");
@@ -409,57 +446,66 @@ class AppStrings {
       _('Configura tu sistema VigiShield', 'Set up your VigiShield system');
   String get nameHint => _('Tu nombre', 'Your name');
   String get nameMin => _('Mínimo 2 caracteres', 'At least 2 characters');
-  String get passwordHintMin => _('Mínimo 8 caracteres', 'At least 8 characters');
+  String get passwordHintMin =>
+      _('Mínimo 8 caracteres', 'At least 8 characters');
   String get householdAddressField => _('DIRECCIÓN DEL HOGAR', 'HOME ADDRESS');
   String get addressHint => _('Av. Ejemplo 123', '123 Example St');
   String get addressTooShort => _('Dirección muy corta', 'Address too short');
   String get registerPrimaryInfo => _(
-      'Serás el residente principal con acceso completo al sistema.',
-      'You will be the primary resident with full system access.');
+    'Serás el residente principal con acceso completo al sistema.',
+    'You will be the primary resident with full system access.',
+  );
   String get alreadyHaveAccount =>
       _('¿Ya tienes cuenta? ', 'Already have an account? ');
   String get registerError => _('Error al registrarse', 'Registration failed');
   String get recoverPassword => _('Recuperar contraseña', 'Recover password');
   String get recoverHint => _(
-      'Ingresa tu correo y te enviaremos un enlace para restablecer tu contraseña.',
-      "Enter your email and we'll send you a reset link.");
+    'Ingresa tu correo y te enviaremos un enlace para restablecer tu contraseña.',
+    "Enter your email and we'll send you a reset link.",
+  );
   String get sendLink => _('Enviar enlace', 'Send link');
   String linkSent(String email) => _(
-      'Enlace enviado a $email.\nRevisa tu bandeja de entrada.',
-      'Link sent to $email.\nCheck your inbox.');
+    'Enlace enviado a $email.\nRevisa tu bandeja de entrada.',
+    'Link sent to $email.\nCheck your inbox.',
+  );
 
   // ── Developer screen ────────────────────────────────────────────────────────
   String get developer => _('Desarrollador', 'Developer');
-  String get developerTools => _('Herramientas de desarrollador', 'Developer tools');
+  String get developerTools =>
+      _('Herramientas de desarrollador', 'Developer tools');
   String get rolePreview => _('Vista previa de rol', 'Role preview');
   String get rolePreviewHint => _(
-      'Cambia cómo se ve la app para presentar como otro tipo de usuario. No cambia tu cuenta real.',
-      "Change how the app looks to present as another user type. Doesn't change your real account.");
+    'Cambia cómo se ve la app para presentar como otro tipo de usuario. No cambia tu cuenta real.',
+    "Change how the app looks to present as another user type. Doesn't change your real account.",
+  );
   String get previewing => _('Previsualizando como', 'Previewing as');
   String get exitPreview => _('Salir de la vista previa', 'Exit preview');
   String get serverAddress => _('Dirección del servidor', 'Server address');
   String get serverAddressHint => _(
-      'Solo para administradores. La app de producción usa el servidor en la nube.',
-      'Administrators only. The production app uses the cloud server.');
+    'Solo para administradores. La app de producción usa el servidor en la nube.',
+    'Administrators only. The production app uses the cloud server.',
+  );
   String get serverUrlField => _('URL del servidor', 'Server URL');
   String get saveAndReconnect =>
       _('Guardar y reconectar', 'Save and reconnect');
   String get serverUpdated => _(
-      'Servidor actualizado. Inicia sesión de nuevo.',
-      'Server updated. Sign in again.');
-  String get manageAdmins =>
-      _('Administradores', 'Administrators');
+    'Servidor actualizado. Inicia sesión de nuevo.',
+    'Server updated. Sign in again.',
+  );
+  String get manageAdmins => _('Administradores', 'Administrators');
   String get manageAdminsHint => _(
-      'Cuentas con acceso a las herramientas de desarrollador.',
-      'Accounts with access to the developer tools.');
+    'Cuentas con acceso a las herramientas de desarrollador.',
+    'Accounts with access to the developer tools.',
+  );
   String get addAdmin => _('Agregar administrador', 'Add administrator');
-  String get adminEmailField =>
-      _('CORREO DEL USUARIO', 'USER EMAIL');
+  String get adminEmailField => _('CORREO DEL USUARIO', 'USER EMAIL');
   String get adminAdded => _('Administrador agregado', 'Administrator added');
-  String get adminRemoved => _('Administrador removido', 'Administrator removed');
+  String get adminRemoved =>
+      _('Administrador removido', 'Administrator removed');
   String get adminAddHint => _(
-      'El usuario debe tener una cuenta registrada. Se le concederá el rol de administrador.',
-      'The user must already have an account. They will be granted the administrator role.');
+    'El usuario debe tener una cuenta registrada. Se le concederá el rol de administrador.',
+    'The user must already have an account. They will be granted the administrator role.',
+  );
   String get diagnostics => _('Diagnóstico', 'Diagnostics');
   String get you => _('Tú', 'You');
 
@@ -471,36 +517,39 @@ class AppStrings {
   // Son sustantivos ("Merodeo"), no frases con "detectado": el tipo de evento se
   // usa como etiqueta, y el hecho de que se haya detectado ya lo dice el contexto.
   String eventTypeLabel(String type) => switch (type) {
-        'FaceRecognized' => _('Acceso reconocido', 'Recognized access'),
-        'UnknownFace' => _('Persona desconocida', 'Unknown person'),
-        'LowConfidenceFace' =>
-          _('Detección de baja confianza', 'Low-confidence detection'),
-        'RecurrentUnknownFace' => _(
-            'Visitante desconocido recurrente', 'Recurrent unknown visitor'),
-        'ForcedAccessAttempt' =>
-          _('Intento de acceso forzado', 'Forced-access attempt'),
-        'LockpickingAttempt' =>
-          _('Intento de ganzúa', 'Lock-picking attempt'),
-        'Tailgating' => _('Merodeo', 'Loitering'),
-        'Climbing' => _('Escalamiento', 'Climbing'),
-        'Burglary' => _('Allanamiento', 'Burglary'),
-        'PhysicalAggression' =>
-          _('Agresión física', 'Physical aggression'),
-        'Assault' => _('Asalto', 'Assault'),
-        'Abuse' => _('Abuso', 'Abuse'),
-        'Arrest' => _('Arresto', 'Arrest'),
-        'Stealing' => _('Hurto', 'Theft'),
-        'Shoplifting' => _('Hurto en tienda', 'Shoplifting'),
-        'Vandalism' => _('Vandalismo', 'Vandalism'),
-        'Robbery' => _('Robo a mano armada', 'Armed robbery'),
-        'Arson' => _('Incendio provocado', 'Arson'),
-        'Explosion' => _('Explosión', 'Explosion'),
-        'Roadaccidents' =>
-          _('Accidente de tránsito', 'Traffic accident'),
-        'WeaponDetected' => _('Arma detectada', 'Weapon detected'),
-        'SuspiciousIntent' => _('Riesgo de intrusión', 'Intrusion risk'),
-        _ => type,
-      };
+    'FaceRecognized' => _('Acceso reconocido', 'Recognized access'),
+    'UnknownFace' => _('Persona desconocida', 'Unknown person'),
+    'LowConfidenceFace' => _(
+      'Detección de baja confianza',
+      'Low-confidence detection',
+    ),
+    'RecurrentUnknownFace' => _(
+      'Visitante desconocido recurrente',
+      'Recurrent unknown visitor',
+    ),
+    'ForcedAccessAttempt' => _(
+      'Intento de acceso forzado',
+      'Forced-access attempt',
+    ),
+    'LockpickingAttempt' => _('Intento de ganzúa', 'Lock-picking attempt'),
+    'Tailgating' => _('Merodeo', 'Loitering'),
+    'Climbing' => _('Escalamiento', 'Climbing'),
+    'Burglary' => _('Allanamiento', 'Burglary'),
+    'PhysicalAggression' => _('Agresión física', 'Physical aggression'),
+    'Assault' => _('Asalto', 'Assault'),
+    'Abuse' => _('Abuso', 'Abuse'),
+    'Arrest' => _('Arresto', 'Arrest'),
+    'Stealing' => _('Hurto', 'Theft'),
+    'Shoplifting' => _('Hurto en tienda', 'Shoplifting'),
+    'Vandalism' => _('Vandalismo', 'Vandalism'),
+    'Robbery' => _('Robo a mano armada', 'Armed robbery'),
+    'Arson' => _('Incendio provocado', 'Arson'),
+    'Explosion' => _('Explosión', 'Explosion'),
+    'Roadaccidents' => _('Accidente de tránsito', 'Traffic accident'),
+    'WeaponDetected' => _('Arma detectada', 'Weapon detected'),
+    'SuspiciousIntent' => _('Riesgo de intrusión', 'Intrusion risk'),
+    _ => type,
+  };
 
   // ── Relative time ───────────────────────────────────────────────────────────
   String get justNow => _('Hace un momento', 'Just now');
@@ -508,79 +557,106 @@ class AppStrings {
   String hoursAgo(int h) => _('Hace $h h', '$h h ago');
 
   // ── Términos y privacidad ───────────────────────────────────────────────────
-  String get termsAcceptPrefix => _('He leído y acepto los ', 'I have read and accept the ');
+  String get termsAcceptPrefix =>
+      _('He leído y acepto los ', 'I have read and accept the ');
   String get termsLink => _('Términos y condiciones', 'Terms and conditions');
   String get termsAnd => _(' y la ', ' and the ');
   String get privacyLink => _('Política de privacidad', 'Privacy policy');
   String get termsRequired => _(
-      'Debes aceptar los Términos y la Política de privacidad para crear tu cuenta.',
-      'You must accept the Terms and the Privacy policy to create your account.');
-  String get consentTitle => _('Tus datos y tu privacidad', 'Your data and your privacy');
+    'Debes aceptar los Términos y la Política de privacidad para crear tu cuenta.',
+    'You must accept the Terms and the Privacy policy to create your account.',
+  );
+  String get consentTitle =>
+      _('Tus datos y tu privacidad', 'Your data and your privacy');
   String get consentBody => _(
-      'VigiShield analiza el video de tus cámaras en servidores en la nube (fuera del Perú) para detectar '
-      'personas y riesgos. Solo guarda una foto y un clip corto de cada evento, y los rostros que tú '
-      'registres. No graba de forma continua ni capta audio. Puedes pedir la eliminación de tus datos '
-      'cuando quieras.',
-      'VigiShield analyzes your camera video on cloud servers (outside Peru) to detect people and risks. '
-      'It only keeps a photo and a short clip of each event, and the faces you register. It does not '
-      'record continuously or capture audio. You can ask for your data to be deleted at any time.');
+    'VigiShield analiza el video de tus cámaras en servidores en la nube (fuera del Perú) para detectar '
+        'personas y riesgos. Solo guarda una foto y un clip corto de cada evento, y los rostros que tú '
+        'registres. No graba de forma continua ni capta audio a menos que tu lo solicites. Puedes pedir la eliminación de tus datos '
+        'cuando quieras.',
+    'VigiShield analyzes your camera video on cloud servers (outside Peru) to detect people and risks. '
+        'It only keeps a photo and a short clip of each event, and the faces you register. It does not '
+        'record continuously or capture audio. You can ask for your data to be deleted at any time.',
+  );
   String get consentAccept => _('Aceptar y continuar', 'Accept and continue');
   String get consentLogout => _('Cerrar sesión', 'Log out');
-  String get consentError => _('No se pudo guardar tu aceptación. Revisa tu conexión.',
-      'Could not save your acceptance. Check your connection.');
+  String get consentError => _(
+    'No se pudo guardar tu aceptación. Revisa tu conexión.',
+    'Could not save your acceptance. Check your connection.',
+  );
 
   // ── Video de ejemplo ────────────────────────────────────────────────────────
   String get sampleVideo => _('Video de ejemplo', 'Sample video');
-  String get sampleCardTitle => _('¿Nadie pasó frente a tu cámara?', 'Nobody walked past your camera?');
+  String get sampleCardTitle =>
+      _('¿Nadie pasó frente a tu cámara?', 'Nobody walked past your camera?');
   String get sampleCardBody => _(
-      'Mira cómo VigiShield detecta a un desconocido y evalúa el riesgo con un video de ejemplo de '
-      '3 minutos. Sus eventos quedan en tu historial, sin avisos por WhatsApp.',
-      'See how VigiShield detects a stranger and assesses the risk with a 3-minute sample video. '
-      'Its events go to your history, without WhatsApp alerts.');
-  String get sampleCardAction => _('Ver video de ejemplo', 'Watch sample video');
-  String get sampleRunning => _('Video de ejemplo en curso', 'Sample video playing');
+    'Mira cómo VigiShield detecta a un desconocido y evalúa el riesgo con un video de ejemplo de '
+        '3 minutos. Sus eventos quedan en tu historial, sin avisos por WhatsApp.',
+    'See how VigiShield detects a stranger and assesses the risk with a 3-minute sample video. '
+        'Its events go to your history, without WhatsApp alerts.',
+  );
+  String get sampleCardAction =>
+      _('Ver video de ejemplo', 'Watch sample video');
+  String get sampleRunning =>
+      _('Video de ejemplo en curso', 'Sample video playing');
   String get sampleWatch => _('Ver', 'Watch');
   String get sampleAnother => _('Otro video', 'Another video');
   String get sampleStop => _('Terminar', 'Stop');
-  String get sampleError => _('No se pudo iniciar el video de ejemplo. Inténtalo de nuevo.',
-      'Could not start the sample video. Please try again.');
+  String get sampleError => _(
+    'No se pudo iniciar el video de ejemplo. Inténtalo de nuevo.',
+    'Could not start the sample video. Please try again.',
+  );
   String get samplePaused => _(
-      'La vigilancia está en pausa: reanúdala para que se registren los eventos del video.',
-      'Monitoring is paused: resume it so the video events are recorded.');
+    'La vigilancia está en pausa: reanúdala para que se registren los eventos del video.',
+    'Monitoring is paused: resume it so the video events are recorded.',
+  );
 
   // ── Alerta de emergencia ────────────────────────────────────────────────────
   String get emergencyAlert => _('Alerta de emergencia', 'Emergency alert');
   String get emergencyAlertHint => _(
-      'Si una cámara detecta riesgo de intrusión sostenido, la app ocupa la pantalla, suena y vibra. Si no la desactivas a tiempo, llama al número que indiques.',
-      'If a camera detects sustained intrusion risk, the app takes over the screen, sounds and vibrates. If you do not dismiss it in time, it calls the number you set.');
-  String get emergencyEnabled => _('Activar alerta de emergencia', 'Enable emergency alert');
+    'Si una cámara detecta riesgo de intrusión sostenido, la app ocupa la pantalla, suena y vibra. Si no la desactivas a tiempo, llama al número que indiques.',
+    'If a camera detects sustained intrusion risk, the app takes over the screen, sounds and vibrates. If you do not dismiss it in time, it calls the number you set.',
+  );
+  String get emergencyEnabled =>
+      _('Activar alerta de emergencia', 'Enable emergency alert');
   String get emergencyForegroundNote => _(
-      'Funciona mientras la app está abierta.',
-      'Works while the app is open.');
+    'Funciona mientras la app está abierta.',
+    'Works while the app is open.',
+  );
   String get emergencyPhone => _('Número a llamar', 'Number to call');
-  String get emergencyPhoneHint => _('Ej. +51 999 999 999', 'E.g. +1 555 123 4567');
+  String get emergencyPhoneHint =>
+      _('Ej. +51 999 999 999', 'E.g. +1 555 123 4567');
   String get emergencyPhoneInvalid => _(
-      'Introduce un teléfono personal completo (7 a 15 dígitos). No se permiten números cortos de emergencia.',
-      'Enter a full personal phone number (7 to 15 digits). Short emergency numbers are not allowed.');
-  String get emergencyAutoCall => _('Llamar si no se desactiva', 'Call if not dismissed');
+    'Introduce un teléfono personal completo (7 a 15 dígitos). No se permiten números cortos de emergencia.',
+    'Enter a full personal phone number (7 to 15 digits). Short emergency numbers are not allowed.',
+  );
+  String get emergencyAutoCall =>
+      _('Llamar si no se desactiva', 'Call if not dismissed');
   String get emergencyIosCallNote => _(
-      'En iPhone el sistema pide confirmar la llamada con un toque: iOS no permite que una app llame sola.',
-      'On iPhone the system asks you to confirm the call with one tap: iOS does not let apps place calls on their own.');
+    'En iPhone el sistema pide confirmar la llamada con un toque: iOS no permite que una app llame sola.',
+    'On iPhone the system asks you to confirm the call with one tap: iOS does not let apps place calls on their own.',
+  );
   String get emergencyVolume => _('Volumen de la alarma', 'Alarm volume');
-  String get emergencySustain => _('Riesgo sostenido antes de alertar', 'Sustained risk before alerting');
-  String get emergencyCountdown => _('Tiempo para desactivarla', 'Time to dismiss');
+  String get emergencySustain =>
+      _('Riesgo sostenido antes de alertar', 'Sustained risk before alerting');
+  String get emergencyCountdown =>
+      _('Tiempo para desactivarla', 'Time to dismiss');
   String seconds(int s) => _('$s s', '$s s');
   String get emergencyTest => _('Probar alerta', 'Test alert');
   String get emergencyTestHint => _(
-      'Muestra la alerta 10 segundos con sonido y vibración. Si activaste la llamada, al terminar llamará a tu número.',
-      'Shows the alert for 10 seconds with sound and vibration. If calling is on, it calls your number at the end.');
+    'Muestra la alerta 10 segundos con sonido y vibración. Si activaste la llamada, al terminar llamará a tu número.',
+    'Shows the alert for 10 seconds with sound and vibration. If calling is on, it calls your number at the end.',
+  );
   String get emergencyTitle => _('ALERTA DE EMERGENCIA', 'EMERGENCY ALERT');
   String get emergencyTestTitle => _('PRUEBA DE ALERTA', 'ALERT TEST');
-  String get emergencyRisk => _('Riesgo de intrusión detectado', 'Intrusion risk detected');
-  String emergencyWillCall(String n) => _('Al llegar a cero se llamará a $n', 'At zero it will call $n');
-  String get emergencyNoCall => _('No se llamará a nadie', 'Nobody will be called');
+  String get emergencyRisk =>
+      _('Riesgo de intrusión detectado', 'Intrusion risk detected');
+  String emergencyWillCall(String n) =>
+      _('Al llegar a cero se llamará a $n', 'At zero it will call $n');
+  String get emergencyNoCall =>
+      _('No se llamará a nadie', 'Nobody will be called');
   String get emergencyDismiss => _('DESACTIVAR ALERTA', 'DISMISS ALERT');
-  String get emergencyCallFailed => _('No se pudo iniciar la llamada.', 'The call could not be started.');
+  String get emergencyCallFailed =>
+      _('No se pudo iniciar la llamada.', 'The call could not be started.');
 
   // ── Date formats (intl patterns + locale tag) ───────────────────────────────
   String get localeCode => en ? 'en' : 'es';

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
+import 'package:vigishield_mobile_app/core/network/api_client.dart';
 import 'package:vigishield_mobile_app/data/services/mobile_camera_publisher.dart';
 
 class Capture implements MobileCameraCapture {
@@ -40,6 +41,7 @@ class Transport implements MobilePublishTransport {
   final events = <String>[];
   Completer<MobilePublishAnswer>? pending;
   bool failDelete = false;
+  bool deleteNotFound = false;
   @override Future<MobilePublishAnswer> publish(String id, String sdp) async {
     events.add('$id:$sdp');
     return pending == null ? const MobilePublishAnswer('session', 'answer') : await pending!.future;
@@ -47,6 +49,7 @@ class Transport implements MobilePublishTransport {
   @override Future<void> unpublish(String id, String sessionId) async {
     events.add('delete:$id:$sessionId');
     if (failDelete) throw StateError('offline');
+    if (deleteNotFound) throw const ApiException('Publicación no encontrada', 404);
   }
 }
 void main() {
@@ -97,20 +100,35 @@ void main() {
     await publisher.start('camera', front: true);
     expect(capture.events.where((e) => e.startsWith('open')), hasLength(1));
   });
-  test('failed deletion blocks a new camera until old session is cleaned', () async {
+  test('una sesión que ya no existe en el servidor no traba el siguiente inicio', () async {
+    // Pasaba al borrar la cámara desde el servidor mientras el teléfono
+    // transmitía: el cierre daba 404 y el publicador quedaba trabado.
+    final transport = Transport();
+    final publisher = MobileCameraPublisher(transport: transport, capture: Capture(), observarCicloDeVida: false);
+    await publisher.start('old', front: false);
+    transport.deleteNotFound = true;
+    await publisher.stop();
+    expect(publisher.error, isNull);
+    transport.deleteNotFound = false;
+    await publisher.start('new', front: true);
+    expect(publisher.isPublishing, isTrue);
+    expect(transport.events.where((e) => e == 'delete:old:session').length, 1);
+    await publisher.stop();
+    publisher.dispose();
+  });
+  test('un cierre fallido se reintenta una vez y no bloquea la cámara nueva', () async {
+    // El servidor reemplaza la publicación previa de la misma cámara, así que
+    // no hace falta bloquear: se intenta cerrar y se sigue.
     final transport = Transport();
     final publisher = MobileCameraPublisher(transport: transport, capture: Capture(), observarCicloDeVida: false);
     await publisher.start('old', front: false);
     transport.failDelete = true;
     await publisher.stop();
-    await publisher.start('new', front: true);
-    expect(publisher.isPublishing, isFalse);
-    expect(transport.events, isNot(contains('new:offer')));
-    transport.failDelete = false;
-    await publisher.stop();
-    expect(transport.events.last, 'delete:old:session');
+    expect(publisher.error, contains('No se pudo cerrar'));
     await publisher.start('new', front: true);
     expect(publisher.isPublishing, isTrue);
+    expect(transport.events, contains('new:offer'));
+    transport.failDelete = false;
     await publisher.stop();
     publisher.dispose();
   });
