@@ -564,6 +564,18 @@ class _CameraScreenState extends State<CameraScreen>
     // re-open here — only the play-state listener recovers, and only on a real stop.
     _errorSub ??= _player!.stream.error.listen((e) => _log('error-stream: $e'));
 
+    // Primera visita a la pestaña justo después de pedir el video de ejemplo:
+    // la pantalla nace ahora y no oyó el cambio de cámara, así que el modo IA
+    // pedido se aplica aquí.
+    final sel = provider.selectedCamera;
+    if (sel != null && sel.isSample && provider.abrirEnModoIa) {
+      provider.abrirEnModoIa = false;
+      _camaraAbierta = sel.id;
+      _claveAbierta = sel.streamKey;
+      setState(() => _viewMode = _ViewMode.ai);
+      _startAiFramePoller();
+      return;
+    }
     await _openStream();
   }
 
