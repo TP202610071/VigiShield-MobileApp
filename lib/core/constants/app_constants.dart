@@ -21,7 +21,7 @@ class AppConstants {
   /// [loadAppVersion] leyendo el paquete instalado, asi que siempre coincide
   /// con `version:` del pubspec y nunca se queda desfasada.
   static String appVersion = _versionPorDefecto;
-  static const String _versionPorDefecto = '0.19.1';
+  static const String _versionPorDefecto = '0.19.2';
 
   /// Lee la version real del paquete. Se llama una vez al arrancar.
   static Future<void> loadAppVersion() async {

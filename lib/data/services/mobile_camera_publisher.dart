@@ -57,6 +57,7 @@ abstract interface class MobileCameraCapture {
 class WebRtcCameraCapture implements MobileCameraCapture {
   MediaStream? _stream;
   RTCPeerConnection? _peer;
+  final List<RTCRtpSender> _senders = [];
   @override MediaStream? get stream => _stream;
 
   @override
@@ -84,6 +85,7 @@ class WebRtcCameraCapture implements MobileCameraCapture {
       final transceiver = await _peer!.addTransceiver(track: track,
         init: RTCRtpTransceiverInit(direction: TransceiverDirection.SendOnly, streams: [_stream!]));
       await transceiver.setCodecPreferences(codecs);
+      _senders.add(transceiver.sender);
     }
   }
 
@@ -114,7 +116,29 @@ class WebRtcCameraCapture implements MobileCameraCapture {
     } finally { peer.onIceGatheringState = null; }
   }
 
-  @override Future<void> answer(String sdp) => _peer!.setRemoteDescription(RTCSessionDescription(sdp, 'answer'));
+  @override
+  Future<void> answer(String sdp) async {
+    await _peer!.setRemoteDescription(RTCSessionDescription(sdp, 'answer'));
+    await _mantenerResolucion();
+  }
+
+  /// WebRTC arranca con poca resolución y la sube cuando estima más ancho de
+  /// banda (o la baja si falta). La IA lee el stream con OpenCV, que no
+  /// soporta un cambio de tamaño a mitad: se quedaba con el último cuadro
+  /// bueno y la vista de IA se congelaba a los pocos segundos. Con
+  /// «maintain-resolution» el video sale siempre a 1280x720 y, si falta red,
+  /// baja los cuadros por segundo.
+  Future<void> _mantenerResolucion() async {
+    for (final sender in _senders) {
+      try {
+        final parametros = sender.parameters;
+        parametros.degradationPreference = RTCDegradationPreference.MAINTAIN_RESOLUTION;
+        await sender.setParameters(parametros);
+      } catch (e) {
+        debugPrint('[VS-CAM] no se pudo fijar la resolución: $e');
+      }
+    }
+  }
   MediaStreamTrack? get _videoTrack {
     final tracks = _stream?.getVideoTracks();
     return tracks == null || tracks.isEmpty ? null : tracks.first;
@@ -129,6 +153,7 @@ class WebRtcCameraCapture implements MobileCameraCapture {
   Future<void> close() async {
     final stream = _stream; _stream = null;
     final peer = _peer; _peer = null;
+    _senders.clear();
     try {
       if (stream != null) {
         for (final track in stream.getTracks()) { await track.stop(); }
