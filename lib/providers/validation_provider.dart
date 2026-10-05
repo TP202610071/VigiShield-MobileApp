@@ -34,6 +34,8 @@ class ValidationProvider extends ChangeNotifier with WidgetsBindingObserver impl
   final Future<Map<String, dynamic>> Function(CameraConfigModel) loadStatus;
   final bool Function(SecurityEventModel)? eventEnabled;
   bool active = false, recording = false, busy = false, alarmOptIn = false, callOptIn = false;
+  /// Grabación continua en curso (del botón de grabar al de detener).
+  bool grabandoSesion = false;
   bool _foreground = true, _disposed = false, _polling = false, _effects = false;
   int _generation = 0;
   int sustainSeconds = 30, countdownSeconds = 30;
@@ -209,6 +211,45 @@ class ValidationProvider extends ChangeNotifier with WidgetsBindingObserver impl
     }));
     _notify();
   }
+  /// Empieza o termina la grabación continua de la pantalla.
+  ///
+  /// A diferencia de los clips por evento —que guardan 10 s antes y 10 s
+  /// después de cada alerta— esta graba todo seguido, que es lo que sirve como
+  /// evidencia de una sesión de validación completa.
+  ///
+  /// Requiere que el búfer de pantalla ya esté activo: ahí es donde el sistema
+  /// pidió el consentimiento de captura.
+  Future<void> grabarSesion(bool value) async {
+    if (!platform.supported) {
+      error = 'La grabación dentro de la app solo funciona en Android. '
+          'En iPhone usa la grabación de pantalla del sistema.';
+      _notify();
+      return;
+    }
+    if (!recording) {
+      error = 'Activa primero "Grabar pantalla con consentimiento".';
+      _notify();
+      return;
+    }
+    if (busy) return;
+    final g = _generation;
+    busy = true; _notify();
+    await _hardware(() async {
+      if (!_valid(g) || !active) return;
+      if (value) {
+        final r = await platform.invoke('startScreenRecording',
+            {'eventId': 'sesion:${DateTime.now().toUtc().toIso8601String()}'});
+        grabandoSesion = r is Map;
+        if (!grabandoSesion) error = 'No se pudo iniciar la grabación.';
+      } else {
+        await platform.invoke('stopScreenRecording');
+        grabandoSesion = false;
+        await refreshClips();
+      }
+    });
+    busy = false; _notify();
+  }
+
   Future<void> setRecording(bool value) async {
     if (!platform.supported) { error = 'Grabación y llamadas no compatibles: requiere Android.'; _notify(); return; }
     if (value && (!active || busy)) return;
@@ -219,6 +260,8 @@ class ValidationProvider extends ChangeNotifier with WidgetsBindingObserver impl
       final result = await platform.invoke(value ? 'startScreenBuffer' : 'stopScreenBuffer');
       if (value && (!_valid(g) || !active)) { await platform.invoke('stopScreenBuffer'); return; }
       recording = value && (result == true || result is Map && result['running'] == true);
+      // Sin bufer no hay grabacion posible: el estado no puede quedarse en si.
+      if (!recording) grabandoSesion = false;
       if (value && !recording) error = 'No se inició la grabación; permiso denegado o servicio no disponible.';
     });
     busy = false; _notify();

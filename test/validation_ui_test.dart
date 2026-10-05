@@ -14,7 +14,7 @@ void main() {
   await tester.pumpWidget(ChangeNotifierProvider.value(value:p,child:MaterialApp(builder:(_,child)=>ValidationOverlay(child:child!),home:const ValidationScreen())));
   expect(find.text('Iniciar sesión de validación'),findsOneWidget);
   expect(p.active,false); expect(p.callOptIn,false); expect(p.recording,false);
-  expect(find.textContaining('iOS'),findsOneWidget);
+  expect(find.textContaining('iPhone'),findsOneWidget);
   await tester.pumpWidget(const SizedBox()); p.dispose(); await tester.pump();
  });
 }
