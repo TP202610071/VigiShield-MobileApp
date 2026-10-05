@@ -247,6 +247,17 @@ class AppStrings {
   String get aiHint => _(
       'La detección tarda unos segundos en empezar.\nSi la cámara acaba de encenderse, puede demorar un poco más.',
       'Detection takes a few seconds to start.\nIf the camera just came online it may take a little longer.');
+  String get aiDisabledTitle =>
+      _('La detección está desactivada', 'Detection is turned off');
+  String get aiDisabledBody => _(
+      'Esta cámara se sigue viendo en vivo, pero la IA no la analiza ni genera alertas. Actívala para ver la detección.',
+      'This camera still streams live, but the AI is not analyzing it or raising alerts. Turn it on to see detection.');
+  String get aiDisabledAction => _('Activar cámara', 'Turn camera on');
+  String get aiDisabledAskPrimary => _(
+      'Pide al residente principal que la active desde Mis cámaras.',
+      'Ask the primary resident to turn it on from My cameras.');
+  String get aiEnableFailed =>
+      _('No se pudo activar la cámara.', 'Could not turn the camera on.');
   String get noCameras =>
       _('No hay cámaras configuradas', 'No cameras configured');
   String get noCamerasHint => _(

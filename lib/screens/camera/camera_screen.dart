@@ -18,6 +18,7 @@ import '../../core/storage/auth_storage.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/models/camera_config_model.dart';
 import '../../data/models/security_event_model.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/camera_provider.dart';
 import '../../providers/event_provider.dart';
 import '../../providers/ui_provider.dart';
@@ -1053,7 +1054,9 @@ class _CameraScreenState extends State<CameraScreen>
         _buildAiContent(),
         if (!_immersive) _buildTopBar(isLandscape, aiMode: true),
         // Live detection status banner (activity + suspicious flag + chips).
-        if (_aiStatus != null)
+        // Con la cámara desactivada el estado es el último que quedó: se oculta.
+        if (_aiStatus != null &&
+            (context.watch<CameraProvider>().selectedCamera?.isActive ?? true))
           Positioned(
             top: _immersive
                 ? (isLandscape ? 12 : MediaQuery.of(context).padding.top + 12)
@@ -1074,7 +1077,75 @@ class _CameraScreenState extends State<CameraScreen>
     );
   }
 
+  Widget _buildAiDisabled(CameraConfigModel cam) {
+    final l10n = context.l10n;
+    final provider = context.watch<CameraProvider>();
+    final isPrimary = context.watch<AuthProvider>().user?.isPrimary ?? false;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.visibility_off_outlined,
+                color: AppColors.textSecondary, size: 44),
+            const SizedBox(height: 16),
+            Text(
+              l10n.aiDisabledTitle,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.inter(
+                color: AppColors.textPrimary,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              isPrimary ? l10n.aiDisabledBody : '${l10n.aiDisabledBody}\n${l10n.aiDisabledAskPrimary}',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.inter(color: AppColors.textSecondary, fontSize: 12),
+            ),
+            if (isPrimary) ...[
+              const SizedBox(height: 20),
+              FilledButton.icon(
+                onPressed: provider.isSaving
+                    ? null
+                    : () async {
+                        final ok = await context.read<CameraProvider>().setActive(cam.id, true);
+                        if (!mounted) return;
+                        if (ok) {
+                          // Fuera el cuadro congelado: se muestra «Conectando…»
+                          // hasta que la IA vuelva a enviar cuadros.
+                          setState(() {
+                            _aiFrame = null;
+                            _aiStatus = null;
+                          });
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(l10n.aiEnableFailed)));
+                        }
+                      },
+                icon: provider.isSaving
+                    ? const SizedBox(
+                        width: 16, height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    : const Icon(Icons.power_settings_new, size: 18),
+                label: Text(l10n.aiDisabledAction),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildAiContent() {
+    // Cámara desactivada: el video en vivo sigue (no cuesta CPU en el
+    // servidor), pero la IA no la procesa y el último cuadro anotado se queda
+    // congelado. En vez de mostrar ese cuadro viejo, se explica y se ofrece
+    // activarla aquí mismo.
+    final cam = context.watch<CameraProvider>().selectedCamera;
+    if (cam != null && !cam.isActive) return _buildAiDisabled(cam);
     final frame = _aiFrame;
     if (frame != null) {
       return InteractiveViewer(
