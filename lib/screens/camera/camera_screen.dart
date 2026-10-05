@@ -74,6 +74,8 @@ class _CameraScreenState extends State<CameraScreen>
   // stream token as the RTSP password (MediaMTX validates it); HLS carries the
   // viewer JWT as a Bearer header through the nginx proxy.
   bool _useRtsp = true;
+  int _openGeneration = 0;
+  Future<void>? _tokenFetch; // una sola peticion de token aunque abran varios
 
   // Authorization header (viewer JWT) sent with every camera request — HLS
   // playback (libmpv httpHeaders) and the AI frame/status polls.
@@ -367,7 +369,10 @@ class _CameraScreenState extends State<CameraScreen>
   /// /ai/stream-token endpoint. The token is what authenticates RTSP reads to
   /// MediaMTX. Cached until ~2 min before expiry. On failure we leave it null so
   /// _resolveStreamUrl skips RTSP and uses the (also-authenticated) HLS path.
-  Future<void> _ensureStreamToken() async {
+  Future<void> _ensureStreamToken() =>
+      _tokenFetch ??= _fetchStreamToken().whenComplete(() => _tokenFetch = null);
+
+  Future<void> _fetchStreamToken() async {
     final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
     if (_streamToken != null && _streamTokenExp - now > 120) return;
     await _ensureAuthHeaders();
@@ -516,10 +521,15 @@ class _CameraScreenState extends State<CameraScreen>
 
   Future<void> _openStream({String? overrideUrl}) async {
     if (_opening) return; // an open() is already in flight — don't stack them
+    // Solo la ultima peticion abre. Esperar el token puede tardar segundos y,
+    // mientras, volver a la pestaña, reanudar la app o cambiar de camara
+    // piden su propia apertura: sin esto cada una abria al fallar su token,
+    // varias por segundo, y la conexion no llegaba a establecerse nunca.
+    final generation = ++_openGeneration;
     // Make sure we have a fresh RTSP read token before resolving the URL (cheap
     // when cached). If it can't be fetched, _resolveStreamUrl uses HLS instead.
     if (overrideUrl == null && _useRtsp) await _ensureStreamToken();
-    if (!mounted) return;
+    if (!mounted || generation != _openGeneration || _opening) return;
     final url = overrideUrl ?? _resolveStreamUrl();
     if (url == null || url.isEmpty) {
       if (mounted)

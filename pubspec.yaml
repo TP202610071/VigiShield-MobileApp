@@ -1,7 +1,7 @@
 name: vigishield_mobile_app
 description: "VigiShield — Sistema Inteligente de Seguridad Doméstica"
 publish_to: 'none'
-version: 0.15.0+17
+version: 0.15.1+18
 
 environment:
   sdk: ^3.8.1
