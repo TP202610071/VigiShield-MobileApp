@@ -1587,7 +1587,11 @@ class _AlertBannerState extends State<_AlertBanner> with TickerProviderStateMixi
     final icon = _iconFor(widget.event.eventType);
     final pct = widget.event.confidenceScore;
     final time = DateFormat('HH:mm:ss').format(widget.event.createdAt.toLocal());
+    // La cámara va primero: con varias en la vivienda, saber QUÉ cámara avisa
+    // es lo primero que se necesita para reaccionar.
+    final camara = widget.event.cameraName;
     final sub = [
+      if (camara != null && camara.isNotEmpty) camara,
       l10n.riskLabel(widget.event.riskLevel),
       if (pct != null) '${(pct * 100).toStringAsFixed(0)}%',
       time,

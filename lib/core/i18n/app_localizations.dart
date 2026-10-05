@@ -241,9 +241,12 @@ class AppStrings {
   String get connecting => _('Conectando…', 'Connecting…');
   String get aiConnecting =>
       _('Conectando al motor AI…', 'Connecting to the AI engine…');
+  // Nada de instrucciones para desarrolladores: esto lo lee quien usa la app en
+  // su casa, y no tiene forma de saber qué es un "backend Python" ni de
+  // encenderlo. Solo se le dice qué ocurre y cuánto puede tardar.
   String get aiHint => _(
-      'Asegúrate de que el backend Python esté corriendo.\nLos frames aparecerán cuando se procese el primer fotograma.',
-      'Make sure the Python backend is running.\nFrames appear once the first one is processed.');
+      'La detección tarda unos segundos en empezar.\nSi la cámara acaba de encenderse, puede demorar un poco más.',
+      'Detection takes a few seconds to start.\nIf the camera just came online it may take a little longer.');
   String get noCameras =>
       _('No hay cámaras configuradas', 'No cameras configured');
   String get noCamerasHint => _(

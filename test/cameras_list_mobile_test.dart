@@ -31,7 +31,10 @@ void main() {
       ], child: const MaterialApp(home: CamerasListScreen())));
       await tester.pumpAndSettle();
       expect(find.byType(Switch), role == 'Secondary' ? findsNothing : findsOneWidget);
-      expect(find.text('Cámara del dispositivo'), findsOneWidget);
+      // La fila dice de donde sale el video, no una IP que una camara de
+      // telefono no tiene, y lleva su propio icono.
+      expect(find.text('Cámara de este teléfono'), findsOneWidget);
+      expect(find.byIcon(Icons.phone_android), findsWidgets);
       if (role != 'Secondary') {
         await tester.tap(find.text('Agregar'));
         await tester.pumpAndSettle();
