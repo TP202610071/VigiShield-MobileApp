@@ -31,6 +31,7 @@ class MainActivity : FlutterFragmentActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         emergencyChannel(flutterEngine)
+        RotacionCamara(this, flutterEngine.dartExecutor.binaryMessenger)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "vigishield/validation").setMethodCallHandler { call, result ->
             try {
                 when (call.method) {

@@ -6,44 +6,52 @@ import 'package:sensors_plus/sensors_plus.dart';
 
 /// Única fuente de verdad de la orientación de la app.
 ///
-/// El video que publica el teléfono toma la orientación de la PANTALLA, no la
-/// del teléfono (así funciona la cámara de WebRTC en Android). Con la pantalla
-/// fijada por cada vista, el mismo teléfono quieto transmitía unas veces en
-/// vertical y otras de lado, el tamaño del video cambiaba a mitad de la
-/// transmisión (la IA recibía cuadros corruptos) y las zonas dibujadas en una
-/// orientación no servían para la otra.
-///
 /// Regla:
-/// - Transmitiendo: la pantalla sigue la posición FÍSICA del teléfono (por el
-///   acelerómetro, aunque el usuario tenga el giro automático bloqueado). El
-///   video sale siempre derecho y solo cambia si el teléfono se gira de verdad.
-/// - Sin transmitir: vertical, salvo la pestaña Cámara cuando es la pantalla
-///   visible (horizontal). Las pantallas abiertas encima de la pestaña Cámara
-///   ya no heredan su horizontal: antes la app giraba sola al guardar zonas.
+/// - La interfaz va SIEMPRE en vertical, gire como gire el teléfono.
+/// - Las únicas vistas en horizontal son las de video: la pestaña Cámara cuando
+///   es la pantalla visible y el clip de un evento a pantalla completa. Las
+///   pantallas abiertas encima de la pestaña Cámara vuelven a vertical.
+/// - Transmitiendo, el acelerómetro da la posición FÍSICA del teléfono (aunque
+///   el usuario tenga el giro automático bloqueado). La pantalla NO la sigue:
+///   la usa el publicador para fijar la rotación del video ([gradosFisicos]).
+///
+/// Antes la pantalla entera seguía al teléfono mientras transmitía, porque la
+/// cámara de WebRTC en Android rota el video según la pantalla. Con el teléfono
+/// acostado, toda la app quedaba en horizontal hasta cortar la transmisión.
+/// Ahora la rotación de cada cuadro se fija aparte (RotacionCamara).
 class OrientacionApp {
   OrientacionApp._();
   static final instance = OrientacionApp._();
 
   bool _publicando = false;
-  bool _pestanaCamara = false;
+  final Set<String> _vistasHorizontales = {};
   DeviceOrientation? _fisica;
   DeviceOrientation? _candidata;
   DateTime? _candidataDesde;
   StreamSubscription<AccelerometerEvent>? _acelerometro;
   List<DeviceOrientation>? _aplicada;
 
-  /// Se llama cuando el teléfono, transmitiendo, cambia de posición física
-  /// (después de que la pantalla ya giró): el publicador reinicia la sesión
-  /// para que el video arranque limpio con el tamaño nuevo.
+  /// Se llama cuando el teléfono, transmitiendo, cambia de posición física:
+  /// el publicador reinicia la sesión para que el video arranque limpio con la
+  /// rotación y el tamaño nuevos (un cambio a mitad corrompe los cuadros de la IA).
   void Function(DeviceOrientation)? alCambiarFisicaTransmitiendo;
 
   DeviceOrientation? get fisica => _fisica;
 
-  /// Antes de abrir la cámara: fija la pantalla a la posición física y espera
-  /// a que termine de girar, para que el video arranque ya con su orientación
-  /// definitiva (si gira después, cambia de tamaño a mitad de la transmisión).
-  Future<void> iniciarTransmision({Duration esperaGiro = const Duration(milliseconds: 900)}) async {
-    final antes = _aplicada;
+  /// Posición física en grados, como la rotación de pantalla de Android:
+  /// 0 vertical, 90 girado a la izquierda (landscapeLeft, apoyado sobre su lado
+  /// izquierdo), 180 de cabeza, 270 girado a la derecha. Sin lectura (sobre la
+  /// mesa), 0.
+  int get gradosFisicos => switch (_fisica) {
+        DeviceOrientation.landscapeLeft => 90,
+        DeviceOrientation.portraitDown => 180,
+        DeviceOrientation.landscapeRight => 270,
+        _ => 0,
+      };
+
+  /// Antes de abrir la cámara: espera la primera lectura del acelerómetro para
+  /// que el video arranque ya con su rotación definitiva.
+  Future<void> iniciarTransmision() async {
     _publicando = true;
     _fisica = null;
     _candidata = null;
@@ -52,33 +60,31 @@ class OrientacionApp {
     while (_fisica == null && DateTime.now().isBefore(limite)) {
       await Future<void>.delayed(const Duration(milliseconds: 50));
     }
-    _aplicar();
-    if (!listEquals(antes, _aplicada)) await Future<void>.delayed(esperaGiro);
   }
 
-  /// La transmisión terminó: vuelve la orientación de cada vista.
+  /// La transmisión terminó: ya no hace falta el acelerómetro.
   void finTransmision() {
     if (!_publicando) return;
     _publicando = false;
     unawaited(_acelerometro?.cancel());
     _acelerometro = null;
-    _aplicar();
   }
 
-  void setPestanaCamara(bool valor) {
-    if (valor == _pestanaCamara) return;
-    _pestanaCamara = valor;
-    _aplicar();
+  /// La pestaña Cámara pasó a ser (o dejó de ser) la pantalla visible.
+  void setPestanaCamara(bool valor) => _vistaHorizontal('camara', valor);
+
+  /// Un clip de evento se abrió (o se cerró) a pantalla completa.
+  void setVideoCompleto(bool valor) => _vistaHorizontal('clip', valor);
+
+  void _vistaHorizontal(String vista, bool valor) {
+    final cambio = valor ? _vistasHorizontales.add(vista) : _vistasHorizontales.remove(vista);
+    if (cambio) _aplicar();
   }
 
   @visibleForTesting
-  List<DeviceOrientation> deseada() {
-    if (_publicando) return [_fisica ?? DeviceOrientation.portraitUp];
-    if (_pestanaCamara) {
-      return const [DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight];
-    }
-    return const [DeviceOrientation.portraitUp];
-  }
+  List<DeviceOrientation> deseada() => _vistasHorizontales.isNotEmpty
+      ? const [DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight]
+      : const [DeviceOrientation.portraitUp];
 
   void _aplicar() {
     final d = deseada();
@@ -94,7 +100,7 @@ class OrientacionApp {
         samplingPeriod: SensorInterval.uiInterval,
       ).listen((e) => muestra(e.x, e.y, e.z), onError: (_) {});
     } catch (_) {
-      // Sin acelerómetro: se transmite en la orientación actual de la pantalla.
+      // Sin acelerómetro: se transmite como si estuviera en vertical.
     }
   }
 
@@ -102,7 +108,7 @@ class OrientacionApp {
   /// marca +9.8: +y vertical, −y vertical invertido, +x girado a la izquierda
   /// (landscapeLeft), −x girado a la derecha. Sobre la mesa (domina z) no se
   /// cambia nada. Solo se acepta un cambio estable durante 0.8 s, para que un
-  /// movimiento brusco no gire la pantalla.
+  /// movimiento brusco no reinicie la transmisión.
   @visibleForTesting
   void muestra(double x, double y, double z, {DateTime? ahora}) {
     final t = ahora ?? DateTime.now();
@@ -115,7 +121,7 @@ class OrientacionApp {
     }
     if (o == null) return;
     if (_fisica == null) {
-      // Primera lectura: se adopta de inmediato (la aplica iniciarTransmision).
+      // Primera lectura: se adopta de inmediato (la espera iniciarTransmision).
       _fisica = o;
       return;
     }
@@ -131,7 +137,6 @@ class OrientacionApp {
     if (t.difference(_candidataDesde!) >= const Duration(milliseconds: 800)) {
       _fisica = o;
       _candidata = null;
-      _aplicar();
       if (_publicando) alCambiarFisicaTransmitiendo?.call(o);
     }
   }
@@ -141,7 +146,7 @@ class OrientacionApp {
     unawaited(_acelerometro?.cancel());
     _acelerometro = null;
     _publicando = false;
-    _pestanaCamara = false;
+    _vistasHorizontales.clear();
     _fisica = null;
     _candidata = null;
     _aplicada = null;

@@ -9,6 +9,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../core/i18n/app_localizations.dart';
+import '../../core/orientation/orientacion_app.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/models/security_event_model.dart';
 import '../../providers/auth_provider.dart';
@@ -333,7 +334,7 @@ class _ClipSectionState extends State<_ClipSection> {
             _MediaActionButton(
               icon: Icons.fullscreen,
               label: context.l10n.fullscreen,
-              onTap: () => Navigator.of(context).push(MaterialPageRoute(
+              onTap: () => Navigator.of(context, rootNavigator: true).push(MaterialPageRoute(
                 builder: (_) => _FullScreenVideo(url: widget.url))),
             ),
             _MediaActionButton(
@@ -365,7 +366,7 @@ class _EventPhoto extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         GestureDetector(
-          onTap: () => Navigator.of(context).push(MaterialPageRoute(
+          onTap: () => Navigator.of(context, rootNavigator: true).push(MaterialPageRoute(
               builder: (_) => _FullScreenImage(url: url))),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(12),
@@ -507,11 +508,15 @@ class _FullScreenVideoState extends State<_FullScreenVideo> {
   @override
   void initState() {
     super.initState();
+    // El clip a pantalla completa es una de las dos vistas en horizontal
+    // (la otra es la pestaña Cámara); al cerrarlo vuelve la vertical.
+    OrientacionApp.instance.setVideoCompleto(true);
     _player.open(Media(widget.url), play: true);
   }
 
   @override
   void dispose() {
+    OrientacionApp.instance.setVideoCompleto(false);
     _player.dispose();
     super.dispose();
   }
