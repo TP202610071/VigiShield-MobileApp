@@ -1,3 +1,4 @@
+import '../core/constants/app_constants.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import '../data/models/user_model.dart';
@@ -68,11 +69,25 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  /// Acepta los Términos y la Política de privacidad vigentes.
+  Future<bool> aceptarTerminos() async {
+    try {
+      _user = await _authService.acceptTerms(kVersionTerminos);
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
   Future<bool> register({
     required String email,
     required String password,
     required String name,
     required String householdAddress,
+    String? termsVersion,
   }) async {
     _errorMessage = null;
     try {
@@ -81,6 +96,7 @@ class AuthProvider extends ChangeNotifier {
         password: password,
         name: name,
         householdAddress: householdAddress,
+        termsVersion: termsVersion,
       );
       await _storage.saveToken(result.token);
       // Se vacía ANTES de entrar: si la cuenta anterior dejó cámaras o eventos

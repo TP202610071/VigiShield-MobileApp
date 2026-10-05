@@ -11,6 +11,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   gal
   local_auth_windows
   media_kit_video
+  permission_handler_windows
   share_plus
   url_launcher_windows
   volume_controller

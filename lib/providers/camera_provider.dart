@@ -71,12 +71,16 @@ class CameraProvider extends ChangeNotifier implements SessionScoped {
     }
   }
 
+  /// La última cámara creada en esta sesión (para llevar a sus zonas).
+  CameraConfigModel? ultimaCreada;
+
   Future<bool> createCamera(SaveCameraRequest req) async {
     _isSaving = true;
     _error = null;
     notifyListeners();
     try {
       final created = await _service.createCamera(req);
+      ultimaCreada = created;
       _cameras = [..._cameras, created];
       if (created.isDefault) selectCameraById(created.id);
       return true;

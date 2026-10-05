@@ -1,7 +1,7 @@
 name: vigishield_mobile_app
 description: "VigiShield — Sistema Inteligente de Seguridad Doméstica"
 publish_to: 'none'
-version: 0.17.0+22
+version: 0.18.0+23
 
 environment:
   sdk: ^3.8.1
@@ -72,6 +72,7 @@ dependencies:
   vibration: ^3.2.1
   url_launcher: ^6.3.3
   sensors_plus: ^7.1.1
+  permission_handler: ^13.0.2
 
 dev_dependencies:
   flutter_test:

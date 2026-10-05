@@ -89,8 +89,10 @@ GoRouter createRouter(AuthProvider authProvider) => GoRouter(
         ),
         GoRoute(
           path: '/settings/cameras/:id/zones',
-          builder: (ctx, st) =>
-              ZoneEditorScreen(cameraId: st.pathParameters['id']!),
+          builder: (ctx, st) => ZoneEditorScreen(
+              cameraId: st.pathParameters['id']!,
+              // ?intro=1: recién creada; explica para qué sirven las zonas.
+              intro: st.uri.queryParameters['intro'] == '1'),
         ),
         GoRoute(
           path: '/settings/faces',

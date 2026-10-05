@@ -12,6 +12,11 @@ import 'package:vigishield_mobile_app/screens/camera/device_camera_screen.dart';
 import 'mobile_camera_publisher_test.dart' show Capture, Transport;
 import 'package:vigishield_mobile_app/data/services/mobile_camera_publisher.dart';
 void main() {
+  // Permiso de cámara concedido (el plugin no existe en las pruebas).
+  setUp(() => TestWidgetsFlutterBinding.ensureInitialized()
+      .defaultBinaryMessenger
+      .setMockMethodCallHandler(const MethodChannel('flutter.baseflow.com/permissions/methods'),
+          (call) async => call.method == 'checkPermissionStatus' ? 1 : {1: 1}));
   testWidgets('al iniciar la transmisión la pantalla se cierra y avisa a quien la abrió', (tester) async {
     final capture = Capture();
     final publisher = MobileCameraPublisher(

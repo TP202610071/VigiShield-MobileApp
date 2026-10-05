@@ -7,6 +7,12 @@ import 'package:package_info_plus/package_info_plus.dart';
 const bool kValidationTools =
     !kReleaseMode || bool.fromEnvironment('VIGISHIELD_VALIDATION');
 
+/// Versión vigente de los Términos y la Política de privacidad. Si cambia,
+/// la app vuelve a pedir la aceptación a todos los usuarios.
+const String kVersionTerminos = '2026-10-05';
+const String kUrlTerminos = 'https://vigishield.app/terminos';
+const String kUrlPrivacidad = 'https://vigishield.app/privacidad';
+
 class AppConstants {
   AppConstants._();
 
@@ -15,7 +21,7 @@ class AppConstants {
   /// [loadAppVersion] leyendo el paquete instalado, asi que siempre coincide
   /// con `version:` del pubspec y nunca se queda desfasada.
   static String appVersion = _versionPorDefecto;
-  static const String _versionPorDefecto = '0.17.0';
+  static const String _versionPorDefecto = '0.18.0';
 
   /// Lee la version real del paquete. Se llama una vez al arrancar.
   static Future<void> loadAppVersion() async {

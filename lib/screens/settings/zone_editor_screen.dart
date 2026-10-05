@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -17,7 +18,11 @@ import '../../providers/camera_provider.dart';
 /// para estimar intención con mayor precisión y menos falsos positivos.
 class ZoneEditorScreen extends StatefulWidget {
   final String cameraId;
-  const ZoneEditorScreen({super.key, required this.cameraId});
+
+  /// Cámara recién creada: se explica para qué sirven las zonas y la captura
+  /// se reintenta mientras el video termina de llegar al servidor.
+  final bool intro;
+  const ZoneEditorScreen({super.key, required this.cameraId, this.intro = false});
 
   @override
   State<ZoneEditorScreen> createState() => _ZoneEditorScreenState();
@@ -55,6 +60,7 @@ class _ZoneEditorScreenState extends State<ZoneEditorScreen> {
   Future<void> _init() async {
     // El aviso «ya está transmitiendo» taparía los controles de dibujo.
     ScaffoldMessenger.maybeOf(context)?.hideCurrentSnackBar();
+    if (widget.intro) unawaited(_explicar());
     final cam = _camera();
     if (cam != null) {
       _zones.addAll(parseZonesJson(cam.zonesJson));
@@ -86,18 +92,52 @@ class _ZoneEditorScreenState extends State<ZoneEditorScreen> {
       await _usarCaptura(guardada);
       return;
     }
-    await _tomarCaptura();
+    // Recién creada: el video puede tardar unos segundos en llegar.
+    await _tomarCaptura(intentos: widget.intro ? 6 : 1);
+  }
+
+  /// Qué son las zonas y cómo se dibujan, la primera vez.
+  Future<void> _explicar() async {
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surfaceElevated,
+        // En horizontal no cabe todo: el texto se desplaza y el ícono sobra.
+        scrollable: true,
+        icon: MediaQuery.of(ctx).size.height < 500
+            ? null
+            : const Icon(Icons.crop_free, color: AppColors.accent, size: 36),
+        title: Text('Zonas de interés',
+            style: GoogleFonts.inter(color: AppColors.textPrimary, fontWeight: FontWeight.w600)),
+        content: Text(
+            'Marca en la imagen lo importante, como la puerta o la reja. Así el sistema sabe dónde '
+            'un desconocido es un riesgo y dónde solo está de paso.\n\n'
+            '1. Toca la imagen para marcar las esquinas de la zona.\n'
+            '2. Pulsa «Cerrar zona», elige el tipo y ponle un nombre.\n'
+            '3. Pulsa «Guardar».',
+            style: GoogleFonts.inter(color: AppColors.textSecondary, fontSize: 14, height: 1.45)),
+        actions: [
+          FilledButton(onPressed: () => Navigator.pop(ctx), child: const Text('Entendido')),
+        ],
+      ),
+    );
   }
 
   /// «Actualizar captura»: toma una nueva del video en vivo.
-  Future<void> _tomarCaptura() async {
+  Future<void> _tomarCaptura({int intentos = 1}) async {
     final cam = _camera();
     if (cam == null) return;
     setState(() {
       _loadingBg = true;
       _sinVideo = false;
     });
-    final c = await context.read<CapturaCamara>().tomar(cam);
+    final capturas = context.read<CapturaCamara>();
+    var c = await capturas.tomar(cam);
+    for (var i = 1; c == null && i < intentos && mounted; i++) {
+      await Future<void>.delayed(const Duration(milliseconds: 2500));
+      if (!mounted) return;
+      c = await capturas.tomar(cam);
+    }
     if (!mounted) return;
     if (c == null) {
       setState(() {
@@ -498,7 +538,7 @@ class _ZoneEditorScreenState extends State<ZoneEditorScreen> {
             ),
           ),
           TextButton.icon(
-            onPressed: _loadingBg ? null : _tomarCaptura,
+                onPressed: _loadingBg ? null : () => _tomarCaptura(),
             icon: const Icon(Icons.refresh, size: 18),
             label: const Text('Actualizar captura'),
             style: TextButton.styleFrom(

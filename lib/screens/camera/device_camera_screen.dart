@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:provider/provider.dart';
 import '../../core/network/api_client.dart';
+import '../../core/utils/permiso_camara.dart';
 import '../../data/models/camera_config_model.dart';
 import '../../data/services/camera_service.dart';
 import '../../data/services/mobile_camera_publisher.dart';
@@ -89,7 +90,12 @@ class _DeviceCameraScreenState extends State<DeviceCameraScreen> with WidgetsBin
     WidgetsBinding.instance.addObserver(this);
     // La orientación no se fija aquí: la gestiona OrientacionApp (vertical
     // mientras no transmite, la posición física del teléfono al transmitir).
-    WidgetsBinding.instance.addPostFrameCallback((_) => _restorePreview());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _restorePreview();
+      // Se pide al entrar, con su explicación: es el momento en que el usuario
+      // eligió usar este teléfono como cámara.
+      if (!(_publisher?.isPublishing ?? false)) asegurarPermisoCamara(context);
+    });
   }
 
   Future<void> _restorePreview() async {
@@ -130,6 +136,11 @@ class _DeviceCameraScreenState extends State<DeviceCameraScreen> with WidgetsBin
           name: _name.text.trim(), streamMode: 'MobileWebRtc'));
         if (!vigente()) return;
         await cameras.fetchCameras();
+      }
+      if (!vigente()) return;
+      if (!await asegurarPermisoCamara(context)) {
+        _error = 'VigiShield necesita el permiso de cámara para transmitir.';
+        return;
       }
       if (!vigente()) return;
       // La vista previa no bloquea el arranque: si la transmisión sale bien la

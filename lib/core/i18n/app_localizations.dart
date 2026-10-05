@@ -507,6 +507,28 @@ class AppStrings {
   String minutesAgo(int m) => _('Hace $m min', '$m min ago');
   String hoursAgo(int h) => _('Hace $h h', '$h h ago');
 
+  // ── Términos y privacidad ───────────────────────────────────────────────────
+  String get termsAcceptPrefix => _('He leído y acepto los ', 'I have read and accept the ');
+  String get termsLink => _('Términos y condiciones', 'Terms and conditions');
+  String get termsAnd => _(' y la ', ' and the ');
+  String get privacyLink => _('Política de privacidad', 'Privacy policy');
+  String get termsRequired => _(
+      'Debes aceptar los Términos y la Política de privacidad para crear tu cuenta.',
+      'You must accept the Terms and the Privacy policy to create your account.');
+  String get consentTitle => _('Tus datos y tu privacidad', 'Your data and your privacy');
+  String get consentBody => _(
+      'VigiShield analiza el video de tus cámaras en servidores en la nube (fuera del Perú) para detectar '
+      'personas y riesgos. Solo guarda una foto y un clip corto de cada evento, y los rostros que tú '
+      'registres. No graba de forma continua ni capta audio. Puedes pedir la eliminación de tus datos '
+      'cuando quieras.',
+      'VigiShield analyzes your camera video on cloud servers (outside Peru) to detect people and risks. '
+      'It only keeps a photo and a short clip of each event, and the faces you register. It does not '
+      'record continuously or capture audio. You can ask for your data to be deleted at any time.');
+  String get consentAccept => _('Aceptar y continuar', 'Accept and continue');
+  String get consentLogout => _('Cerrar sesión', 'Log out');
+  String get consentError => _('No se pudo guardar tu aceptación. Revisa tu conexión.',
+      'Could not save your acceptance. Check your connection.');
+
   // ── Alerta de emergencia ────────────────────────────────────────────────────
   String get emergencyAlert => _('Alerta de emergencia', 'Emergency alert');
   String get emergencyAlertHint => _(

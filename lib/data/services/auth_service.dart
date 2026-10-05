@@ -24,12 +24,14 @@ class AuthService {
     required String password,
     required String name,
     required String householdAddress,
+    String? termsVersion,
   }) async {
     final data = await _client.post<Map<String, dynamic>>('/api/auth/register', body: {
       'email': email,
       'password': password,
       'name': name,
       'householdAddress': householdAddress,
+      if (termsVersion != null) 'termsVersion': termsVersion,
     });
     return (
       token: data['token'] as String,
@@ -111,4 +113,11 @@ class AuthService {
         'householdId': householdId,
         'eventType': eventType,
       });
+
+  /// Registra que el usuario aceptó los Términos y la Política de privacidad.
+  Future<UserModel> acceptTerms(String version) async {
+    final data = await _client.post<Map<String, dynamic>>('/api/auth/accept-terms',
+        body: {'version': version});
+    return UserModel.fromJson(data);
+  }
 }
