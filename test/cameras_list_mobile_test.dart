@@ -46,7 +46,15 @@ void main() {
         await tester.pumpAndSettle();
         expect(find.text('Usar este dispositivo como cámara'), findsOneWidget);
         expect(find.text('Agregar cámara IP'), findsOneWidget);
+        await tester.tapAt(const Offset(10, 10));
+        await tester.pumpAndSettle();
+        expect(find.byIcon(Icons.crop_free), findsOneWidget);
+        expect(find.byIcon(Icons.edit_outlined), findsOneWidget);
+        expect(find.byIcon(Icons.delete_outline), findsOneWidget);
       }
+      final card = find.byKey(const ValueKey('camera-card-c'));
+      expect(card, findsOneWidget);
+      expect(tester.getSize(card).height, lessThan(170));
       expect(tester.takeException(), isNull);
     });
   }

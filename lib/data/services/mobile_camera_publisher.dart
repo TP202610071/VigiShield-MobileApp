@@ -45,6 +45,8 @@ abstract interface class MobilePublishTransport {
 abstract interface class MobileCameraCapture {
   MediaStream? get stream;
   Future<void> open({required bool front});
+  Future<bool> hasTorch();
+  Future<void> setTorch(bool enabled);
   Future<String> offer(Duration timeout);
   Future<void> answer(String sdp);
   Future<void> close();
@@ -105,6 +107,16 @@ class WebRtcCameraCapture implements MobileCameraCapture {
   }
 
   @override Future<void> answer(String sdp) => _peer!.setRemoteDescription(RTCSessionDescription(sdp, 'answer'));
+  MediaStreamTrack? get _videoTrack {
+    final tracks = _stream?.getVideoTracks();
+    return tracks == null || tracks.isEmpty ? null : tracks.first;
+  }
+  @override Future<bool> hasTorch() async => await _videoTrack?.hasTorch() ?? false;
+  @override Future<void> setTorch(bool enabled) async {
+    final track = _videoTrack;
+    if (track == null) throw StateError('La cámara no está abierta.');
+    await track.setTorch(enabled);
+  }
   @override
   Future<void> close() async {
     final stream = _stream; _stream = null;
@@ -161,6 +173,9 @@ class MobileCameraPublisher extends ChangeNotifier
   String? error;
   bool isPublishing = false;
   bool isStarting = false;
+  bool front = false;
+  bool hasTorch = false;
+  bool torchEnabled = false;
   bool _disposed = false;
   int _generation = 0;
   Future<void>? _starting, _stopping;
@@ -184,8 +199,14 @@ class MobileCameraPublisher extends ChangeNotifier
       }
       if (generation != _generation) return;
       _cameraId = cameraId;
+      this.front = front;
+      hasTorch = false;
+      torchEnabled = false;
       await capture.open(front: front);
       if (generation != _generation) return;
+      if (!front) {
+        try { hasTorch = await capture.hasTorch(); } catch (_) { hasTorch = false; }
+      }
       _notify();
       final offer = await capture.offer(iceTimeout);
       if (generation != _generation) return;
@@ -202,6 +223,8 @@ class MobileCameraPublisher extends ChangeNotifier
     }
   }
   Future<void> _cleanup() async {
+    hasTorch = false;
+    torchEnabled = false;
     try { await capture.close(); } catch (e) { error ??= e.toString(); }
     final session = _sessionId; final camera = _cameraId;
     if (session != null && camera != null) {
@@ -222,6 +245,14 @@ class MobileCameraPublisher extends ChangeNotifier
     try { await capture.close(); } catch (e) { error = e.toString(); }
     await _starting;
     await _cleanup();
+    _notify();
+  }
+  Future<void> setTorch(bool enabled) async {
+    if (!isPublishing || front || !hasTorch) {
+      throw StateError('La linterna no está disponible en esta cámara.');
+    }
+    await capture.setTorch(enabled);
+    torchEnabled = enabled;
     _notify();
   }
   /// Cerrar sesion corta la transmision: la camara de una cuenta no puede

@@ -11,6 +11,35 @@ import 'package:vigishield_mobile_app/screens/camera/device_camera_screen.dart';
 import 'mobile_camera_publisher_test.dart' show Capture, Transport;
 import 'package:vigishield_mobile_app/data/services/mobile_camera_publisher.dart';
 void main() {
+  testWidgets('device camera configuration stays portrait', (tester) async {
+    final calls = <MethodCall>[];
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform, (call) async {
+        if (call.method == 'SystemChrome.setPreferredOrientations') calls.add(call);
+        return null;
+      });
+    addTearDown(() => tester.binding.defaultBinaryMessenger
+      .setMockMethodCallHandler(SystemChannels.platform, null));
+    await tester.pumpWidget(ChangeNotifierProvider(
+      create: (_) => MobileCameraPublisher(
+        transport: Transport(), capture: Capture(), observarCicloDeVida: false),
+      child: const MaterialApp(home: DeviceCameraScreen())));
+    await tester.pump();
+    expect(calls.last.arguments, ['DeviceOrientation.portraitUp']);
+  });
+  testWidgets('reopening configuration reflects active front publication', (tester) async {
+    final publisher = MobileCameraPublisher(
+      transport: Transport(), capture: Capture(), observarCicloDeVida: false);
+    await publisher.start('camera', front: true);
+    await tester.pumpWidget(MaterialApp(home: DeviceCameraScreen(publisher: publisher)));
+    await tester.pumpAndSettle();
+    expect(find.text('Detener transmisión'), findsOneWidget);
+    final segmented = tester.widget<SegmentedButton<bool>>(
+      find.byType(SegmentedButton<bool>));
+    expect(segmented.selected, {true});
+    await tester.pumpWidget(const SizedBox());
+    await tester.pumpAndSettle();
+  });
   testWidgets('background during registration cancels start even after resume', (tester) async {
     final api = ApiClient(AuthStorage());
     RequestInterceptorHandler? pending;

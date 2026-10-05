@@ -1,4 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+
+/// Herramientas de validación del OE4 (llamada de prueba, grabación de
+/// pantalla). No forman parte del producto: el build de tienda las excluye
+/// del todo, código nativo y permisos incluidos (android/app/src/store).
+const bool kValidationTools =
+    !kReleaseMode || bool.fromEnvironment('VIGISHIELD_VALIDATION');
 
 class AppConstants {
   AppConstants._();
@@ -8,7 +15,7 @@ class AppConstants {
   /// [loadAppVersion] leyendo el paquete instalado, asi que siempre coincide
   /// con `version:` del pubspec y nunca se queda desfasada.
   static String appVersion = _versionPorDefecto;
-  static const String _versionPorDefecto = '0.14.0';
+  static const String _versionPorDefecto = '0.15.0';
 
   /// Lee la version real del paquete. Se llama una vez al arrancar.
   static Future<void> loadAppVersion() async {

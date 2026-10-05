@@ -153,9 +153,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(height: 24),
               ],
 
-              _SettingsTile(icon: Icons.science_outlined, label: 'Validación en primer plano',
-                onTap: () => Navigator.of(context, rootNavigator: true).push(MaterialPageRoute<void>(builder: (_) => const ValidationScreen()))),
-              const SizedBox(height: 24),
+              if (kValidationTools) ...[
+                _SettingsTile(icon: Icons.science_outlined, label: 'Validación en primer plano',
+                  onTap: () => Navigator.of(context, rootNavigator: true).push(MaterialPageRoute<void>(builder: (_) => const ValidationScreen()))),
+                const SizedBox(height: 24),
+              ],
               _SectionLabel(l10n.sectionPreferences),
               const SizedBox(height: 8),
               _LanguageTile(),
