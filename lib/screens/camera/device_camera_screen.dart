@@ -167,8 +167,9 @@ class _DeviceCameraScreenState extends State<DeviceCameraScreen> with WidgetsBin
     if (state == AppLifecycleState.paused || state == AppLifecycleState.hidden || state == AppLifecycleState.detached) {
       _foreground = false;
       // Invalida cualquier arranque en curso: al volver no debe seguir solo.
+      // Detener la transmision ya no es cosa de la pantalla: lo hace el propio
+      // publicador, que sigue vivo aunque esta pantalla se desmonte.
       _arranque++;
-      unawaited(_stop());
     }
   }
 
