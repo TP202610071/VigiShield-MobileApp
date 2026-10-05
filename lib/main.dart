@@ -32,6 +32,7 @@ import 'data/services/mobile_camera_publisher.dart';
 import 'data/services/emergency_effects.dart';
 import 'providers/emergency_provider.dart';
 import 'widgets/emergency_overlay.dart';
+import 'widgets/consentimiento_gate.dart';
 import 'core/orientation/orientacion_app.dart';
 import 'core/utils/pantalla_encendida.dart';
 import 'data/services/captura_camara.dart';
@@ -313,8 +314,10 @@ class _VigiShieldAppState extends State<VigiShieldApp> {
             builder: (context, child) => _OcultarTeclado(
               child: KeyedSubtree(
                 key: ValueKey(locale.languageCode),
-                child: EmergencyOverlay(
-                  child: ValidationOverlay(child: child ?? const SizedBox.shrink()),
+                child: ConsentimientoGate(
+                  child: EmergencyOverlay(
+                    child: ValidationOverlay(child: child ?? const SizedBox.shrink()),
+                  ),
                 ),
               ),
             ),

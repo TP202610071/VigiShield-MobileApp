@@ -75,6 +75,11 @@ class _CameraScreenState extends State<CameraScreen>
   // stream token as the RTSP password (MediaMTX validates it); HLS carries the
   // viewer JWT as a Bearer header through the nginx proxy.
   bool _useRtsp = true;
+  // Cámara cuyo video está abierto. Si la lista cambia y la seleccionada deja
+  // de ser esta (por ejemplo, porque se borró), se cierra o se cambia.
+  String? _camaraAbierta;
+  bool _reabrirAlVolver = false;
+  CameraProvider? _camaras;
   int _openGeneration = 0;
   Future<void>? _tokenFetch; // una sola peticion de token aunque abran varios
 
@@ -159,6 +164,7 @@ class _CameraScreenState extends State<CameraScreen>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     PantallaEncendida.pedir('camara');
+    _camaras = context.read<CameraProvider>()..addListener(_alCambiarCamaras);
     // Orientation is owned by MainShell (camera tab = landscape). This screen
     // must NOT set orientation itself — it lives in an IndexedStack and stays
     // alive on other tabs, so forcing landscape here rotates the other tabs.
@@ -179,6 +185,10 @@ class _CameraScreenState extends State<CameraScreen>
     _isActive = active;
     if (active) {
       _startEventPolling();
+      if (_reabrirAlVolver) {
+        _reabrirAlVolver = false;
+        _alCambiarCamaras();
+      }
     } else {
       _eventPollTimer?.cancel();
     }
@@ -204,6 +214,44 @@ class _CameraScreenState extends State<CameraScreen>
     }
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     super.deactivate();
+  }
+
+  /// La lista de cámaras cambió. Si la que se está viendo ya no es la
+  /// seleccionada (se borró o se cambió), se deja de reproducir: antes el
+  /// video de una cámara eliminada seguía corriendo en la pestaña.
+  void _alCambiarCamaras() {
+    if (!mounted) return;
+    final provider = _camaras!;
+    final vigentes = provider.cameras.map((c) => c.id).toSet();
+    for (final id in _gridPlayers.keys.where((k) => !vigentes.contains(k)).toList()) {
+      unawaited(_gridPlayers.remove(id)!.dispose());
+      _gridControllers.remove(id);
+    }
+    final sel = provider.selectedCamera;
+    if (sel?.id == _camaraAbierta) return;
+    _log('camera list changed: $_camaraAbierta -> ${sel?.id}');
+    _cancelRecoveryTimers();
+    _stopAiFramePoller();
+    unawaited(_player?.stop());
+    setState(() {
+      _camaraAbierta = null;
+      _aiFrame = null;
+      _aiStatus = null;
+      _hasVideo = false;
+      _isPlaying = false;
+      _error = null;
+    });
+    if (sel == null) return; // sin cámaras: se muestra el estado vacío
+    if (!_isActive) {
+      _reabrirAlVolver = true; // pestaña oculta: se abre al volver
+      return;
+    }
+    if (_viewMode == _ViewMode.ai) {
+      _startAiFramePoller();
+    } else if (_viewMode == _ViewMode.single) {
+      _resetStreamRecovery(forceRtsp: true);
+      _openStream();
+    }
   }
 
   // Grep logcat with:  adb logcat | grep -E "VS-CAM|VS-MPV"
@@ -257,6 +305,7 @@ class _CameraScreenState extends State<CameraScreen>
   @override
   void dispose() {
     _isActive = false;
+    _camaras?.removeListener(_alCambiarCamaras);
     WidgetsBinding.instance.removeObserver(this);
     PantallaEncendida.soltar('camara');
     _cancelRecoveryTimers();
@@ -532,6 +581,7 @@ class _CameraScreenState extends State<CameraScreen>
     if (overrideUrl == null && _useRtsp) await _ensureStreamToken();
     if (!mounted || generation != _openGeneration || _opening) return;
     final url = overrideUrl ?? _resolveStreamUrl();
+    _camaraAbierta = context.read<CameraProvider>().selectedCamera?.id;
     if (url == null || url.isEmpty) {
       if (mounted)
         setState(() {

@@ -100,22 +100,10 @@ class _CamerasListScreenState extends State<CamerasListScreen> {
     final transmitiendo = await Navigator.of(context).push(MaterialPageRoute<bool>(
       builder: (_) => DeviceCameraScreen(camera: camera)));
     if (transmitiendo != true || !context.mounted) return;
-    // Se acaba de iniciar la transmisión: se dice qué hacer a continuación.
-    final publicador = context.read<MobileCameraPublisher>();
-    final cam = context.read<CameraProvider>().cameras
-        .where((c) => c.id == publicador.cameraId).firstOrNull;
-    final nombre = cam?.name ?? 'La cámara';
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      duration: const Duration(seconds: 8),
-      behavior: SnackBarBehavior.floating,
-      content: Text('$nombre ya está transmitiendo. Ahora dibuja sus zonas de interés y deja el '
-          'teléfono apuntando a la entrada con VigiShield abierta.'),
-      action: cam == null
-          ? null
-          : SnackBarAction(
-              label: 'Dibujar zonas',
-              onPressed: () => context.push('/settings/cameras/${cam.id}/zones')),
-    ));
+    // Recién empezó a transmitir: lo siguiente es dibujar las zonas de
+    // interés. El editor explica para qué sirven.
+    final id = context.read<MobileCameraPublisher>().cameraId;
+    if (id != null) await context.push('/settings/cameras/$id/zones?intro=1');
   }
 
   void _showAddOptions(BuildContext context) {
@@ -198,6 +186,14 @@ class _CamerasListScreenState extends State<CamerasListScreen> {
           TextButton(
             onPressed: () async {
               Navigator.pop(ctx);
+              // Si la cámara es este mismo teléfono transmitiendo, se corta
+              // antes: si no, seguiría enviando video de una cámara borrada.
+              final publicador = context.read<MobileCameraPublisher>();
+              if (publicador.cameraId == id &&
+                  (publicador.isPublishing || publicador.isStarting)) {
+                await publicador.stop();
+              }
+              if (!context.mounted) return;
               await context.read<CameraProvider>().deleteCamera(id);
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(

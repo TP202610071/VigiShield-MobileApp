@@ -1,3 +1,5 @@
+import '../../core/constants/app_constants.dart';
+
 class UserModel {
   final String id;
   final String email;
@@ -7,6 +9,8 @@ class UserModel {
   final String? whatsAppNumber;
   final String? avatarPath;
   final DateTime createdAt;
+  final DateTime? termsAcceptedAt;
+  final String? termsVersion;
 
   const UserModel({
     required this.id,
@@ -17,7 +21,12 @@ class UserModel {
     this.whatsAppNumber,
     this.avatarPath,
     required this.createdAt,
+    this.termsAcceptedAt,
+    this.termsVersion,
   });
+
+  /// Aceptó la versión vigente de los Términos y la Política de privacidad.
+  bool get aceptoTerminosVigentes => termsVersion == kVersionTerminos;
 
   /// Admin accounts inherit every primary-resident power.
   bool get isPrimary => role == 'Primary' || role == 'Admin';
@@ -39,6 +48,10 @@ class UserModel {
         whatsAppNumber: json['whatsAppNumber'] as String?,
         avatarPath: json['avatarPath'] as String?,
         createdAt: DateTime.parse(json['createdAt'] as String),
+        termsAcceptedAt: json['termsAcceptedAt'] == null
+            ? null
+            : DateTime.tryParse(json['termsAcceptedAt'] as String),
+        termsVersion: json['termsVersion'] as String?,
       );
 }
 

@@ -1,3 +1,5 @@
+import '../../core/constants/app_constants.dart';
+import '../../widgets/texto_terminos.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -43,6 +45,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       password: _passwordCtrl.text,
       name: _nameCtrl.text.trim(),
       householdAddress: _addressCtrl.text.trim(),
+      termsVersion: kVersionTerminos,
     );
     if (success) {
       // Cierra el contexto de autocompletado para que el sistema ofrezca
@@ -194,7 +197,53 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 28),
+                  const SizedBox(height: 16),
+                  // Consentimiento informado (Ley 29733): sin marcarlo no se
+                  // crea la cuenta. La versión aceptada queda en el backend.
+                  FormField<bool>(
+                    initialValue: false,
+                    validator: (v) => v == true ? null : l10n.termsRequired,
+                    builder: (campo) => Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SizedBox(
+                              width: 32,
+                              height: 32,
+                              child: Checkbox(
+                                key: const ValueKey('acepta-terminos'),
+                                value: campo.value ?? false,
+                                onChanged: (v) => campo.didChange(v ?? false),
+                                activeColor: AppColors.accent,
+                                side: const BorderSide(color: AppColors.textMuted),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            const Expanded(
+                              child: Padding(
+                                padding: EdgeInsets.only(top: 6),
+                                child: TextoTerminos(),
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (campo.hasError)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 40, top: 4),
+                            child: Text(
+                              campo.errorText!,
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                color: AppColors.alertRed,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
                   VsButton(
                     label: l10n.createAccount,
                     onPressed: _isLoading ? null : _register,

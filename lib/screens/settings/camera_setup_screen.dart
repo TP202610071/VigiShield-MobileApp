@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
@@ -129,10 +130,10 @@ class _CameraSetupScreenState extends State<CameraSetupScreen> {
     }
 
     final req = SaveCameraRequest(
-      name: _nameCtrl.text.trim().isEmpty ? 'Cámara' : _nameCtrl.text.trim(),
+      name: _nameCtrl.text.trim(),
       streamMode: _streamMode,
       cameraIp: _ipCtrl.text.trim().isEmpty ? null : _ipCtrl.text.trim(),
-      cameraPort: int.tryParse(_portCtrl.text) ?? 554,
+      cameraPort: int.parse(_portCtrl.text.trim()),
       cameraPath: _pathCtrl.text.trim().isEmpty ? null : _pathCtrl.text.trim(),
       cameraUsername:
           _userCtrl.text.trim().isEmpty ? null : _userCtrl.text.trim(),
@@ -146,6 +147,15 @@ class _CameraSetupScreenState extends State<CameraSetupScreen> {
         : await provider.createCamera(req);
 
     if (!mounted) return;
+
+    if (ok && !widget.isEditing && _streamMode == 'DirectRtsp') {
+      // Cámara nueva: lo siguiente es dibujar sus zonas de interés.
+      final creada = provider.ultimaCreada;
+      if (creada != null) {
+        context.pushReplacement('/settings/cameras/${creada.id}/zones?intro=1');
+        return;
+      }
+    }
 
     if (ok) {
       // Get the saved camera's auto-generated URLs
@@ -215,6 +225,7 @@ class _CameraSetupScreenState extends State<CameraSetupScreen> {
                 controller: _nameCtrl,
                 label: 'Nombre de la cámara',
                 hint: 'Ej: Entrada, Jardín, Garaje…',
+                validator: validarNombreCamara,
               ),
               const SizedBox(height: 20),
 
@@ -283,7 +294,8 @@ class _CameraSetupScreenState extends State<CameraSetupScreen> {
                 controller: _ipCtrl,
                 label: 'Dirección IP',
                 hint: 'Ej: 192.168.1.82',
-                keyboardType: TextInputType.number,
+                keyboardType: TextInputType.url,
+                validator: validarIpCamara,
               ),
               const SizedBox(height: 12),
               Row(children: [
@@ -294,6 +306,7 @@ class _CameraSetupScreenState extends State<CameraSetupScreen> {
                     label: 'Puerto',
                     hint: '554',
                     keyboardType: TextInputType.number,
+                    validator: validarPuertoCamara,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -403,6 +416,14 @@ class _CameraSetupScreenState extends State<CameraSetupScreen> {
               if (_savedStreamKey != null) ...[
                 const SizedBox(height: 28),
                 _buildMediaMtxInstructions(),
+                if (!widget.isEditing && context.read<CameraProvider>().ultimaCreada != null) ...[
+                  const SizedBox(height: 16),
+                  VsButton(
+                    label: 'Continuar: zonas de interés',
+                    onPressed: () => context.pushReplacement(
+                        '/settings/cameras/${context.read<CameraProvider>().ultimaCreada!.id}/zones?intro=1'),
+                  ),
+                ],
               ],
 
               const SizedBox(height: 40),
@@ -741,4 +762,30 @@ class _ScanResultsSheet extends StatelessWidget {
       ),
     );
   }
+}
+
+
+/// Validaciones del alta de cámara IP. Antes no había ninguna y se podía
+/// guardar una cámara sin IP, que quedaba registrada sin forma de verla.
+String? validarNombreCamara(String? v) {
+  final t = v?.trim() ?? '';
+  if (t.isEmpty) return 'Ponle un nombre a la cámara.';
+  if (t.length > 60) return 'Máximo 60 caracteres.';
+  return null;
+}
+
+String? validarIpCamara(String? v) {
+  final t = v?.trim() ?? '';
+  if (t.isEmpty) return 'Escribe la dirección IP de la cámara.';
+  if (t.toUpperCase() == 'DEMO') return null;
+  final ipv4 = RegExp(r'^(25[0-5]|2[0-4]\d|1?\d?\d)(\.(25[0-5]|2[0-4]\d|1?\d?\d)){3}$');
+  final host = RegExp(r'^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)+$');
+  if (ipv4.hasMatch(t) || (host.hasMatch(t) && !RegExp(r'^[\d.]+$').hasMatch(t))) return null;
+  return 'Dirección no válida. Ejemplo: 192.168.1.82';
+}
+
+String? validarPuertoCamara(String? v) {
+  final n = int.tryParse(v?.trim() ?? '');
+  if (n == null || n < 1 || n > 65535) return 'Puerto entre 1 y 65535 (normalmente 554).';
+  return null;
 }
