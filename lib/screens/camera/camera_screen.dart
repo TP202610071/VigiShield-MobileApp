@@ -83,6 +83,16 @@ class _CameraScreenState extends State<CameraScreen>
   String? _claveAbierta;
   bool _reabrirAlVolver = false;
   CameraProvider? _camaras;
+  // Este teléfono reinicia su transmisión al girarlo: el video abierto queda
+  // de la sesión anterior (otro tamaño u orientación) y hay que reabrirlo.
+  MobileCameraPublisher? _publicador;
+  bool _publicadorActivo = false;
+  bool _reabrirStream = false;
+  // Última hora (local) en que cambió el estado que publica la IA. Si deja de
+  // cambiar, la IA no está procesando (p. ej. reconectando con la cámara) y el
+  // cuadro que se ve es viejo: se avisa en vez de mostrarlo como si fuera en vivo.
+  Object? _aiUltimoTs;
+  DateTime? _aiTsCambio;
   int _openGeneration = 0;
   Future<void>? _tokenFetch; // una sola peticion de token aunque abran varios
 
@@ -168,6 +178,9 @@ class _CameraScreenState extends State<CameraScreen>
     WidgetsBinding.instance.addObserver(this);
     PantallaEncendida.pedir('camara');
     _camaras = context.read<CameraProvider>()..addListener(_alCambiarCamaras);
+    _publicador = context.read<MobileCameraPublisher?>();
+    _publicadorActivo = _publicador?.isPublishing ?? false;
+    _publicador?.addListener(_alCambiarPublicador);
     // Orientation is owned by MainShell (camera tab = landscape). This screen
     // must NOT set orientation itself — it lives in an IndexedStack and stays
     // alive on other tabs, so forcing landscape here rotates the other tabs.
@@ -191,6 +204,12 @@ class _CameraScreenState extends State<CameraScreen>
       if (_reabrirAlVolver) {
         _reabrirAlVolver = false;
         _alCambiarCamaras();
+      } else if (_reabrirStream) {
+        _reabrirStream = false;
+        if (_viewMode == _ViewMode.single) {
+          _resetStreamRecovery(forceRtsp: true);
+          _openStream();
+        }
       }
     } else {
       _eventPollTimer?.cancel();
@@ -266,6 +285,28 @@ class _CameraScreenState extends State<CameraScreen>
     }
   }
 
+  /// Este teléfono empezó (o reanudó tras un giro) su transmisión. Si es la
+  /// cámara que se está viendo, el reproductor sigue con la sesión anterior:
+  /// el video quedaba vertical con la app en horizontal, o en «Conectando…».
+  void _alCambiarPublicador() {
+    final pub = _publicador;
+    if (pub == null || !mounted) return;
+    final empezo = pub.isPublishing && !_publicadorActivo;
+    _publicadorActivo = pub.isPublishing;
+    if (!empezo || _camaras?.selectedCamera?.id != pub.cameraId) return;
+    _log('own publisher (re)started → reopening stream');
+    if (!_isActive) {
+      _reabrirStream = true;
+      return;
+    }
+    if (_viewMode != _ViewMode.single) return;
+    _resetStreamRecovery(forceRtsp: true);
+    // El servidor tarda un momento en tener lista la sesión nueva.
+    _reopenTimer = Timer(const Duration(milliseconds: 1500), () {
+      if (mounted && _isActive && _viewMode == _ViewMode.single) _openStream();
+    });
+  }
+
   // Grep logcat with:  adb logcat | grep -E "VS-CAM|VS-MPV"
   void _log(String msg) {
     final t = DateTime.now().toIso8601String().substring(11, 23);
@@ -318,6 +359,7 @@ class _CameraScreenState extends State<CameraScreen>
   void dispose() {
     _isActive = false;
     _camaras?.removeListener(_alCambiarCamaras);
+    _publicador?.removeListener(_alCambiarPublicador);
     WidgetsBinding.instance.removeObserver(this);
     PantallaEncendida.soltar('camara');
     _cancelRecoveryTimers();
@@ -535,7 +577,11 @@ class _CameraScreenState extends State<CameraScreen>
         if (playing) _error = null;
       });
       if (playing) {
-        _stallTimer?.cancel();
+        // «Reproduciendo» no basta: mpv puede quedar así sin decodificar
+        // ningún cuadro (p. ej. la sesión del teléfono se reinició) y la
+        // pestaña se quedaba en «Conectando…» para siempre. El vigilante
+        // sigue armado hasta que llega el primer cuadro.
+        if (_hasVideo) _stallTimer?.cancel();
         _reopenTimer?.cancel();
         // Clear the failure budget only after playback SUSTAINS (anti-thrash).
         _stableTimer?.cancel();
@@ -557,6 +603,11 @@ class _CameraScreenState extends State<CameraScreen>
       if (hasVideo != _hasVideo && mounted) {
         _log('width=$w hasVideo=$hasVideo');
         setState(() => _hasVideo = hasVideo);
+        if (hasVideo) {
+          _stallTimer?.cancel();
+        } else {
+          _armStallWatchdog();
+        }
       }
     });
 
@@ -652,12 +703,13 @@ class _CameraScreenState extends State<CameraScreen>
   void _armStallWatchdog() {
     if (!mounted || !_isActive || _viewMode != _ViewMode.single) return;
     _stallTimer?.cancel();
-    // 10s grace tolerates the camera's keyframe wait on a fresh connect. We only
-    // recover if mpv is genuinely NOT playing — never re-open a stream mpv
-    // considers healthy (that thrash was the regression).
-    _stallTimer = Timer(const Duration(seconds: 10), () {
+    // Margen para el primer keyframe: 10 s por RTSP y 20 s por HLS, que en
+    // frío tarda más. Solo se recupera si no hay NINGÚN cuadro decodificado:
+    // un stream que muestra video nunca se reabre (eso causaba el bucle).
+    final gracia = Duration(seconds: _useRtsp ? 10 : 20);
+    _stallTimer = Timer(gracia, () {
       if (!mounted || !_isActive || _viewMode != _ViewMode.single) return;
-      if (_isPlaying) return; // mpv is playing — leave it alone
+      if (_isPlaying && _hasVideo) return; // hay video: no tocar
       _onRecoverableFailure();
     });
   }
@@ -782,6 +834,11 @@ class _CameraScreenState extends State<CameraScreen>
           options: Options(headers: _authHeaders),
         );
         if (resp.statusCode == 200 && resp.data != null && mounted) {
+          final ts = resp.data!['ts'];
+          if (ts != _aiUltimoTs) {
+            _aiUltimoTs = ts;
+            _aiTsCambio = DateTime.now();
+          }
           setState(() => _aiStatus = resp.data);
         }
       } catch (_) {
@@ -798,7 +855,14 @@ class _CameraScreenState extends State<CameraScreen>
     _aiStatusTimer = null;
     _aiFrame = null;
     _aiStatus = null;
+    _aiUltimoTs = null;
+    _aiTsCambio = null;
   }
+
+  /// La IA no actualiza su estado hace rato: está reconectando con la cámara.
+  bool get _aiDesactualizada =>
+      _aiTsCambio != null &&
+      DateTime.now().difference(_aiTsCambio!) > const Duration(seconds: 6);
 
   // ──────────────────────────────────────────────────────────────────────────────
   // Screenshot (captures the decoded video frame directly via libmpv)
@@ -814,7 +878,15 @@ class _CameraScreenState extends State<CameraScreen>
       } else {
         bytes = await _player?.screenshot();
       }
-      if (bytes == null) throw Exception('No frame available');
+      if (bytes == null) {
+        // Todavía no hay imagen (el video sigue cargando): no es un error.
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(context.l10n.screenshotNoFrame)),
+          );
+        }
+        return;
+      }
       final name =
           'vigishield_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}';
       await Gal.putImageBytes(bytes, name: name);
@@ -1224,12 +1296,46 @@ class _CameraScreenState extends State<CameraScreen>
     if (cam != null && !cam.isActive) return _buildAiDisabled(cam);
     final frame = _aiFrame;
     if (frame != null) {
-      return InteractiveViewer(
-        minScale: 1.0,
-        maxScale: 4.0,
-        // Sin key por fotograma: recrearía el visor en cada imagen (zoom
-        // reiniciado y parpadeo). MemoryImage ya se refresca con bytes nuevos.
-        child: Image.memory(frame, fit: BoxFit.contain, gaplessPlayback: true),
+      final viejo = _aiDesactualizada;
+      return Stack(
+        fit: StackFit.expand,
+        children: [
+          InteractiveViewer(
+            minScale: 1.0,
+            maxScale: 4.0,
+            // Sin key por fotograma: recrearía el visor en cada imagen (zoom
+            // reiniciado y parpadeo). MemoryImage ya se refresca con bytes nuevos.
+            child: Opacity(
+              opacity: viejo ? 0.4 : 1,
+              child: Image.memory(frame, fit: BoxFit.contain, gaplessPlayback: true),
+            ),
+          ),
+          if (viejo)
+            Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                decoration: BoxDecoration(
+                  color: Colors.black.withAlpha(180),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(color: AppColors.accent, strokeWidth: 2),
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      context.l10n.aiReconnecting,
+                      style: GoogleFonts.inter(color: Colors.white, fontSize: 13),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
       );
     }
     return Center(

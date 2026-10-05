@@ -63,9 +63,12 @@ void main() {
     o.muestra(-9.6, 0.4, 0.5, ahora: t0);
     o.muestra(0.2, 9.8, 0.3, ahora: t0.add(const Duration(milliseconds: 300)));
     expect(reiniciada, isNull);
-    // Girado y quieto: a los 0.8 s se adopta.
+    // Girado y quieto un rato corto: todavía no (se está manipulando).
     o.muestra(-9.6, 0.4, 0.5, ahora: t0.add(const Duration(seconds: 1)));
-    o.muestra(-9.6, 0.4, 0.5, ahora: t0.add(const Duration(milliseconds: 1900)));
+    o.muestra(-9.6, 0.4, 0.5, ahora: t0.add(const Duration(milliseconds: 2000)));
+    expect(reiniciada, isNull);
+    // Quieto 2.5 s: se adopta y se pide reiniciar.
+    o.muestra(-9.6, 0.4, 0.5, ahora: t0.add(const Duration(milliseconds: 3600)));
     expect(reiniciada, DeviceOrientation.landscapeRight);
     expect(o.gradosFisicos, 270);
     expect(o.deseada(), [DeviceOrientation.portraitUp]);

@@ -4,6 +4,7 @@ import 'package:flutter_webrtc/flutter_webrtc.dart';
 import '../../providers/session_scoped.dart';
 import '../../core/orientation/orientacion_app.dart';
 import 'rotacion_camara.dart';
+import '../../core/network/api_client.dart';
 
 class MobilePublishAnswer {
   final String sessionId;
@@ -232,10 +233,14 @@ class MobileCameraPublisher extends ChangeNotifier
   }
   Future<void> _start(int generation, bool front, String cameraId) async {
     try {
-      // Keep the original camera/session pair until DELETE succeeds.
+      // Se intenta cerrar la sesión anterior, pero no se bloquea si no se
+      // puede: el servidor reemplaza la publicación previa de la misma cámara.
+      // Antes, una sesión que ya no existía (cámara borrada, servidor
+      // reiniciado) dejaba el publicador trabado hasta cerrar la app.
       if (_sessionId != null) {
         await _cleanup();
-        if (_sessionId != null) throw StateError('La sesión anterior sigue pendiente de cierre. Reintenta cuando haya conexión.');
+        _sessionId = null;
+        error = null;
       }
       if (generation != _generation) return;
       _cameraId = cameraId;
@@ -273,6 +278,13 @@ class MobileCameraPublisher extends ChangeNotifier
       try {
         await transport.unpublish(camera, session);
         _sessionId = null;
+      } on ApiException catch (e) {
+        // 404: la sesión ya no existe en el servidor; para nosotros, cerrada.
+        if (e.statusCode == 404) {
+          _sessionId = null;
+        } else {
+          error = 'No se pudo cerrar la sesión remota: $e';
+        }
       } catch (e) { error = 'No se pudo cerrar la sesión remota: $e'; }
     }
   }
