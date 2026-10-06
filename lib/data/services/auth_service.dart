@@ -82,6 +82,16 @@ class AuthService {
 
   Future<void> logout() => _client.post('/api/auth/logout');
 
+  /// Borra la cuenta (y el hogar entero si es el residente principal). Pide
+  /// la contraseña para confirmar. Devuelve si se borró el hogar.
+  Future<bool> deleteAccount(String password) async {
+    final data = await _client.post<Map<String, dynamic>>(
+      '/api/auth/delete-account',
+      body: {'password': password},
+    );
+    return data['hogarEliminado'] as bool? ?? false;
+  }
+
   // ── Admin management (developer screen) ─────────────────────────────────────
 
   Future<List<AdminUser>> getAdmins() async {

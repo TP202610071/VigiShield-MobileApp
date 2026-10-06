@@ -143,6 +143,26 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Borra la cuenta en el servidor y, si sale bien, cierra la sesión y limpia
+  /// todo lo local (cámaras, eventos, transmisión). Con la contraseña
+  /// equivocada devuelve false y deja el motivo en [errorMessage].
+  Future<bool> deleteAccount(String password) async {
+    _errorMessage = null;
+    try {
+      await _authService.deleteAccount(password);
+    } on ApiException catch (e) {
+      _errorMessage = e.message;
+      notifyListeners();
+      return false;
+    }
+    await _storage.deleteToken();
+    _user = null;
+    _state = AuthState.unauthenticated;
+    _clearSessionData();
+    notifyListeners();
+    return true;
+  }
+
   /// Re-fetch the current user (e.g. after a role/profile change elsewhere).
   Future<void> refreshUser() async {
     try {
