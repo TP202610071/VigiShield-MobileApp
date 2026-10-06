@@ -23,6 +23,8 @@ import '../../providers/camera_provider.dart';
 import '../../providers/event_provider.dart';
 import '../../providers/ui_provider.dart';
 import '../../data/services/mobile_camera_publisher.dart';
+import '../../data/services/estado_transmision.dart';
+import 'aviso_sin_transmision.dart';
 
 enum _ViewMode { single, grid, ai }
 
@@ -88,6 +90,13 @@ class _CameraScreenState extends State<CameraScreen>
   MobileCameraPublisher? _publicador;
   bool _publicadorActivo = false;
   bool _reabrirStream = false;
+  // La cámara es un celular y nadie la transmite (salieron de la app y la
+  // transmisión se cortó). En vez de «Conectando…» para siempre se explica y
+  // se ofrece transmitir desde aquí. Mientras tanto se vuelve a consultar cada
+  // pocos segundos, por si empieza a transmitir otro celular.
+  bool _sinTransmision = false;
+  String? _errorTransmitir;
+  Timer? _transmisionTimer;
   // Última hora (local) en que cambió el estado que publica la IA. Si deja de
   // cambiar, la IA no está procesando (p. ej. reconectando con la cámara) y el
   // cuadro que se ve es viejo: se avisa en vez de mostrarlo como si fuera en vivo.
@@ -220,6 +229,7 @@ class _CameraScreenState extends State<CameraScreen>
   void deactivate() {
     _isActive = false;
     _cancelRecoveryTimers();
+    _dejarDeVigilarTransmision();
     _stopAiFramePoller();
     // El aviso emergente de evento solo tiene sentido mientras se mira la cámara.
     // Dejarlo corriendo hacía que, estando en el historial, el refresco de fondo
@@ -263,6 +273,8 @@ class _CameraScreenState extends State<CameraScreen>
       _hasVideo = false;
       _isPlaying = false;
       _error = null;
+      _sinTransmision = false;
+      _errorTransmitir = null;
     });
     if (sel == null) return; // sin cámaras: se muestra el estado vacío
     if (!_isActive) {
@@ -295,6 +307,7 @@ class _CameraScreenState extends State<CameraScreen>
     _publicadorActivo = pub.isPublishing;
     if (!empezo || _camaras?.selectedCamera?.id != pub.cameraId) return;
     _log('own publisher (re)started → reopening stream');
+    _quitarAvisoTransmision();
     if (!_isActive) {
       _reabrirStream = true;
       return;
@@ -305,6 +318,96 @@ class _CameraScreenState extends State<CameraScreen>
     _reopenTimer = Timer(const Duration(milliseconds: 1500), () {
       if (mounted && _isActive && _viewMode == _ViewMode.single) _openStream();
     });
+  }
+
+  /// ¿Nadie transmite la cámara seleccionada (la de un celular)? En ese caso
+  /// se muestra el aviso, se deja de intentar abrir el video y devuelve true.
+  /// Si no se pudo saber (sin red), se sigue como antes.
+  Future<bool> _comprobarTransmision() async {
+    final cam = context.read<CameraProvider>().selectedCamera;
+    if (cam == null ||
+        !cam.isMobileWebRtc ||
+        transmiteEsteTelefono(cam, context.read<MobileCameraPublisher?>())) {
+      _quitarAvisoTransmision();
+      return false;
+    }
+    final enVivo = await context.read<EstadoTransmision?>()?.enVivo(cam);
+    if (!mounted) return false;
+    // Mientras se consultaba pudo cambiar la cámara o empezar a transmitir.
+    if (context.read<CameraProvider>().selectedCamera?.id != cam.id ||
+        !faltaTransmitir(cam, context.read<MobileCameraPublisher?>(), enVivo)) {
+      _quitarAvisoTransmision();
+      return false;
+    }
+    if (!_sinTransmision) {
+      _log('phone camera not streaming → showing notice');
+      _cancelRecoveryTimers();
+      unawaited(_player?.stop());
+      setState(() {
+        _sinTransmision = true;
+        _hasVideo = false;
+        _error = null;
+      });
+    }
+    _vigilarTransmision();
+    return true;
+  }
+
+  void _quitarAvisoTransmision() {
+    if (!_sinTransmision || !mounted) return;
+    setState(() {
+      _sinTransmision = false;
+      _errorTransmitir = null;
+    });
+  }
+
+  /// Vuelve a consultar cada 5 s mientras haga falta.
+  void _vigilarTransmision() {
+    _transmisionTimer ??= Timer.periodic(
+      const Duration(seconds: 5),
+      (_) => _alVigilarTransmision(),
+    );
+  }
+
+  void _dejarDeVigilarTransmision() {
+    _transmisionTimer?.cancel();
+    _transmisionTimer = null;
+  }
+
+  Future<void> _alVigilarTransmision() async {
+    if (!mounted || !_isActive) return;
+    final cam = camSeleccionada;
+    if (cam == null || !cam.isMobileWebRtc || _viewMode == _ViewMode.grid) {
+      _dejarDeVigilarTransmision();
+      _quitarAvisoTransmision();
+      return;
+    }
+    // Vista IA: no tiene vigilante de reproducción, así que se consulta
+    // siempre. Si el otro celular deja de transmitir mientras se mira,
+    // aparece el aviso en vez de un cuadro congelado.
+    if (_viewMode == _ViewMode.ai) {
+      await _comprobarTransmision();
+      return;
+    }
+    // Video en vivo: el vigilante de reproducción ya detecta un corte, así
+    // que esto solo hace falta mientras se ve el aviso. Abrir el video vuelve
+    // a consultar y, si ya transmite, quita el aviso.
+    if (!_sinTransmision) {
+      _dejarDeVigilarTransmision();
+      return;
+    }
+    _resetStreamRecovery(forceRtsp: true);
+    await _openStream();
+  }
+
+  /// Botón del aviso: transmite la cámara seleccionada desde este celular.
+  /// Si sale bien, [_alCambiarPublicador] quita el aviso y abre el video.
+  Future<void> _transmitirAqui() async {
+    final cam = camSeleccionada;
+    if (cam == null) return;
+    setState(() => _errorTransmitir = null);
+    final error = await transmitirDesdeEsteCelular(context, cam);
+    if (mounted && error != null) setState(() => _errorTransmitir = error);
   }
 
   // Grep logcat with:  adb logcat | grep -E "VS-CAM|VS-MPV"
@@ -363,6 +466,7 @@ class _CameraScreenState extends State<CameraScreen>
     WidgetsBinding.instance.removeObserver(this);
     PantallaEncendida.soltar('camara');
     _cancelRecoveryTimers();
+    _dejarDeVigilarTransmision();
     _stopAiFramePoller();
     _eventPollTimer?.cancel();
     _playingSub?.cancel();
@@ -652,6 +756,10 @@ class _CameraScreenState extends State<CameraScreen>
     // piden su propia apertura: sin esto cada una abria al fallar su token,
     // varias por segundo, y la conexion no llegaba a establecerse nunca.
     final generation = ++_openGeneration;
+    // Cámara de un celular que nadie transmite: aviso en vez de esperar un
+    // video que no va a llegar.
+    if (overrideUrl == null && await _comprobarTransmision()) return;
+    if (!mounted || generation != _openGeneration) return;
     // Make sure we have a fresh RTSP read token before resolving the URL (cheap
     // when cached). If it can't be fetched, _resolveStreamUrl uses HLS instead.
     if (overrideUrl == null && _useRtsp) await _ensureStreamToken();
@@ -701,14 +809,14 @@ class _CameraScreenState extends State<CameraScreen>
   /// fires, we treat it as a failure and recover. Cancelled as soon as the
   /// `playing` stream reports true, so a healthy stream never triggers it.
   void _armStallWatchdog() {
-    if (!mounted || !_isActive || _viewMode != _ViewMode.single) return;
+    if (!mounted || !_isActive || _viewMode != _ViewMode.single || _sinTransmision) return;
     _stallTimer?.cancel();
     // Margen para el primer keyframe: 10 s por RTSP y 20 s por HLS, que en
     // frío tarda más. Solo se recupera si no hay NINGÚN cuadro decodificado:
     // un stream que muestra video nunca se reabre (eso causaba el bucle).
     final gracia = Duration(seconds: _useRtsp ? 10 : 20);
     _stallTimer = Timer(gracia, () {
-      if (!mounted || !_isActive || _viewMode != _ViewMode.single) return;
+      if (!mounted || !_isActive || _viewMode != _ViewMode.single || _sinTransmision) return;
       if (_isPlaying && _hasVideo) return; // hay video: no tocar
       _onRecoverableFailure();
     });
@@ -717,7 +825,7 @@ class _CameraScreenState extends State<CameraScreen>
   /// A genuine, sustained failure. Counts toward the protocol's failure budget;
   /// RTSP falls back to HLS after 3, HLS surfaces a hard error after several.
   void _onRecoverableFailure() {
-    if (!mounted || !_isActive || _viewMode != _ViewMode.single) return;
+    if (!mounted || !_isActive || _viewMode != _ViewMode.single || _sinTransmision) return;
     _log(
       'recoverableFailure (useRtsp=$_useRtsp, playing=$_isPlaying, hasVideo=$_hasVideo)',
     );
@@ -845,6 +953,12 @@ class _CameraScreenState extends State<CameraScreen>
         /* backend not ready — keep polling */
       }
     });
+    // Cámara de un celular: si nadie la transmite, aviso en vez de
+    // «Conectando con la IA…» para siempre.
+    if (cam?.isMobileWebRtc ?? false) {
+      unawaited(_comprobarTransmision());
+      _vigilarTransmision();
+    }
   }
 
   void _stopAiFramePoller() {
@@ -1145,6 +1259,7 @@ class _CameraScreenState extends State<CameraScreen>
   }
 
   Widget _buildSingleContent() {
+    if (_sinTransmision) return _buildAvisoTransmision();
     if (_error == 'no_config') return _buildNotConfigured();
     if (_error == 'stream_error') return _buildStreamError();
 
@@ -1204,6 +1319,7 @@ class _CameraScreenState extends State<CameraScreen>
         // Live detection status banner (activity + suspicious flag + chips).
         // Con la cámara desactivada el estado es el último que quedó: se oculta.
         if (_aiStatus != null &&
+            !_sinTransmision &&
             (context.watch<CameraProvider>().selectedCamera?.isActive ?? true))
           Positioned(
             top: _immersive
@@ -1222,6 +1338,19 @@ class _CameraScreenState extends State<CameraScreen>
             onDismiss: () => setState(() => _showLiveAlert = false),
           ),
       ],
+    );
+  }
+
+  /// La cámara es un celular y nadie la transmite.
+  Widget _buildAvisoTransmision() {
+    final cam = camSeleccionada;
+    final pub = context.watch<MobileCameraPublisher?>();
+    final isPrimary = context.watch<AuthProvider>().user?.isPrimary ?? false;
+    return AvisoSinTransmision(
+      puedeTransmitir: isPrimary && pub != null,
+      arrancando: cam != null && pub != null && pub.cameraId == cam.id && pub.isStarting,
+      error: _errorTransmitir,
+      onTransmitir: _transmitirAqui,
     );
   }
 
@@ -1294,6 +1423,7 @@ class _CameraScreenState extends State<CameraScreen>
     // activarla aquí mismo.
     final cam = context.watch<CameraProvider>().selectedCamera;
     if (cam != null && !cam.isActive) return _buildAiDisabled(cam);
+    if (_sinTransmision) return _buildAvisoTransmision();
     final frame = _aiFrame;
     if (frame != null) {
       final viejo = _aiDesactualizada;

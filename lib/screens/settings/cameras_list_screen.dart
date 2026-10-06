@@ -1,14 +1,19 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/i18n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/camera_provider.dart';
 import '../../data/models/camera_config_model.dart';
 import '../camera/device_camera_screen.dart';
 import '../../data/services/mobile_camera_publisher.dart';
+import '../../data/services/estado_transmision.dart';
+import '../camera/aviso_sin_transmision.dart';
 
 class CamerasListScreen extends StatefulWidget {
   const CamerasListScreen({super.key});
@@ -323,12 +328,7 @@ class _CameraCard extends StatelessWidget {
                     tamano: 12,
                   )
                 else if (cam.isMobileWebRtc)
-                  const _LineaConIcono(
-                    icono: Icons.phone_android,
-                    texto: 'Cámara de este teléfono',
-                    color: AppColors.textSecondary,
-                    tamano: 12,
-                  )
+                  _EstadoTransmisionLinea(cam: cam, isPrimary: isPrimary)
                 else ...[
                   _LineaConIcono(
                     icono: isConfigured ? Icons.lan_outlined : Icons.link_off,
@@ -481,4 +481,121 @@ class _LineaConIcono extends StatelessWidget {
               style: GoogleFonts.inter(color: color, fontSize: tamano)),
         ),
       ]);
+}
+
+/// Si la cámara de un celular está transmitiendo.
+///
+/// «Activa» solo dice si la IA la analiza. Una cámara de celular deja de
+/// transmitir al salir de la app y antes eso no se veía en ninguna parte:
+/// seguía «Activa» y parecía que el sistema no funcionaba.
+class _EstadoTransmisionLinea extends StatefulWidget {
+  final CameraConfigModel cam;
+  final bool isPrimary;
+  const _EstadoTransmisionLinea({required this.cam, required this.isPrimary});
+
+  @override
+  State<_EstadoTransmisionLinea> createState() => _EstadoTransmisionLineaState();
+}
+
+class _EstadoTransmisionLineaState extends State<_EstadoTransmisionLinea> {
+  bool? _enVivo;
+  bool _arrancando = false;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    if (context.read<EstadoTransmision?>() == null) return;
+    _consultar();
+    _timer = Timer.periodic(const Duration(seconds: 8), (_) => _consultar());
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _consultar() async {
+    final vivo = await context.read<EstadoTransmision?>()?.enVivo(widget.cam);
+    if (mounted && vivo != _enVivo) setState(() => _enVivo = vivo);
+  }
+
+  Future<void> _transmitir() async {
+    setState(() => _arrancando = true);
+    final error = await transmitirDesdeEsteCelular(context, widget.cam);
+    if (!mounted) return;
+    setState(() => _arrancando = false);
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+    }
+    unawaited(_consultar());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final pub = context.watch<MobileCameraPublisher?>();
+    final sinDatos = _enVivo == null && !transmiteEsteTelefono(widget.cam, pub);
+    if (sinDatos) {
+      return const _LineaConIcono(
+        icono: Icons.phone_android,
+        texto: 'Cámara de este teléfono',
+        color: AppColors.textSecondary,
+        tamano: 12,
+      );
+    }
+    final l10n = context.l10n;
+    if (transmiteEsteTelefono(widget.cam, pub)) {
+      return _LineaConIcono(
+        icono: Icons.fiber_manual_record,
+        texto: pub!.isStarting ? l10n.phoneCamStarting : l10n.phoneCamStreaming,
+        color: AppColors.safeGreen,
+        tamano: 12,
+      );
+    }
+    return switch (_enVivo) {
+      true => _LineaConIcono(
+          icono: Icons.fiber_manual_record,
+          texto: l10n.phoneCamStreaming,
+          color: AppColors.safeGreen,
+          tamano: 12,
+        ),
+      false => Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _LineaConIcono(
+              icono: Icons.phonelink_off,
+              texto: l10n.phoneCamNotStreaming,
+              color: AppColors.warningAmber,
+              tamano: 12,
+            ),
+            if (widget.isPrimary && pub != null)
+              TextButton.icon(
+                key: ValueKey('transmitir-${widget.cam.id}'),
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.accent,
+                  visualDensity: VisualDensity.compact,
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  minimumSize: const Size(0, 30),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                onPressed: _arrancando ? null : _transmitir,
+                icon: _arrancando
+                    ? const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.accent),
+                      )
+                    : const Icon(Icons.videocam, size: 16),
+                label: Text(
+                  _arrancando ? l10n.phoneCamStarting : l10n.phoneCamStartHereShort,
+                  style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600),
+                ),
+              ),
+          ],
+        ),
+      // Sin datos ya se resolvió arriba.
+      null => const SizedBox.shrink(),
+    };
+  }
 }
