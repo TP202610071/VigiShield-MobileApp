@@ -35,7 +35,7 @@ flutter build ipa --release           # luego Xcode > Organizer (o Transporter) 
 
 ## Publicar en App Store: estado
 
-Versión actual: **0.20.0+28**.
+Versión actual: **0.21.0+29**.
 
 Hecho:
 - Política de privacidad en `https://vigishield.app/privacidad`; términos con aceptación versionada (`kVersionTerminos`).
@@ -85,6 +85,7 @@ emergency services asks for system confirmation.
 - Interfaz y comentarios en español. Los textos de la app van en ES y EN en `lib/core/i18n/app_localizations.dart`.
 - Orientación: la interfaz va siempre en vertical. Solo van en horizontal la pestaña Cámara visible y el clip a pantalla completa (`lib/core/orientation/orientacion_app.dart`). Las pantallas no llaman a `SystemChrome.setPreferredOrientations`.
 - Cámara del teléfono: publica por WHIP con resolución fija (`maintain-resolution`). Si el teléfono gira, se reinicia la sesión. En Android, `RotacionCamara.kt` fija la rotación del video con la posición física. En iOS no hace falta (WebRTC ya usa la orientación del dispositivo).
+- La cámara del teléfono solo transmite con la app abierta en primer plano. Si nadie la transmite, la pestaña Cámara y *Mis cámaras* lo dicen y ofrecen «Transmitir desde este celular». La app lo consulta en `GET /ai/en-vivo/{clave}` (`EstadoTransmision`).
 - La alerta de emergencia funciona solo con la app abierta. En iPhone, la llamada pide confirmación del sistema.
 - Antes de entregar: `flutter analyze` sin errores y `flutter test` en verde.
 - No subir al repo `yolov8n-pose.pt` ni secretos. Commits con `Co-Authored-By: Claude ...`.

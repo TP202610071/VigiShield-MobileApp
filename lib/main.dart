@@ -36,6 +36,7 @@ import 'widgets/consentimiento_gate.dart';
 import 'core/orientation/orientacion_app.dart';
 import 'core/utils/pantalla_encendida.dart';
 import 'data/services/captura_camara.dart';
+import 'data/services/estado_transmision.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -103,6 +104,7 @@ class _VigiShieldAppState extends State<VigiShieldApp> {
   late final CameraProvider _cameraProvider;
   late final MobileCameraPublisher _mobilePublisher;
   late final CapturaCamara _capturas;
+  late final EstadoTransmision _estadoTransmision;
   bool _transmitia = false;
   late final ValidationProvider _validationProvider;
   late final EmergencyProvider _emergencyProvider;
@@ -133,6 +135,7 @@ class _VigiShieldAppState extends State<VigiShieldApp> {
       antesDeAbrir: OrientacionApp.instance.iniciarTransmision,
     );
     _capturas = CapturaCamara(_storage);
+    _estadoTransmision = EstadoTransmision(_storage);
     _mobilePublisher.addListener(_alCambiarTransmision);
     // Teléfono girado mientras transmite: se reinicia la sesión para que el
     // video arranque con la rotación nueva y un tamaño estable (la interfaz
@@ -282,6 +285,7 @@ class _VigiShieldAppState extends State<VigiShieldApp> {
       providers: [
         Provider<ApiClient>.value(value: _api),
         Provider<CapturaCamara>.value(value: _capturas),
+        Provider<EstadoTransmision>.value(value: _estadoTransmision),
         ChangeNotifierProvider.value(value: _authProvider),
         ChangeNotifierProvider.value(value: _eventProvider),
         ChangeNotifierProvider.value(value: _systemProvider),

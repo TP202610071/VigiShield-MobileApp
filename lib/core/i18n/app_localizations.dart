@@ -602,6 +602,33 @@ class AppStrings {
       _('No se pudo eliminar la cuenta. Inténtalo de nuevo.', 'Could not delete the account. Please try again.');
   String get deleteAccountDone => _('Tu cuenta fue eliminada.', 'Your account was deleted.');
 
+  // ── Cámara de un teléfono sin transmitir ────────────────────────────────────
+  String get phoneCamOffTitle =>
+      _('Esta cámara no está transmitiendo', 'This camera is not streaming');
+  String get phoneCamOffBody => _(
+      'La cámara de un celular solo transmite mientras VigiShield está abierta en ese celular. '
+      'Al salir de la app o bloquear la pantalla, la transmisión se detiene y hay que volver a iniciarla.',
+      'A phone camera only streams while VigiShield is open on that phone. '
+      'Leaving the app or locking the screen stops the stream, and it has to be started again.');
+  String get phoneCamStartHere => _('Transmitir desde este celular', 'Stream from this phone');
+  String get phoneCamStarting => _('Iniciando transmisión…', 'Starting stream…');
+  String get phoneCamOtherPhone => _(
+      'Si la cámara es otro celular, abre VigiShield en ese celular y pulsa «Transmitir».',
+      'If the camera is another phone, open VigiShield on that phone and tap "Stream".');
+  String get phoneCamAskPrimary => _(
+      'Pide a quien administra el hogar que abra VigiShield en el celular de la cámara y pulse «Transmitir».',
+      'Ask the home administrator to open VigiShield on the camera phone and tap "Stream".');
+  String get phoneCamWaiting =>
+      _('El video aparecerá solo cuando vuelva a transmitir.', 'The video will appear as soon as it streams again.');
+  String get phoneCamStartFailed =>
+      _('No se pudo iniciar la transmisión.', 'Could not start the stream.');
+  String get phoneCamStreaming => _('Transmitiendo', 'Streaming');
+  String get phoneCamNotStreaming => _('Sin transmitir', 'Not streaming');
+  String get phoneCamStartHereShort => _('Transmitir desde aquí', 'Stream from here');
+  String get phoneCamNeedsPermission => _(
+      'VigiShield necesita el permiso de cámara para transmitir.',
+      'VigiShield needs camera permission to stream.');
+
   // ── Video de ejemplo ────────────────────────────────────────────────────────
   String get sampleVideo => _('Video de ejemplo', 'Sample video');
   String get sampleCardTitle =>
