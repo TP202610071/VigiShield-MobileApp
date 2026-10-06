@@ -584,6 +584,24 @@ class AppStrings {
     'Could not save your acceptance. Check your connection.',
   );
 
+  // ── Eliminar cuenta ─────────────────────────────────────────────────────────
+  String get deleteAccount => _('Eliminar cuenta', 'Delete account');
+  String get deleteAccountTitle => _('¿Eliminar tu cuenta?', 'Delete your account?');
+  String get deleteAccountOwner => _(
+      'Se borrará para siempre tu hogar: cámaras, eventos con sus fotos y clips, rostros '
+      'registrados y las cuentas de las personas que invitaste. No se puede deshacer.',
+      'Your home will be permanently deleted: cameras, events with their photos and clips, '
+      'registered faces and the accounts of the people you invited. This cannot be undone.');
+  String get deleteAccountMember => _(
+      'Se borrará tu cuenta. El hogar y sus datos seguirán disponibles para su residente principal.',
+      'Your account will be deleted. The home and its data stay available to its primary resident.');
+  String get deleteAccountPassword =>
+      _('Escribe tu contraseña para confirmar', 'Enter your password to confirm');
+  String get deleteAccountConfirm => _('Eliminar', 'Delete');
+  String get deleteAccountError =>
+      _('No se pudo eliminar la cuenta. Inténtalo de nuevo.', 'Could not delete the account. Please try again.');
+  String get deleteAccountDone => _('Tu cuenta fue eliminada.', 'Your account was deleted.');
+
   // ── Video de ejemplo ────────────────────────────────────────────────────────
   String get sampleVideo => _('Video de ejemplo', 'Sample video');
   String get sampleCardTitle =>

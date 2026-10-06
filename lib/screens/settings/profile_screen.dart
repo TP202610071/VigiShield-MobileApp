@@ -240,9 +240,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   .format(user.createdAt.toLocal()),
             ),
           ],
+          const SizedBox(height: 40),
+          Center(
+            child: TextButton.icon(
+              key: const Key('eliminar-cuenta'),
+              onPressed: _eliminarCuenta,
+              icon: const Icon(Icons.delete_forever_outlined, color: AppColors.alertRed),
+              label: Text(l10n.deleteAccount,
+                  style: GoogleFonts.inter(color: AppColors.alertRed, fontWeight: FontWeight.w600)),
+            ),
+          ),
+          const SizedBox(height: 12),
         ],
       ),
     );
+  }
+
+  /// Borrar la cuenta (exigido por Apple). Se explica qué se pierde y se pide
+  /// la contraseña; al terminar, la app vuelve al inicio de sesión.
+  Future<void> _eliminarCuenta() async {
+    final l10n = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    final eliminada = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const _DialogoEliminarCuenta(),
+    );
+    if (eliminada == true) {
+      messenger.showSnackBar(SnackBar(content: Text(l10n.deleteAccountDone)));
+    }
   }
 }
 
@@ -312,6 +338,94 @@ class _InfoTile extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Diálogo de confirmación. Es un widget con estado para que el controlador de
+/// la contraseña se libere cuando el diálogo ya salió de pantalla (liberarlo
+/// al volver de showDialog rompía la animación de cierre).
+class _DialogoEliminarCuenta extends StatefulWidget {
+  const _DialogoEliminarCuenta();
+
+  @override
+  State<_DialogoEliminarCuenta> createState() => _DialogoEliminarCuentaState();
+}
+
+class _DialogoEliminarCuentaState extends State<_DialogoEliminarCuenta> {
+  final _clave = TextEditingController();
+  bool _enviando = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _clave.dispose();
+    super.dispose();
+  }
+
+  Future<void> _confirmar() async {
+    final l10n = context.l10n;
+    if (_clave.text.isEmpty) {
+      setState(() => _error = l10n.deleteAccountPassword);
+      return;
+    }
+    setState(() => _enviando = true);
+    final auth = context.read<AuthProvider>();
+    final ok = await auth.deleteAccount(_clave.text);
+    if (!mounted) return;
+    if (ok) {
+      Navigator.of(context).pop(true);
+    } else {
+      setState(() {
+        _enviando = false;
+        _error = auth.errorMessage ?? l10n.deleteAccountError;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final esDueno = context.read<AuthProvider>().user?.role != 'Secondary';
+    return AlertDialog(
+      backgroundColor: AppColors.surface,
+      title: Text(l10n.deleteAccountTitle),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(esDueno ? l10n.deleteAccountOwner : l10n.deleteAccountMember,
+                style: GoogleFonts.inter(color: AppColors.textSecondary, height: 1.4)),
+            const SizedBox(height: 16),
+            TextField(
+              key: const Key('clave-eliminar'),
+              controller: _clave,
+              obscureText: true,
+              autofocus: true,
+              decoration: InputDecoration(labelText: l10n.deleteAccountPassword, errorText: _error),
+              onChanged: (_) {
+                if (_error != null) setState(() => _error = null);
+              },
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _enviando ? null : () => Navigator.of(context).pop(false),
+          child: Text(l10n.cancel),
+        ),
+        FilledButton(
+          key: const Key('confirmar-eliminar'),
+          style: FilledButton.styleFrom(backgroundColor: AppColors.alertRed),
+          onPressed: _enviando ? null : _confirmar,
+          child: _enviando
+              ? const SizedBox(width: 16, height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+              : Text(l10n.deleteAccountConfirm),
+        ),
+      ],
     );
   }
 }

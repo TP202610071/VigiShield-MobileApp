@@ -35,15 +35,50 @@ flutter build ipa --release           # luego Xcode > Organizer (o Transporter) 
 
 ## Publicar en App Store: estado
 
+Versión actual: **0.20.0+28**.
+
 Hecho:
 - Política de privacidad en `https://vigishield.app/privacidad`; términos con aceptación versionada (`kVersionTerminos`).
 - Permisos con texto de uso en `Info.plist`.
+- **Borrar la cuenta desde la app** (guía 5.1.1(v)): *Ajustes > tocar el nombre arriba (Perfil) > «Eliminar cuenta»* al final de la pantalla. Pide la contraseña y explica qué se borra.
+  - El residente principal borra su hogar entero: cámaras, eventos con sus fotos y clips, rostros, alertas y las cuentas de los invitados.
+  - Un invitado borra solo su cuenta.
+  - Backend: `POST /api/auth/delete-account` (`CuentaService`). Una contraseña equivocada devuelve 400, no 401.
+- **Cuenta para el revisor**: `revision@vigishield.app`, rol Primary (no Admin), términos ya aceptados.
+  - **La contraseña la tiene Diego. No va en el repo ni en este archivo.**
+  - Si el revisor prueba «Eliminar cuenta», la cuenta desaparece. Antes de volver a enviar, regístrala otra vez desde la app con el mismo correo (queda libre) y la misma contraseña.
 
-Falta (bloqueante para Apple):
-- **Borrar la cuenta desde la app** (guía 5.1.1(v)): no existe todavía. Hace falta un endpoint en el backend y una pantalla en Perfil.
-- **Cuenta de prueba para el revisor**, sin rol Admin. El revisor no tiene cámara IP: que use *Inicio > «Ver video de ejemplo»* (video de 3 min analizado por la IA) o *Ajustes > Mis cámaras > Agregar > «Usar este dispositivo como cámara»*.
+Falta:
+- Subir el primer build y probarlo en TestFlight: video de ejemplo, cámara del teléfono, eventos y borrar una cuenta de prueba.
 - App Privacy (etiquetas): nombre, correo y teléfono (opcional); fotos y video (cámaras, rostros autorizados; los rasgos faciales son dato sensible); ID de usuario. Todo vinculado a la cuenta y nada de rastreo.
-- Capturas de iPhone 6.9". Si se mantiene iPad (`TARGETED_DEVICE_FAMILY = "1,2"`), también de iPad 13"; la app no está pensada para iPad.
+- Capturas de iPhone 6.9". Si se mantiene iPad (`TARGETED_DEVICE_FAMILY = "1,2"`), también de iPad 13"; la app no está pensada para iPad, así que conviene dejar solo iPhone (`TARGETED_DEVICE_FAMILY = "1"`).
+- Menor: en *Mis cámaras > +* las opciones «Agregar cámara IP» y «Usar este dispositivo como cámara» están escritas a mano en español (no pasan por `app_localizations.dart`).
+
+### Notas para la revisión (App Review Information > Notes)
+
+Para pegar tal cual (Apple lee en inglés):
+
+```
+VigiShield is a home security app. It shows the user's own cameras, analyzes
+their video with AI (unknown faces, falls, loitering, etc.) and sends alerts.
+
+The app is in Spanish by default. To switch to English: Ajustes (Settings) >
+Idioma (Language) > English.
+
+You don't need an IP camera to test it. Two options:
+1. Home > "Watch sample video": starts a 3-minute sample camera with a stock
+   clip that the AI analyzes live. Detections appear in the Camera tab and
+   events appear in the History tab.
+2. Settings > My cameras > + > "Usar este dispositivo como cámara" (use this
+   device as a camera): the phone streams its own camera to our server
+   (WebRTC) and the AI analyzes it.
+
+Account deletion: Settings > tap your name at the top (Profile) > "Delete
+account" at the bottom. It asks for the password.
+
+The emergency alert works only while the app is open. On iPhone, the call to
+emergency services asks for system confirmation.
+```
 
 ## Reglas del proyecto
 
