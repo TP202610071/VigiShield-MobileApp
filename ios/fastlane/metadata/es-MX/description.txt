@@ -1,0 +1,34 @@
+VigiShield convierte tus cámaras en un sistema de seguridad inteligente. La inteligencia artificial analiza el video de tu casa en tiempo real y te avisa cuando pasa algo que importa.
+
+QUÉ DETECTA
+• Personas desconocidas, distinguiéndolas de los rostros autorizados de tu familia
+• Visitantes desconocidos que vuelven una y otra vez
+• Merodeo, escalamiento e intentos de acceso forzado o con ganzúa
+• Armas, agresiones, robos, vandalismo e incendios
+
+TUS CÁMARAS, EN VIVO
+• Conecta tus cámaras IP (RTSP) y míralas en vivo desde el teléfono
+• ¿No tienes cámara? Usa tu propio teléfono como cámara de vigilancia
+• Mira en pantalla lo que la IA está detectando en ese momento
+• Ajusta la imagen de tu cámara IP, como la visión nocturna, cuando estás en el wifi de casa
+
+HISTORIAL DE EVENTOS
+• Cada evento queda guardado con su foto y su clip de video
+• Filtra por tipo de evento, revisa el detalle y descarga o comparte las capturas
+
+ALERTAS
+• Avisos por WhatsApp al número que registres
+• Alerta de emergencia: si una cámara detecta un riesgo de intrusión sostenido, la app ocupa la pantalla, suena y vibra. Si no la desactivas a tiempo, llama al número que elijas. Funciona mientras la app está abierta.
+
+TU HOGAR, COMPARTIDO
+• Invita a familiares de confianza para que vigilen la casa contigo
+• Registra los rostros autorizados de quienes viven en casa
+
+PRIVACIDAD
+• Desbloqueo con Face ID
+• Todas las conexiones con nuestros servidores van cifradas
+• Puedes eliminar tu cuenta y todos tus datos desde la app
+
+¿Quieres probarla antes de conectar una cámara? Toca «Ver video de ejemplo» en el inicio y mira cómo la IA analiza un video de 3 minutos.
+
+Disponible en español e inglés. Requiere una cuenta de VigiShield.

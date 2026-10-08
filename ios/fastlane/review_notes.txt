@@ -1,0 +1,20 @@
+VigiShield is a home security app. It shows the user's own cameras, analyzes
+their video with AI (unknown people, loitering, forced-entry attempts, weapons,
+etc.) and sends alerts.
+
+The app is in Spanish by default. To switch to English: Ajustes (Settings) >
+Idioma (Language) > English.
+
+You don't need an IP camera to test it. Two options:
+1. Home > "Watch sample video": starts a 3-minute sample camera with a stock
+   clip that the AI analyzes live. Detections appear in the Camera tab and
+   events appear in the History tab.
+2. Settings > My cameras > + > "Usar este dispositivo como cámara" (use this
+   device as a camera): the phone streams its own camera to our server
+   (WebRTC) and the AI analyzes it.
+
+Account deletion: Settings > tap your name at the top (Profile) > "Delete
+account" at the bottom. It asks for the password.
+
+The emergency alert works only while the app is open. On iPhone, the call to
+emergency services asks for system confirmation.
