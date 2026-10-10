@@ -16,6 +16,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/dev_settings_provider.dart';
 import '../../providers/event_provider.dart';
 import '../../widgets/event_card.dart';
+import 'rostro_del_evento.dart';
 
 class EventDetailScreen extends StatefulWidget {
   final String eventId;
@@ -203,6 +204,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
               child: _EventPhoto(url: ev.imageCapturePath!),
             ),
           ],
+          if (RostroDelEvento.aplica(ev)) RostroDelEvento(evento: ev),
           if (ev.videoClipPath != null) ...[
             const SizedBox(height: 16),
             _DetailSection(
