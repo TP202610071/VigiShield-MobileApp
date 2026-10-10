@@ -16,6 +16,7 @@ import '../../widgets/vs_button.dart';
 import '../../widgets/vs_text_field.dart';
 import '../../widgets/sheet_header.dart';
 import '../../core/security/biometric_lock.dart';
+import '../../widgets/tutorial/tutorial_guiado.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -167,6 +168,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 label: l10n.emergencyAlert,
                 onTap: () => Navigator.of(context, rootNavigator: true).push(
                     MaterialPageRoute<void>(builder: (_) => const EmergencySettingsScreen())),
+              ),
+              _SettingsTile(
+                icon: Icons.school_outlined,
+                label: l10n.tutorialVerDeNuevo,
+                onTap: () async {
+                  final id = context.read<AuthProvider>().user?.id;
+                  if (id != null) await TutorialGuiado.olvidar(id);
+                  if (!context.mounted) return;
+                  context.go('/dashboard');
+                  TutorialGuiado.pedido.value++;
+                },
               ),
               const SizedBox(height: 16),
               _LanguageTile(),

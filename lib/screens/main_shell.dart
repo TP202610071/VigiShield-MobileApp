@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../providers/ui_provider.dart';
 import '../widgets/vs_bottom_nav.dart';
+import '../widgets/tutorial/tutorial_claves.dart';
+import '../widgets/tutorial/tutorial_inicio.dart';
 
 /// Le dice a [OrientacionApp] si la pestaña Cámara es lo que se ve (para
 /// ponerla en horizontal; todo lo demás va en vertical, transmita o no). Las
@@ -52,10 +54,14 @@ class _MainShellState extends State<MainShell> {
     // takes the entire screen (the system bars are hidden by the camera screen).
     final fullscreen = context.watch<UiProvider>().cameraFullscreen;
     return Scaffold(
-      body: widget.navigationShell,
+      body: TutorialInicial(
+        pestanaActual: () => widget.navigationShell.currentIndex,
+        child: widget.navigationShell,
+      ),
       bottomNavigationBar: fullscreen
           ? null
           : VsBottomNav(
+              key: TutorialClaves.navegacion,
               currentIndex: widget.navigationShell.currentIndex,
               onTap: (index) {
                 // Gira en el mismo toque, sin esperar al redibujado.
