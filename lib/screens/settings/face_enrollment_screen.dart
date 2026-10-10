@@ -57,17 +57,31 @@ class _FaceEnrollmentScreenState extends State<FaceEnrollmentScreen>
   static const _steps = <_PoseStep>[
     _PoseStep('center', 'Mira al frente', Icons.center_focus_strong,
         _centerPose),
-    _PoseStep('left', 'Gira la cabeza a tu izquierda', Icons.turn_left,
-        _leftPose),
-    _PoseStep('right', 'Gira la cabeza a tu derecha', Icons.turn_right,
-        _rightPose),
+    // Los dos giros no dicen "izquierda" ni "derecha": el signo del ángulo que
+    // da ML Kit depende de cómo entrega la imagen cada cámara frontal (en las
+    // pruebas, "a tu derecha" pedía en realidad la izquierda). Se pide un lado
+    // cualquiera y luego el contrario: así salen bien en todos los teléfonos.
+    _PoseStep('left', 'Gira la cabeza hacia un lado', Icons.swap_horiz,
+        _aUnLado),
+    _PoseStep('right', 'Ahora gira hacia el otro lado', Icons.swap_horiz,
+        _aUnLado),
     _PoseStep('up', 'Levanta un poco la barbilla', Icons.keyboard_arrow_up,
         _upPose),
   ];
 
   static bool _centerPose(double yaw, double pitch) => yaw.abs() < 14 && pitch.abs() < 16;
-  static bool _leftPose(double yaw, double pitch) => yaw > 16;
-  static bool _rightPose(double yaw, double pitch) => yaw < -16;
+  static bool _aUnLado(double yaw, double pitch) => yaw.abs() > 16;
+
+  /// Ángulo del primer giro; el segundo debe ir hacia el lado contrario.
+  double? _primerLado;
+
+  bool _coincide(_PoseStep step, double yaw, double pitch) {
+    if (step.key == 'right') {
+      final primero = _primerLado;
+      return primero != null && yaw.abs() > 16 && yaw.sign != primero.sign;
+    }
+    return step.matches(yaw, pitch);
+  }
   static bool _upPose(double yaw, double pitch) => pitch > 11;
 
   static const _orientations = {
@@ -173,7 +187,7 @@ class _FaceEnrollmentScreenState extends State<FaceEnrollmentScreen>
       } else if (areaRatio > 0.40) {
         hint = 'Aléjate un poco';
         _stableFrames = 0;
-      } else if (!step.matches(yaw, pitch)) {
+      } else if (!_coincide(step, yaw, pitch)) {
         hint = step.instruction;
         _stableFrames = 0;
       } else {
@@ -182,6 +196,7 @@ class _FaceEnrollmentScreenState extends State<FaceEnrollmentScreen>
         _stableFrames++;
         if (_stableFrames >= _framesToHold) {
           _stableFrames = 0;
+          if (step.key == 'left') _primerLado = yaw;
           _capture();
         }
       }

@@ -12,7 +12,8 @@ import '../../providers/event_provider.dart';
 import '../../providers/system_provider.dart';
 import '../../widgets/event_card.dart';
 import '../../widgets/user_avatar.dart';
-import '../../widgets/video_ejemplo.dart';
+import '../../widgets/inicio_camaras.dart';
+import '../../widgets/tutorial/tutorial_claves.dart';
 import '../../widgets/vs_button.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -106,11 +107,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
                   const SizedBox(height: 8),
-                  _StatusCard(system: system),
+                  KeyedSubtree(key: TutorialClaves.estado, child: _StatusCard(system: system)),
                   const SizedBox(height: 16),
                   _StatsRow(system: system),
                   const SizedBox(height: 16),
-                  const TarjetaVideoEjemplo(),
+                  const TarjetaInicioCamaras(),
                   const SizedBox(height: 24),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,

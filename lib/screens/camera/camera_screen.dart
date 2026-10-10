@@ -22,6 +22,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/camera_provider.dart';
 import '../../providers/event_provider.dart';
 import '../../providers/ui_provider.dart';
+import '../../widgets/servidor_video_caido.dart';
 import '../../data/services/mobile_camera_publisher.dart';
 import '../../data/services/estado_transmision.dart';
 import 'aviso_sin_transmision.dart';
@@ -1231,6 +1232,7 @@ class _CameraScreenState extends State<CameraScreen>
       fit: StackFit.expand,
       children: [
         _buildSingleContent(),
+        ServidorVideoCaido(camara: camSeleccionada),
         if (!_immersive) _buildTopBar(isLandscape),
         if (!_immersive) _buildBottomBar(isLandscape),
         if (_immersive) _buildFullscreenExit(isLandscape),
@@ -1315,6 +1317,7 @@ class _CameraScreenState extends State<CameraScreen>
       fit: StackFit.expand,
       children: [
         _buildAiContent(),
+        ServidorVideoCaido(camara: camSeleccionada),
         if (!_immersive) _buildTopBar(isLandscape, aiMode: true),
         // Live detection status banner (activity + suspicious flag + chips).
         // Con la cámara desactivada el estado es el último que quedó: se oculta.
@@ -1844,6 +1847,7 @@ class _CameraScreenState extends State<CameraScreen>
             ],
           ),
         ),
+        ServidorVideoCaido(camara: cameras.isEmpty ? null : cameras.first),
       ],
     );
   }
