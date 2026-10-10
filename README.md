@@ -25,6 +25,8 @@ Proyecto de tesis de Ingeniería de Software (UPC, 2026).
 - **Alertas:** aviso en vivo, alerta de emergencia a pantalla completa (con la app abierta) y WhatsApp.
 - **Hogar:** el residente principal invita a otros residentes; cada uno puede eliminar su cuenta desde la app.
 - **Tutorial guiado** la primera vez y **video de ejemplo** para probar sin cámara propia.
+- **Actualizaciones (iOS):** avisa cuando hay una versión nueva y, si la instalada ya no es compatible con el
+  servidor, pide actualizar antes de seguir.
 - Español e inglés.
 
 <p align="center">

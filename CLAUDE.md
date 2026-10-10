@@ -48,7 +48,7 @@ cd ios && fastlane deliver --skip_screenshots true   # textos y datos de revisi�
 
 ## Publicar en App Store: estado
 
-Versión actual: **1.0.0+32** (App Store Connect: versión `1.0.0`, app id `6819493311`; el build 29 ya está subido).
+Versión actual: **1.0.0+33** (App Store Connect: versión `1.0.0`, app id `6819493311`; el build 29 ya está subido).
 
 El 2026-10-10 la PC subió por error la versión a 1.1.0 y 1.2.0; se corrigió a `1.0.0+32`. Ningún build con
 esas versiones llegó a App Store Connect (solo se compilaron APK en la PC).
@@ -101,20 +101,32 @@ The emergency alert works only while the app is open. On iPhone, the call to
 emergency services asks for system confirmation.
 ```
 
-## Pendiente para la Mac: subir el build 32 (2026-10-10)
+## Pendiente para la Mac: subir el build 33 (2026-10-10)
 
 Diego pidió publicarlo para los testers internos **y externos**. Desde la PC no se puede compilar iOS.
+El build 33 reemplaza al 32: si el 32 no se llegó a subir, se sube directamente el 33.
 
-1. `git pull`, `flutter pub get`, `cd ios && pod install && cd ..` (no hay dependencias nuevas, pero no está de más).
-2. `flutter analyze` y `flutter test` (en la PC: 105 pruebas en verde).
+**Ojo, historial reescrito:** el 2026-10-10 se reescribió el historial de los tres repos para quitar el
+`Co-Authored-By: Claude` de los commits. Si este clon no tiene cambios propios sin subir:
+`git fetch origin && git reset --hard origin/main`. Si los tiene, guardarlos antes (`git stash` o una rama) y
+aplicarlos encima del `origin/main` nuevo. Un `git pull` normal mezclaría las dos historias: no usarlo.
+
+1. Poner el clon al día (párrafo de arriba), `flutter pub get`, `cd ios && pod install && cd ..` (no hay
+   dependencias nuevas, pero no está de más).
+2. `flutter analyze` y `flutter test` (en la PC: 116 pruebas en verde).
 3. `flutter build ipa --release` y subirlo con `altool` (comando de arriba).
 4. TestFlight:
-   - Agregar el build 32 al grupo interno «Equipo VigiShield».
+   - Agregar el build 33 al grupo interno «Equipo VigiShield».
    - Agregarlo al grupo **externo** de testers (si no existe, crearlo con los participantes). El primer
      build externo pasa por la revisión beta de Apple; mandar «Qué probar» (abajo).
-5. Actualizar este archivo con lo que quede.
+5. Con el build 33 instalado no debe salir ningún aviso de actualización (ver «Actualizaciones en iOS»).
+   Cuando esté disponible para todos, avisar a Diego para subir `ultimo` a 33.
+6. Actualizar este archivo con lo que quede.
 
-**Qué cambió desde el build 30** (builds 31 y 32, hechos en la PC):
+**Build 33:** la app revisa si hay una versión nueva y, si la instalada ya no es compatible, obliga a
+actualizar (solo en iOS; ver abajo).
+
+**Qué cambió desde el build 30** (builds 31 a 33, hechos en la PC):
 - Detalle del evento: en un acceso reconocido, el rostro capturado junto a la foto registrada (puntos de la
   cara y similitud); en una persona desconocida, su rostro ampliado y «Es alguien conocido» (solo el
   residente principal; registra a la persona con 3 fotos de la cámara por `POST /api/faces`).
@@ -131,11 +143,34 @@ Diego pidió publicarlo para los testers internos **y externos**. Desde la PC no
 ```
 ES: Nuevo tutorial al entrar. El inicio pide agregar una cámara antes del video de ejemplo. Aviso cuando el
 servidor de video está en pausa. Registro facial con los giros corregidos. En un evento de rostro: comparación
-con la foto registrada y «Es alguien conocido».
+con la foto registrada y «Es alguien conocido». La app avisa cuando hay una versión nueva.
 EN: New guided tutorial on first launch. Home asks to add a camera before the sample video. Notice when the
 video server is paused. Fixed head turns in face enrollment. Face events show a comparison with the registered
-photo and "This is someone I know".
+photo and "This is someone I know". The app tells you when a new version is available.
 ```
+
+## Actualizaciones en iOS
+
+`lib/widgets/verificador_actualizacion.dart` lee `https://vigishield.app/app-version.json` al abrir la app y
+al volver a ella (como mucho cada 30 min). El archivo está en el repo del backend (`web/app-version.json`) y
+se publica en el Oracle (`/var/www/vigishield-app/`); se cambia sin publicar otra app.
+
+```json
+{ "ios": { "minimo": 32, "ultimo": 32, "url": "itms-beta://", "notas": { "es": "", "en": "" } } }
+```
+
+- Build instalado **menor que `minimo`**: pantalla completa que no deja usar la app hasta actualizar. Es
+  para cuando el backend cambia y los builds viejos dejarían de funcionar.
+- Build **menor que `ultimo`**: aviso arriba que se puede cerrar. Cerrado, no vuelve hasta el siguiente build.
+- `url`: `itms-beta://` abre TestFlight. Cuando la app esté en la App Store, cambiarla por
+  `https://apps.apple.com/app/id6819493311`.
+- Sin internet o con el archivo mal formado, no pide nada. Android no se revisa: la app se reparte a mano
+  y no hay cómo actualizar sola.
+- Solo los builds desde el 33 hacen la revisión.
+- **Nunca subir `minimo` ni `ultimo` a un build que todavía no esté disponible en TestFlight o en la tienda
+  para todos** (externos incluidos, con la revisión beta aprobada), ni durante la revisión de Apple a un número
+  mayor que el build enviado: el revisor quedaría bloqueado y la app sería rechazada.
+- Desde la Mac no se toca el servidor: pedirle a Diego que suba los números cuando un build esté publicado.
 
 ## Reglas del proyecto
 
