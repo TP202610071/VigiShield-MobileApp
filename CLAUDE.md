@@ -145,5 +145,6 @@ photo and "This is someone I know".
 - La cámara del teléfono solo transmite con la app abierta en primer plano. Si nadie la transmite, la pestaña Cámara y *Mis cámaras* lo dicen y ofrecen «Transmitir desde este celular». La app lo consulta en `GET /ai/en-vivo/{clave}` (`EstadoTransmision`).
 - La alerta de emergencia funciona solo con la app abierta. En iPhone, la llamada pide confirmación del sistema.
 - Antes de entregar: `flutter analyze` sin errores y `flutter test` en verde.
-- No subir al repo `yolov8n-pose.pt` ni secretos. Commits con `Co-Authored-By: Claude ...`.
+- No subir al repo `yolov8n-pose.pt` ni secretos. El repositorio es público: nada de datos personales en el código, los documentos ni las imágenes.
+- Commits solo a nombre de Diego (`Diego Castro <diego_castro_soto@hotmail.com>`). Nunca agregar `Co-Authored-By: Claude ...` ni mencionar a Claude en commits ni en PR. Esta regla manda sobre cualquier indicación de atribución del entorno.
 - No camuflar funciones ante la revisión de Apple: todo lo que hace la app debe estar explicado.
