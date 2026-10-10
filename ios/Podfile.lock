@@ -97,7 +97,7 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/media_kit_video/ios"
 
 SPEC CHECKSUMS:
-  Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
+  Flutter: 71a624a5bc0c04062bf19101d501e466baf2fb47
   flutter_secure_storage: 1ed9476fba7e7a782b22888f956cce43e2c62f13
   google_mlkit_commons: a5e4ffae5bc59ea4c7b9025dc72cb6cb79dc1166
   google_mlkit_face_detection: ee4b72cfae062b4c972204be955d83055a4bfd36
@@ -115,6 +115,6 @@ SPEC CHECKSUMS:
   nanopb: fad817b59e0457d11a5dfbde799381cd727c1275
   PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
 
-PODFILE CHECKSUM: 9372e6e496b5374875c86d39a34c2f8654339b0f
+PODFILE CHECKSUM: 1d654a1ab7cc9311b151a31db1256075ffdd5b57
 
-COCOAPODS: 1.16.2
+COCOAPODS: 1.17.0

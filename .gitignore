@@ -48,3 +48,10 @@ app.*.map.json
 /android/key.properties
 *.jks
 *.keystore
+
+# fastlane (la llave y los datos del revisor viven en ~/.appstoreconnect)
+ios/fastlane/report.xml
+ios/fastlane/README.md
+ios/fastlane/Preview.html
+ios/fastlane/test_output
+*.p8

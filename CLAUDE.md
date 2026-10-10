@@ -21,21 +21,34 @@ Repos: `TP202610071/VigiShield-MobileApp` (este), `VigiShield-Main-Backend` y `V
 ```bash
 flutter pub get
 cd ios && pod install && cd ..        # obligatorio tras cambiar dependencias
-flutter build ipa --release           # luego Xcode > Organizer (o Transporter) para subirlo
+flutter build ipa --release
+xcrun altool --upload-app --type ios -f build/ios/ipa/*.ipa \
+  --apiKey 5RPFG6VXG9 --apiIssuer da3def3c-e780-49b7-81e7-45361d5e6ec2
+cd ios && fastlane deliver --skip_screenshots true   # textos y datos de revisión
 ```
 
-- Bundle ID `com.vigishield.app`, equipo `ZUXS3B846T`, iOS mínimo 15.5.
+- Llave de la API de App Store Connect (rol App Manager) en
+  `~/.appstoreconnect/private_keys/AuthKey_5RPFG6VXG9.p8`. Fuera del repo; nunca se sube.
+- Ficha de tienda en `ios/fastlane/` (`Deliverfile`, `metadata/es-MX` y `en-US`,
+  `review_notes.txt`, `age_rating.json`, `screenshots/`). Los datos de contacto y la
+  contraseña del revisor se leen de `~/.appstoreconnect/vigishield_review.json`.
+- TestFlight: grupo interno «Equipo VigiShield» con acceso a todos los builds.
+- Bundle ID `com.vigishield.app`, equipo `ZUXS3B846T`, iOS mínimo 15.5, solo iPhone (`TARGETED_DEVICE_FAMILY = 1`).
+- ATS: sin excepciones de HTTP; solo `NSAllowsLocalNetworking` (control de la cámara IP en el wifi de casa).
 - El `Podfile` define `PERMISSION_CAMERA=1` (permission_handler). Sin eso, el permiso de cámara no se pide.
 - `ITSAppUsesNonExemptEncryption = false`: solo se usa HTTPS/TLS estándar.
 - Versión: cada tanda sube semver en `pubspec.yaml` (`version: x.y.z+N`) y en
   `_versionPorDefecto` de `lib/core/constants/app_constants.dart`.
   **Cada subida a App Store Connect necesita un número de build (`+N`) mayor.**
+  La versión (`x.y.z`) debe coincidir con la que está en preparación en App Store
+  Connect (hoy `1.0.0`). Hasta publicarla, las tandas nuevas solo suben el `+N`.
+  Los builds 29 y 30 corresponden a 1.0.0.
 - El build de release es el de tienda: las herramientas de validación (OE4) no
   se incluyen (`kValidationTools`) y la sesión de validación solo existe en Android.
 
 ## Publicar en App Store: estado
 
-Versión actual: **0.21.0+29**.
+Versión actual: **1.0.0+30** (App Store Connect: versión `1.0.0`, app id `6819493311`; el build 29 ya está subido).
 
 Hecho:
 - Política de privacidad en `https://vigishield.app/privacidad`; términos con aceptación versionada (`kVersionTerminos`).
@@ -47,20 +60,25 @@ Hecho:
 - **Cuenta para el revisor**: `revision@vigishield.app`, rol Primary (no Admin), términos ya aceptados.
   - **La contraseña la tiene Diego. No va en el repo ni en este archivo.**
   - Si el revisor prueba «Eliminar cuenta», la cuenta desaparece. Antes de volver a enviar, regístrala otra vez desde la app con el mismo correo (queda libre) y la misma contraseña.
+- Ficha subida con fastlane: nombre, subtítulo, descripción, palabras clave, URLs y categorías (Utilidades / Estilo de vida), en es-MX y en-US.
+- Se dejó solo iPhone. Para volver a iPad: `TARGETED_DEVICE_FAMILY = "1,2"` y capturas de iPad 13".
 
 Falta:
-- Subir el primer build y probarlo en TestFlight: video de ejemplo, cámara del teléfono, eventos y borrar una cuenta de prueba.
+- Probar en TestFlight el último build (29 subido; el 30 incluye el aviso de transmisión de 0.21.0): video de ejemplo, cámara del teléfono, eventos y borrar una cuenta de prueba.
+- Completar `~/.appstoreconnect/vigishield_review.json` (contacto, copyright, contraseña del revisor).
+- Capturas de iPhone 6.9" (1320×2868) en `ios/fastlane/screenshots/es-MX` y `en-US`.
+- En la web (la API no lo permite): App Privacy, precio y disponibilidad, estado de comerciante (DSA).
 - App Privacy (etiquetas): nombre, correo y teléfono (opcional); fotos y video (cámaras, rostros autorizados; los rasgos faciales son dato sensible); ID de usuario. Todo vinculado a la cuenta y nada de rastreo.
-- Capturas de iPhone 6.9". Si se mantiene iPad (`TARGETED_DEVICE_FAMILY = "1,2"`), también de iPad 13"; la app no está pensada para iPad, así que conviene dejar solo iPhone (`TARGETED_DEVICE_FAMILY = "1"`).
 - Menor: en *Mis cámaras > +* las opciones «Agregar cámara IP» y «Usar este dispositivo como cámara» están escritas a mano en español (no pasan por `app_localizations.dart`).
 
 ### Notas para la revisión (App Review Information > Notes)
 
-Para pegar tal cual (Apple lee en inglés):
+Están en `ios/fastlane/review_notes.txt` y `deliver` las sube (Apple lee en inglés):
 
 ```
 VigiShield is a home security app. It shows the user's own cameras, analyzes
-their video with AI (unknown faces, falls, loitering, etc.) and sends alerts.
+their video with AI (unknown people, loitering, forced-entry attempts, weapons,
+etc.) and sends alerts.
 
 The app is in Spanish by default. To switch to English: Ajustes (Settings) >
 Idioma (Language) > English.
