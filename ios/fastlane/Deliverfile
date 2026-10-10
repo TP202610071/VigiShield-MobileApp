@@ -1,0 +1,53 @@
+# Ficha de App Store (fastlane deliver). Se corre desde ios/:
+#   fastlane deliver                      # sube textos, capturas y datos de revisión
+#   fastlane deliver --submit_for_review  # además envía a revisión
+#
+# Nada secreto vive en el repo: la llave de la API y los datos de contacto
+# del revisor (con la contraseña de revision@vigishield.app) se leen de
+# ~/.appstoreconnect/, fuera del repo.
+
+require 'json'
+
+privado = File.expand_path('~/.appstoreconnect')
+revision = JSON.parse(File.read("#{privado}/vigishield_review.json"))
+
+llave = JSON.parse(File.read("#{privado}/vigishield_api_key.json"))
+api_key(
+  key_id: llave['key_id'],
+  issuer_id: llave['issuer_id'],
+  key: File.read(llave['key_filepath']),
+  in_house: false
+)
+app_identifier('com.vigishield.app')
+platform('ios')
+app_version('1.0.0')
+
+skip_binary_upload(true)      # el .ipa se sube con altool
+overwrite_screenshots(true)
+force(true)                   # sin la vista previa HTML
+run_precheck_before_submit(false)
+
+app_rating_config_path('./fastlane/age_rating.json')
+automatic_release(false)      # tras la aprobación, se publica a mano
+
+# Mientras vigishield_review.json tenga «COMPLETAR», solo se suben los textos.
+completo = revision.values.none? { |v| v.to_s.include?('COMPLETAR') }
+UI.important('vigishield_review.json incompleto: no se suben copyright ni datos del revisor') unless completo
+
+copyright(revision['copyright']) if completo
+app_review_information(
+  first_name: revision['first_name'],
+  last_name: revision['last_name'],
+  phone_number: revision['phone_number'],
+  email_address: revision['email_address'],
+  demo_user: 'revision@vigishield.app',
+  demo_password: revision['demo_password'],
+  notes: File.read('./fastlane/review_notes.txt')
+) if completo
+
+submission_information(
+  export_compliance_uses_encryption: false,
+  add_id_info_uses_idfa: false,
+  content_rights_contains_third_party_content: true,
+  content_rights_has_rights: true
+)

@@ -4,18 +4,10 @@
 <dict>
 	<key>NSAppTransportSecurity</key>
 	<dict>
-		<!-- Solo la red local (control de la camara IP desde el wifi de casa)
-		     y el servidor de video, que aun sirve HLS por http en :8888. -->
+		<!-- Solo la red local (control de la camara IP desde el wifi de casa).
+		     Los servidores (API, IA y video) van todos por HTTPS. -->
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
-		<key>NSExceptionDomains</key>
-		<dict>
-			<key>api-ai.vigishield.app</key>
-			<dict>
-				<key>NSExceptionAllowsInsecureHTTPLoads</key>
-				<true/>
-			</dict>
-		</dict>
 	</dict>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>VigiShield se conecta a tus cámaras IP en tu red wifi para cambiar sus ajustes de imagen.</string>
