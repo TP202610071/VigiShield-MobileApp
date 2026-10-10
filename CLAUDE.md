@@ -48,7 +48,10 @@ cd ios && fastlane deliver --skip_screenshots true   # textos y datos de revisi�
 
 ## Publicar en App Store: estado
 
-Versión actual: **1.0.0+30** (App Store Connect: versión `1.0.0`, app id `6819493311`; el build 29 ya está subido).
+Versión actual: **1.0.0+32** (App Store Connect: versión `1.0.0`, app id `6819493311`; el build 29 ya está subido).
+
+El 2026-10-10 la PC subió por error la versión a 1.1.0 y 1.2.0; se corrigió a `1.0.0+32`. Ningún build con
+esas versiones llegó a App Store Connect (solo se compilaron APK en la PC).
 
 Hecho:
 - Política de privacidad en `https://vigishield.app/privacidad`; términos con aceptación versionada (`kVersionTerminos`).
@@ -96,6 +99,42 @@ account" at the bottom. It asks for the password.
 
 The emergency alert works only while the app is open. On iPhone, the call to
 emergency services asks for system confirmation.
+```
+
+## Pendiente para la Mac: subir el build 32 (2026-10-10)
+
+Diego pidió publicarlo para los testers internos **y externos**. Desde la PC no se puede compilar iOS.
+
+1. `git pull`, `flutter pub get`, `cd ios && pod install && cd ..` (no hay dependencias nuevas, pero no está de más).
+2. `flutter analyze` y `flutter test` (en la PC: 105 pruebas en verde).
+3. `flutter build ipa --release` y subirlo con `altool` (comando de arriba).
+4. TestFlight:
+   - Agregar el build 32 al grupo interno «Equipo VigiShield».
+   - Agregarlo al grupo **externo** de testers (si no existe, crearlo con los participantes). El primer
+     build externo pasa por la revisión beta de Apple; mandar «Qué probar» (abajo).
+5. Actualizar este archivo con lo que quede.
+
+**Qué cambió desde el build 30** (builds 31 y 32, hechos en la PC):
+- Detalle del evento: en un acceso reconocido, el rostro capturado junto a la foto registrada (puntos de la
+  cara y similitud); en una persona desconocida, su rostro ampliado y «Es alguien conocido» (solo el
+  residente principal; registra a la persona con 3 fotos de la cámara por `POST /api/faces`).
+- Tutorial guiado la primera vez (`lib/widgets/tutorial/`): oscurece todo menos lo que explica, el último
+  paso pide tocar «Agregar cámara», se puede saltar (con aviso) y se repite desde Ajustes → «Ver el tutorial».
+- Inicio: sin cámaras propias, primero «Aún no tienes cámaras» con «Agregar cámara»; el video de ejemplo
+  aparece cuando ya hay una cámara.
+- Si la VM de video está apagada (para no gastar créditos), la pestaña Cámara lo explica en vez de quedarse
+  en «Conectando…» (`servidor_video_caido.dart`).
+- Registro facial: pide girar «hacia un lado» y luego «hacia el otro» (antes pedía el lado contrario).
+
+**Qué probar** (TestFlight, «What to Test»):
+
+```
+ES: Nuevo tutorial al entrar. El inicio pide agregar una cámara antes del video de ejemplo. Aviso cuando el
+servidor de video está en pausa. Registro facial con los giros corregidos. En un evento de rostro: comparación
+con la foto registrada y «Es alguien conocido».
+EN: New guided tutorial on first launch. Home asks to add a camera before the sample video. Notice when the
+video server is paused. Fixed head turns in face enrollment. Face events show a comparison with the registered
+photo and "This is someone I know".
 ```
 
 ## Reglas del proyecto
