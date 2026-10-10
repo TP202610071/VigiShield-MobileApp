@@ -33,6 +33,7 @@ import 'data/services/emergency_effects.dart';
 import 'providers/emergency_provider.dart';
 import 'widgets/emergency_overlay.dart';
 import 'widgets/consentimiento_gate.dart';
+import 'widgets/verificador_actualizacion.dart';
 import 'core/orientation/orientacion_app.dart';
 import 'core/utils/pantalla_encendida.dart';
 import 'data/services/captura_camara.dart';
@@ -316,7 +317,7 @@ class _VigiShieldAppState extends State<VigiShieldApp> {
             // Re-key the visible subtree by language so every screen re-renders
             // its (read-based) strings the instant the user switches languages —
             // without tearing down the go_router navigation stack.
-            builder: (context, child) => _OcultarTeclado(
+            builder: (context, child) => VerificadorActualizacion(child: _OcultarTeclado(
               child: KeyedSubtree(
                 key: ValueKey(locale.languageCode),
                 child: ConsentimientoGate(
@@ -325,7 +326,7 @@ class _VigiShieldAppState extends State<VigiShieldApp> {
                   ),
                 ),
               ),
-            ),
+            )),
             routerConfig: router,
           );
         },
