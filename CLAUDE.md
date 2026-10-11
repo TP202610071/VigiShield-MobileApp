@@ -48,7 +48,7 @@ cd ios && fastlane deliver --skip_screenshots true   # textos y datos de revisi�
 
 ## Publicar en App Store: estado
 
-Versión actual: **1.0.0+33** (App Store Connect: versión `1.0.0`, app id `6819493311`; el build 29 ya está subido).
+Versión actual: **1.0.0+33** (App Store Connect: versión `1.0.0`, app id `6819493311`; builds 29, 30 y 33 subidos).
 
 El 2026-10-10 la PC subió por error la versión a 1.1.0 y 1.2.0; se corrigió a `1.0.0+32`. Ningún build con
 esas versiones llegó a App Store Connect (solo se compilaron APK en la PC).
@@ -67,7 +67,7 @@ Hecho:
 - Se dejó solo iPhone. Para volver a iPad: `TARGETED_DEVICE_FAMILY = "1,2"` y capturas de iPad 13".
 
 Falta:
-- Probar en TestFlight el último build (29 subido; el 30 incluye el aviso de transmisión de 0.21.0): video de ejemplo, cámara del teléfono, eventos y borrar una cuenta de prueba.
+- Probar en TestFlight el último build (33): video de ejemplo, cámara del teléfono, eventos y borrar una cuenta de prueba.
 - Completar `~/.appstoreconnect/vigishield_review.json` (contacto, copyright, contraseña del revisor).
 - Capturas de iPhone 6.9" (1320×2868) en `ios/fastlane/screenshots/es-MX` y `en-US`.
 - En la web (la API no lo permite): App Privacy, precio y disponibilidad, estado de comerciante (DSA).
@@ -101,27 +101,15 @@ The emergency alert works only while the app is open. On iPhone, the call to
 emergency services asks for system confirmation.
 ```
 
-## Pendiente para la Mac: subir el build 33 (2026-10-10)
+## Build 33 en TestFlight (subido desde la Mac el 2026-10-11)
 
-Diego pidió publicarlo para los testers internos **y externos**. Desde la PC no se puede compilar iOS.
-El build 33 reemplaza al 32: si el 32 no se llegó a subir, se sube directamente el 33.
-
-**Ojo, historial reescrito:** el 2026-10-10 se reescribió el historial de los tres repos para quitar el
-`Co-Authored-By: Claude` de los commits. Si este clon no tiene cambios propios sin subir:
-`git fetch origin && git reset --hard origin/main`. Si los tiene, guardarlos antes (`git stash` o una rama) y
-aplicarlos encima del `origin/main` nuevo. Un `git pull` normal mezclaría las dos historias: no usarlo.
-
-1. Poner el clon al día (párrafo de arriba), `flutter pub get`, `cd ios && pod install && cd ..` (no hay
-   dependencias nuevas, pero no está de más).
-2. `flutter analyze` y `flutter test` (en la PC: 116 pruebas en verde).
-3. `flutter build ipa --release` y subirlo con `altool` (comando de arriba).
-4. TestFlight:
-   - Agregar el build 33 al grupo interno «Equipo VigiShield».
-   - Agregarlo al grupo **externo** de testers (si no existe, crearlo con los participantes). El primer
-     build externo pasa por la revisión beta de Apple; mandar «Qué probar» (abajo).
-5. Con el build 33 instalado no debe salir ningún aviso de actualización (ver «Actualizaciones en iOS»).
-   Cuando esté disponible para todos, avisar a Diego para subir `ultimo` a 33.
-6. Actualizar este archivo con lo que quede.
+- Subido y procesado. Internos («Equipo VigiShield»): disponible ya, el grupo recibe todos los builds.
+- Externos («VigiShield Testers»): agregado y enviado a la revisión beta con «Qué probar» en es-MX y en-US.
+  El build 30 ya tenía la revisión beta aprobada.
+- **Falta:** cuando la revisión beta apruebe el 33 y esté disponible para los externos, Diego sube `ultimo`
+  (y `minimo` si hace falta) a 33 en `app-version.json`. No antes (ver «Actualizaciones en iOS»).
+- La Mac llama a la API de App Store Connect con `ruby ~/.appstoreconnect/asc.rb <ruta> [MÉTODO] [json]`
+  (fuera del repo). Los builds nuevos van a externos con agregar al grupo + `POST /v1/betaAppReviewSubmissions`.
 
 **Build 33:** la app revisa si hay una versión nueva y, si la instalada ya no es compatible, obliga a
 actualizar (solo en iOS; ver abajo).
