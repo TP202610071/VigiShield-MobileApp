@@ -43,13 +43,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             const SizedBox(height: 8),
             ListTile(
-              leading: const Icon(Icons.photo_library_outlined, color: AppColors.accent),
+              leading: Icon(Icons.photo_library_outlined, color: AppColors.accent),
               title: Text(l10n.fromGallery,
                   style: GoogleFonts.inter(color: AppColors.textPrimary)),
               onTap: () => Navigator.pop(ctx, ImageSource.gallery),
             ),
             ListTile(
-              leading: const Icon(Icons.photo_camera_outlined, color: AppColors.accent),
+              leading: Icon(Icons.photo_camera_outlined, color: AppColors.accent),
               title: Text(l10n.fromCamera,
                   style: GoogleFonts.inter(color: AppColors.textPrimary)),
               onTap: () => Navigator.pop(ctx, ImageSource.camera),
@@ -190,10 +190,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         border: Border.all(color: AppColors.background, width: 2),
                       ),
                       child: _uploading
-                          ? const SizedBox(
+                          ? SizedBox(
                               width: 14, height: 14,
-                              child: VsCargando(color: Colors.black))
-                          : const Icon(Icons.photo_camera, size: 14, color: Colors.black),
+                              child: VsCargando(color: AppColors.onAccent))
+                          : Icon(Icons.photo_camera, size: 14, color: AppColors.onAccent),
                     ),
                   ),
                 ],
@@ -245,7 +245,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: TextButton.icon(
               key: const Key('eliminar-cuenta'),
               onPressed: _eliminarCuenta,
-              icon: const Icon(Icons.delete_forever_outlined, color: AppColors.alertRed),
+              icon: Icon(Icons.delete_forever_outlined, color: AppColors.alertRed),
               label: Text(l10n.deleteAccount,
                   style: GoogleFonts.inter(color: AppColors.alertRed, fontWeight: FontWeight.w600)),
             ),

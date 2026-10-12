@@ -190,7 +190,7 @@ class _RostroDelEventoState extends State<RostroDelEvento> {
             const SizedBox(height: 12),
             if (_registrado)
               Row(children: [
-                const Icon(Icons.check_circle, color: AppColors.safeGreen, size: 18),
+                Icon(Icons.check_circle, color: AppColors.safeGreen, size: 18),
                 const SizedBox(width: 8),
                 Expanded(child: Text(s.rostroYaRegistrado,
                     style: GoogleFonts.inter(fontSize: 13, color: AppColors.safeGreen))),
@@ -199,12 +199,12 @@ class _RostroDelEventoState extends State<RostroDelEvento> {
               OutlinedButton.icon(
                 onPressed: _registrando ? null : _registrar,
                 icon: _registrando
-                    ? const SizedBox(width: 16, height: 16,
+                    ? SizedBox(width: 16, height: 16,
                         child: VsCargando(color: AppColors.accent))
-                    : const Icon(Icons.person_add_alt_1, color: AppColors.accent, size: 18),
+                    : Icon(Icons.person_add_alt_1, color: AppColors.accent, size: 18),
                 label: Text(s.rostroEsConocido,
                     style: GoogleFonts.inter(color: AppColors.accent, fontSize: 13)),
-                style: OutlinedButton.styleFrom(side: const BorderSide(color: AppColors.accent)),
+                style: OutlinedButton.styleFrom(side: BorderSide(color: AppColors.accent)),
               ),
           ],
         ]),

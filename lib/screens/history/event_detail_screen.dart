@@ -82,13 +82,13 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           if (!_loading && _event != null &&
               context.read<DevSettingsProvider>().isPrimaryEffective(context.read<AuthProvider>().user))
             IconButton(
-              icon: const Icon(Icons.delete_outline, color: AppColors.alertRed),
+              icon: Icon(Icons.delete_outline, color: AppColors.alertRed),
               onPressed: _delete,
             ),
         ],
       ),
       body: _loading
-          ? const Center(child: VsCargando(color: AppColors.accent))
+          ? Center(child: VsCargando(color: AppColors.accent))
           : _event == null
               ? Center(
                   child: Text(context.l10n.eventNotFound,
@@ -155,7 +155,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.nightlight_round,
+                        Icon(Icons.nightlight_round,
                             size: 14, color: AppColors.warningAmber),
                         const SizedBox(width: 6),
                         Text(l10n.nightActivity,
@@ -386,7 +386,7 @@ class _EventPhoto extends StatelessWidget {
                           height: 200,
                           alignment: Alignment.center,
                           color: AppColors.surface,
-                          child: const VsCargando(
+                          child: VsCargando(
                               color: AppColors.accent),
                         ),
                   errorBuilder: (c, e, s) => Container(
@@ -398,7 +398,7 @@ class _EventPhoto extends StatelessWidget {
                     ),
                     child: Center(
                       child: Column(mainAxisSize: MainAxisSize.min, children: [
-                        const Icon(Icons.image_not_supported_outlined,
+                        Icon(Icons.image_not_supported_outlined,
                             color: AppColors.textMuted, size: 40),
                         const SizedBox(height: 8),
                         Text(context.l10n.imageUnavailable,

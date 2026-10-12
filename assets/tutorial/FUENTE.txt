@@ -1,0 +1,3 @@
+entrada_ejemplo.jpg: foto de stock de Pexels (https://www.pexels.com/photo/19227220/),
+licencia Pexels: uso libre, sin atribución obligatoria. Recortada a 16:9 y reducida a 960x540.
+No es la casa de nadie del proyecto.

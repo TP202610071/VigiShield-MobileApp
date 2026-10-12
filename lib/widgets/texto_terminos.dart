@@ -10,8 +10,8 @@ import '../core/theme/app_theme.dart';
 /// «He leído y acepto los Términos y condiciones y la Política de privacidad»,
 /// con los dos enlaces a vigishield.app.
 class TextoTerminos extends StatefulWidget {
-  const TextoTerminos({super.key, this.color = AppColors.textSecondary});
-  final Color color;
+  const TextoTerminos({super.key, this.color});
+  final Color? color;
 
   @override
   State<TextoTerminos> createState() => _TextoTerminosState();
@@ -41,7 +41,7 @@ class _TextoTerminosState extends State<TextoTerminos> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final base = GoogleFonts.inter(fontSize: 13, color: widget.color, height: 1.4);
+    final base = GoogleFonts.inter(fontSize: 13, color: widget.color ?? AppColors.textSecondary, height: 1.4);
     final enlace = base.copyWith(
         color: AppColors.accent, decoration: TextDecoration.underline,
         decorationColor: AppColors.accent);

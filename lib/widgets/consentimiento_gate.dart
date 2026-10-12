@@ -56,7 +56,7 @@ class _ConsentimientoGateState extends State<ConsentimientoGate> {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.privacy_tip_outlined, color: AppColors.accent, size: 44),
+                      Icon(Icons.privacy_tip_outlined, color: AppColors.accent, size: 44),
                       const SizedBox(height: 16),
                       Text(l10n.consentTitle,
                           style: GoogleFonts.inter(
@@ -68,7 +68,7 @@ class _ConsentimientoGateState extends State<ConsentimientoGate> {
                           style: GoogleFonts.inter(
                               color: AppColors.textSecondary, fontSize: 14, height: 1.5)),
                       const SizedBox(height: 16),
-                      const TextoTerminos(color: AppColors.textPrimary),
+                      TextoTerminos(color: AppColors.textPrimary),
                       const SizedBox(height: 28),
                       SizedBox(
                         width: double.infinity,
@@ -88,7 +88,7 @@ class _ConsentimientoGateState extends State<ConsentimientoGate> {
                         child: TextButton(
                           onPressed: _guardando ? null : () => auth.logout(),
                           child: Text(l10n.consentLogout,
-                              style: const TextStyle(color: AppColors.textSecondary)),
+                              style: TextStyle(color: AppColors.textSecondary)),
                         ),
                       ),
                     ],

@@ -166,14 +166,14 @@ class _UsersScreenState extends State<UsersScreen> {
             style: GoogleFonts.inter(
                 color: AppColors.textPrimary, fontSize: 18,
                 fontWeight: FontWeight.w600)),
-        iconTheme: const IconThemeData(color: AppColors.textPrimary),
+        iconTheme: IconThemeData(color: AppColors.textPrimary),
       ),
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: AppColors.accent,
         onPressed: _invitar,
-        icon: const Icon(Icons.person_add_alt, color: Colors.black),
+        icon: Icon(Icons.person_add_alt, color: AppColors.onAccent),
         label: Text(l10n.inviteUser,
-            style: GoogleFonts.inter(color: Colors.black, fontWeight: FontWeight.w700)),
+            style: GoogleFonts.inter(color: AppColors.onAccent, fontWeight: FontWeight.w700)),
       ),
       body: RefreshIndicator(
         onRefresh: _cargar,
@@ -186,13 +186,13 @@ class _UsersScreenState extends State<UsersScreen> {
 
   Widget _build(AppStrings l10n) {
     if (_cargando) {
-      return const Center(
+      return Center(
           child: VsCargando(color: AppColors.accent));
     }
     if (_error != null) {
       return ListView(children: [
         const SizedBox(height: 120),
-        const Icon(Icons.wifi_off_outlined, color: AppColors.textSecondary, size: 48),
+        Icon(Icons.wifi_off_outlined, color: AppColors.textSecondary, size: 48),
         const SizedBox(height: 16),
         Center(
           child: Text(_error!,
@@ -210,7 +210,7 @@ class _UsersScreenState extends State<UsersScreen> {
     if (_users.isEmpty) {
       return ListView(children: [
         const SizedBox(height: 90),
-        const Icon(Icons.group_outlined, color: AppColors.textSecondary, size: 56),
+        Icon(Icons.group_outlined, color: AppColors.textSecondary, size: 56),
         const SizedBox(height: 16),
         Center(
           child: Text(l10n.noSecondaryUsers,
@@ -256,7 +256,7 @@ class _UsersScreenState extends State<UsersScreen> {
               color: AppColors.accent.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.person_outline, color: AppColors.accent, size: 22),
+            child: Icon(Icons.person_outline, color: AppColors.accent, size: 22),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -281,7 +281,7 @@ class _UsersScreenState extends State<UsersScreen> {
           ),
           IconButton(
             onPressed: () => _revocar(u),
-            icon: const Icon(Icons.person_remove_outlined,
+            icon: Icon(Icons.person_remove_outlined,
                 color: AppColors.alertRed, size: 20),
             tooltip: l10n.revokeAccess,
           ),

@@ -56,7 +56,7 @@ class SheetHeader extends StatelessWidget {
             ),
             if (accion != null) accion!,
             IconButton(
-              icon: const Icon(Icons.close_rounded,
+              icon: Icon(Icons.close_rounded,
                   color: AppColors.textSecondary, size: 22),
               tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
               visualDensity: VisualDensity.compact,

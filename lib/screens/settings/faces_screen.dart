@@ -104,14 +104,14 @@ class _FacesScreenState extends State<FacesScreen> {
         title: Text('Caras autorizadas',
             style: GoogleFonts.inter(
                 color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.w600)),
-        iconTheme: const IconThemeData(color: AppColors.textPrimary),
+        iconTheme: IconThemeData(color: AppColors.textPrimary),
       ),
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: AppColors.accent,
         onPressed: _openAddSheet,
-        icon: const Icon(Icons.add_a_photo_outlined, color: Colors.black),
+        icon: Icon(Icons.add_a_photo_outlined, color: AppColors.onAccent),
         label: Text('Registrar',
-            style: GoogleFonts.inter(color: Colors.black, fontWeight: FontWeight.w700)),
+            style: GoogleFonts.inter(color: AppColors.onAccent, fontWeight: FontWeight.w700)),
       ),
       body: RefreshIndicator(
         onRefresh: _load,
@@ -123,12 +123,12 @@ class _FacesScreenState extends State<FacesScreen> {
 
   Widget _buildBody() {
     if (_loading) {
-      return const Center(child: VsCargando(color: AppColors.accent));
+      return Center(child: VsCargando(color: AppColors.accent));
     }
     if (_error != null) {
       return ListView(children: [
         const SizedBox(height: 120),
-        const Icon(Icons.error_outline, color: AppColors.alertRed, size: 48),
+        Icon(Icons.error_outline, color: AppColors.alertRed, size: 48),
         const SizedBox(height: 16),
         Center(
           child: Text(_error!,
@@ -146,7 +146,7 @@ class _FacesScreenState extends State<FacesScreen> {
     if (_faces.isEmpty) {
       return ListView(children: [
         const SizedBox(height: 100),
-        const Icon(Icons.face_retouching_natural_outlined,
+        Icon(Icons.face_retouching_natural_outlined,
             color: AppColors.textSecondary, size: 56),
         const SizedBox(height: 16),
         Center(
@@ -209,7 +209,7 @@ class _FacesScreenState extends State<FacesScreen> {
         ),
         IconButton(
           onPressed: () => _confirmDelete(face),
-          icon: const Icon(Icons.delete_outline, color: AppColors.alertRed, size: 22),
+          icon: Icon(Icons.delete_outline, color: AppColors.alertRed, size: 22),
         ),
       ]),
     );
@@ -217,7 +217,7 @@ class _FacesScreenState extends State<FacesScreen> {
 
   Widget _thumbFallback() => Container(
         color: AppColors.surfaceElevated,
-        child: const Icon(Icons.person, color: AppColors.textMuted, size: 28),
+        child: Icon(Icons.person, color: AppColors.textMuted, size: 28),
       );
 
   // ── Add face sheet ───────────────────────────────────────────────────────────
@@ -304,11 +304,11 @@ class _FacesScreenState extends State<FacesScreen> {
                       fillColor: AppColors.surfaceElevated,
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: AppColors.border),
+                        borderSide: BorderSide(color: AppColors.border),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: AppColors.accent),
+                        borderSide: BorderSide(color: AppColors.accent),
                       ),
                     ),
                   ),
@@ -323,31 +323,31 @@ class _FacesScreenState extends State<FacesScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
-                      icon: const Icon(Icons.face_retouching_natural, color: Colors.black, size: 20),
+                      icon: Icon(Icons.face_retouching_natural, color: AppColors.onAccent, size: 20),
                       label: Text('Escaneo facial en vivo',
                           style: GoogleFonts.inter(
-                              color: Colors.black, fontWeight: FontWeight.w700, fontSize: 14)),
+                              color: AppColors.onAccent, fontWeight: FontWeight.w700, fontSize: 14)),
                     ),
                   ),
                   const SizedBox(height: 18),
                   Row(children: [
-                    const Expanded(child: Divider(color: AppColors.border)),
+                    Expanded(child: Divider(color: AppColors.border)),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 10),
                       child: Text('o sube fotos',
                           style: GoogleFonts.inter(color: AppColors.textMuted, fontSize: 12)),
                     ),
-                    const Expanded(child: Divider(color: AppColors.border)),
+                    Expanded(child: Divider(color: AppColors.border)),
                   ]),
                   const SizedBox(height: 14),
                   OutlinedButton.icon(
                     onPressed: saving ? null : pickFromGallery,
                     style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: AppColors.border),
+                      side: BorderSide(color: AppColors.border),
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       minimumSize: const Size(double.infinity, 0),
                     ),
-                    icon: const Icon(Icons.photo_library_outlined, color: AppColors.accent, size: 18),
+                    icon: Icon(Icons.photo_library_outlined, color: AppColors.accent, size: 18),
                     label: Text('Elegir fotos de galería (mín. 3)',
                         style: GoogleFonts.inter(color: AppColors.textPrimary, fontSize: 13)),
                   ),
@@ -390,7 +390,7 @@ class _FacesScreenState extends State<FacesScreen> {
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
                         child: saving
-                            ? const SizedBox(
+                            ? SizedBox(
                                 width: 20, height: 20,
                                 child: VsCargando(color: AppColors.accent))
                             : Text('Registrar con ${selected.length} foto(s)',

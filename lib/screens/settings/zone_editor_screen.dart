@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:async';
 import 'dart:typed_data';
 
@@ -11,6 +12,7 @@ import '../../core/theme/app_theme.dart';
 import '../../data/models/camera_config_model.dart';
 import '../../data/models/zone_model.dart';
 import '../../providers/camera_provider.dart';
+import '../../widgets/tutorial/demo_zonas.dart';
 import '../../widgets/vs_cargando.dart';
 
 /// Editor de Zonas de Interés (ROI): el usuario dibuja polígonos (puerta, reja,
@@ -107,16 +109,20 @@ class _ZoneEditorScreenState extends State<ZoneEditorScreen> {
         scrollable: true,
         icon: MediaQuery.of(ctx).size.height < 500
             ? null
-            : const Icon(Icons.crop_free, color: AppColors.accent, size: 36),
+            : Icon(Icons.crop_free, color: AppColors.accent, size: 36),
         title: Text('Zonas de interés',
             style: GoogleFonts.inter(color: AppColors.textPrimary, fontWeight: FontWeight.w600)),
-        content: Text(
+        content: Column(mainAxisSize: MainAxisSize.min, children: [
+          DemoZonas(ancho: math.min(320.0, MediaQuery.of(ctx).size.width * 0.66)),
+          const SizedBox(height: 14),
+          Text(
             'Marca en la imagen lo importante, como la puerta o la reja. Así el sistema sabe dónde '
             'un desconocido es un riesgo y dónde solo está de paso.\n\n'
             '1. Toca la imagen para marcar las esquinas de la zona.\n'
             '2. Pulsa «Cerrar zona», elige el tipo y ponle un nombre.\n'
             '3. Pulsa «Guardar».',
             style: GoogleFonts.inter(color: AppColors.textSecondary, fontSize: 14, height: 1.45)),
+        ]),
         actions: [
           FilledButton(onPressed: () => Navigator.pop(ctx), child: const Text('Entendido')),
         ],
@@ -284,11 +290,11 @@ class _ZoneEditorScreenState extends State<ZoneEditorScreen> {
                   labelStyle: GoogleFonts.inter(color: AppColors.textSecondary),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(color: AppColors.border),
+                    borderSide: BorderSide(color: AppColors.border),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(color: AppColors.accent),
+                    borderSide: BorderSide(color: AppColors.accent),
                   ),
                 ),
               ),
@@ -361,10 +367,10 @@ class _ZoneEditorScreenState extends State<ZoneEditorScreen> {
         backgroundColor: AppColors.background,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
-        iconTheme: const IconThemeData(color: AppColors.textPrimary),
+        iconTheme: IconThemeData(color: AppColors.textPrimary),
         actions: [
           _saving
-              ? const Padding(
+              ? Padding(
                   padding: EdgeInsets.only(right: 16),
                   child: Center(
                     child: SizedBox(
@@ -410,7 +416,7 @@ class _ZoneEditorScreenState extends State<ZoneEditorScreen> {
                       const SizedBox(height: 4),
                       _filaCaptura(),
                       _filaControles(),
-                      const Divider(color: AppColors.border, height: 16),
+                      Divider(color: AppColors.border, height: 16),
                       _lista(),
                     ],
                   ),
@@ -426,7 +432,7 @@ class _ZoneEditorScreenState extends State<ZoneEditorScreen> {
               ),
               _filaCaptura(),
               _filaControles(),
-              const Divider(color: AppColors.border, height: 24),
+              Divider(color: AppColors.border, height: 24),
               _lista(),
             ],
           );
@@ -471,7 +477,7 @@ class _ZoneEditorScreenState extends State<ZoneEditorScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const VsCargando(
+                        VsCargando(
                           color: AppColors.accent,
                         ),
                         const SizedBox(height: 10),
@@ -493,7 +499,7 @@ class _ZoneEditorScreenState extends State<ZoneEditorScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.videocam_off_outlined,
                           color: AppColors.textMuted,
                           size: 40,

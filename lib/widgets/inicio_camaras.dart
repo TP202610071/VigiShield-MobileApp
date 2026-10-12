@@ -69,7 +69,7 @@ class _TarjetaInicioCamarasState extends State<TarjetaInicioCamaras> {
               color: AppColors.accent.withAlpha(31),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Icon(Icons.videocam_off_outlined, color: AppColors.accent, size: 20),
+            child: Icon(Icons.videocam_off_outlined, color: AppColors.accent, size: 20),
           ),
           const SizedBox(width: 12),
           Expanded(

@@ -91,7 +91,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(color: AppColors.border),
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.arrow_back,
                         color: AppColors.textPrimary,
                         size: 20,
@@ -179,7 +179,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     child: Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.info_outline,
                           color: AppColors.accent,
                           size: 16,
@@ -217,7 +217,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 value: campo.value ?? false,
                                 onChanged: (v) => campo.didChange(v ?? false),
                                 activeColor: AppColors.accent,
-                                side: const BorderSide(color: AppColors.textMuted),
+                                side: BorderSide(color: AppColors.textMuted),
                               ),
                             ),
                             const SizedBox(width: 8),

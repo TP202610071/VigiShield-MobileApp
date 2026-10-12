@@ -105,27 +105,27 @@ class _ServidorVideoCaidoState extends State<ServidorVideoCaido> {
     final s = context.l10n;
     return Positioned.fill(
       child: Container(
-        color: AppColors.background,
+        color: AppColorsOscuros.background,
         alignment: Alignment.center,
         padding: const EdgeInsets.all(32),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
-          const Icon(Icons.cloud_off_rounded, color: AppColors.warningAmber, size: 52),
+          Icon(Icons.cloud_off_rounded, color: AppColorsOscuros.warningAmber, size: 52),
           const SizedBox(height: 16),
           Text(s.servidorApagadoTitulo,
               textAlign: TextAlign.center,
               style: GoogleFonts.inter(
-                  fontSize: 17, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                  fontSize: 17, fontWeight: FontWeight.w600, color: AppColorsOscuros.textPrimary)),
           const SizedBox(height: 10),
           Text(s.servidorApagadoTexto,
               textAlign: TextAlign.center,
-              style: GoogleFonts.inter(fontSize: 13, height: 1.45, color: AppColors.textSecondary)),
+              style: GoogleFonts.inter(fontSize: 13, height: 1.45, color: AppColorsOscuros.textSecondary)),
           const SizedBox(height: 20),
           OutlinedButton.icon(
             onPressed: _comprobando ? null : _comprobar,
-            icon: const Icon(Icons.refresh, color: AppColors.accent, size: 18),
+            icon: Icon(Icons.refresh, color: AppColorsOscuros.accent, size: 18),
             label: Text(s.servidorApagadoReintentar,
-                style: GoogleFonts.inter(color: AppColors.accent, fontSize: 13)),
-            style: OutlinedButton.styleFrom(side: const BorderSide(color: AppColors.accent)),
+                style: GoogleFonts.inter(color: AppColorsOscuros.accent, fontSize: 13)),
+            style: OutlinedButton.styleFrom(side: BorderSide(color: AppColorsOscuros.accent)),
           ),
         ]),
       ),

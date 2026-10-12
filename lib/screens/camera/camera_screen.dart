@@ -1014,7 +1014,7 @@ class _CameraScreenState extends State<CameraScreen>
               context.l10n.screenshotSaved,
               style: GoogleFonts.inter(color: Colors.white),
             ),
-            backgroundColor: AppColors.safeGreen,
+            backgroundColor: AppColorsOscuros.safeGreen,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
@@ -1031,7 +1031,7 @@ class _CameraScreenState extends State<CameraScreen>
               context.l10n.screenshotError(e.toString()),
               style: GoogleFonts.inter(color: Colors.white),
             ),
-            backgroundColor: AppColors.alertRed,
+            backgroundColor: AppColorsOscuros.alertRed,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
@@ -1195,7 +1195,7 @@ class _CameraScreenState extends State<CameraScreen>
     if (camId == null) return;
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.surface,
+      backgroundColor: AppColorsOscuros.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -1291,14 +1291,14 @@ class _CameraScreenState extends State<CameraScreen>
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const VsCargando(
-                    color: AppColors.accent,
+                  VsCargando(
+                    color: AppColorsOscuros.accent,
                   ),
                   const SizedBox(height: 16),
                   Text(
                     context.l10n.connecting,
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
+                    style: TextStyle(
+                      color: AppColorsOscuros.textSecondary,
                       fontSize: 13,
                     ),
                   ),
@@ -1367,14 +1367,14 @@ class _CameraScreenState extends State<CameraScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.visibility_off_outlined,
-                color: AppColors.textSecondary, size: 44),
+            Icon(Icons.visibility_off_outlined,
+                color: AppColorsOscuros.textSecondary, size: 44),
             const SizedBox(height: 16),
             Text(
               l10n.aiDisabledTitle,
               textAlign: TextAlign.center,
               style: GoogleFonts.inter(
-                color: AppColors.textPrimary,
+                color: AppColorsOscuros.textPrimary,
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
               ),
@@ -1383,7 +1383,7 @@ class _CameraScreenState extends State<CameraScreen>
             Text(
               isPrimary ? l10n.aiDisabledBody : '${l10n.aiDisabledBody}\n${l10n.aiDisabledAskPrimary}',
               textAlign: TextAlign.center,
-              style: GoogleFonts.inter(color: AppColors.textSecondary, fontSize: 12),
+              style: GoogleFonts.inter(color: AppColorsOscuros.textSecondary, fontSize: 12),
             ),
             if (isPrimary) ...[
               const SizedBox(height: 20),
@@ -1454,10 +1454,10 @@ class _CameraScreenState extends State<CameraScreen>
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const SizedBox(
+                    SizedBox(
                       width: 16,
                       height: 16,
-                      child: VsCargando(color: AppColors.accent),
+                      child: VsCargando(color: AppColorsOscuros.accent),
                     ),
                     const SizedBox(width: 10),
                     Text(
@@ -1477,14 +1477,14 @@ class _CameraScreenState extends State<CameraScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const VsCargando(
-              color: AppColors.accent,
+            VsCargando(
+              color: AppColorsOscuros.accent,
             ),
             const SizedBox(height: 20),
             Text(
               context.l10n.aiConnecting,
               style: GoogleFonts.inter(
-                color: AppColors.textPrimary,
+                color: AppColorsOscuros.textPrimary,
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
               ),
@@ -1494,7 +1494,7 @@ class _CameraScreenState extends State<CameraScreen>
               context.l10n.aiHint,
               textAlign: TextAlign.center,
               style: GoogleFonts.inter(
-                color: AppColors.textSecondary,
+                color: AppColorsOscuros.textSecondary,
                 fontSize: 12,
               ),
             ),
@@ -1542,13 +1542,13 @@ class _CameraScreenState extends State<CameraScreen>
                   vertical: 5,
                 ),
                 decoration: BoxDecoration(
-                  color: AppColors.accent.withAlpha(220),
+                  color: AppColorsOscuros.accent.withAlpha(220),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
                   context.l10n.aiDetection,
                   style: GoogleFonts.inter(
-                    color: Colors.black,
+                    color: AppColorsOscuros.onAccent,
                     fontSize: 9,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 1,
@@ -1684,12 +1684,12 @@ class _CameraScreenState extends State<CameraScreen>
                           ),
                           decoration: BoxDecoration(
                             color: selected
-                                ? AppColors.accent
+                                ? AppColorsOscuros.accent
                                 : Colors.white.withAlpha(46),
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
                               color: selected
-                                  ? AppColors.accent
+                                  ? AppColorsOscuros.accent
                                   : Colors.white24,
                             ),
                           ),
@@ -1700,7 +1700,7 @@ class _CameraScreenState extends State<CameraScreen>
                                 cameras[i].isSample
                                     ? Icons.movie_outlined
                                     : Icons.videocam_outlined,
-                                color: selected ? Colors.black : Colors.white70,
+                                color: selected ? AppColorsOscuros.onAccent : Colors.white70,
                                 size: 13,
                               ),
                               const SizedBox(width: 5),
@@ -1708,7 +1708,7 @@ class _CameraScreenState extends State<CameraScreen>
                                 cameras[i].isSample ? l10n.sampleVideo : cameras[i].name,
                                 style: GoogleFonts.inter(
                                   color: selected
-                                      ? Colors.black
+                                      ? AppColorsOscuros.onAccent
                                       : Colors.white70,
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
@@ -1809,16 +1809,16 @@ class _CameraScreenState extends State<CameraScreen>
                 color: Colors.black,
                 child: Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.grid_view_rounded,
-                      color: AppColors.accent,
+                      color: AppColorsOscuros.accent,
                       size: 18,
                     ),
                     const SizedBox(width: 8),
                     Text(
                       context.l10n.allCameras,
                       style: GoogleFonts.inter(
-                        color: AppColors.textPrimary,
+                        color: AppColorsOscuros.textPrimary,
                         fontWeight: FontWeight.w600,
                         fontSize: 14,
                       ),
@@ -1860,9 +1860,9 @@ class _CameraScreenState extends State<CameraScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
+            Icon(
               Icons.videocam_off_outlined,
-              color: AppColors.textSecondary,
+              color: AppColorsOscuros.textSecondary,
               size: 56,
             ),
             const SizedBox(height: 20),
@@ -1870,7 +1870,7 @@ class _CameraScreenState extends State<CameraScreen>
               context.l10n.noCameras,
               textAlign: TextAlign.center,
               style: GoogleFonts.inter(
-                color: AppColors.textPrimary,
+                color: AppColorsOscuros.textPrimary,
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
               ),
@@ -1880,7 +1880,7 @@ class _CameraScreenState extends State<CameraScreen>
               context.l10n.noCamerasHint,
               textAlign: TextAlign.center,
               style: GoogleFonts.inter(
-                color: AppColors.textSecondary,
+                color: AppColorsOscuros.textSecondary,
                 fontSize: 13,
               ),
             ),
@@ -1903,16 +1903,16 @@ class _CameraScreenState extends State<CameraScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
+            Icon(
               Icons.signal_wifi_off_outlined,
-              color: AppColors.alertRed,
+              color: AppColorsOscuros.alertRed,
               size: 56,
             ),
             const SizedBox(height: 20),
             Text(
               context.l10n.streamUnavailable,
               style: GoogleFonts.inter(
-                color: AppColors.textPrimary,
+                color: AppColorsOscuros.textPrimary,
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
               ),
@@ -1922,7 +1922,7 @@ class _CameraScreenState extends State<CameraScreen>
               context.l10n.streamUnavailableHint,
               textAlign: TextAlign.center,
               style: GoogleFonts.inter(
-                color: AppColors.textSecondary,
+                color: AppColorsOscuros.textSecondary,
                 fontSize: 13,
               ),
             ),
@@ -2039,7 +2039,7 @@ class _CameraSettingsSheetState extends State<_CameraSettingsSheet> {
                     : context.l10n.cameraSettingsLanOnly),
           style: GoogleFonts.inter(color: Colors.white),
         ),
-        backgroundColor: ok ? AppColors.safeGreen : AppColors.alertRed,
+        backgroundColor: ok ? AppColorsOscuros.safeGreen : AppColorsOscuros.alertRed,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
@@ -2066,7 +2066,7 @@ class _CameraSettingsSheetState extends State<_CameraSettingsSheet> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppColors.textMuted,
+                  color: AppColorsOscuros.textMuted,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -2074,12 +2074,12 @@ class _CameraSettingsSheetState extends State<_CameraSettingsSheet> {
             const SizedBox(height: 18),
             Row(
               children: [
-                const Icon(Icons.tune, color: AppColors.accent, size: 20),
+                Icon(Icons.tune, color: AppColorsOscuros.accent, size: 20),
                 const SizedBox(width: 8),
                 Text(
                   l10n.cameraSettings,
                   style: GoogleFonts.inter(
-                    color: AppColors.textPrimary,
+                    color: AppColorsOscuros.textPrimary,
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
                   ),
@@ -2090,18 +2090,18 @@ class _CameraSettingsSheetState extends State<_CameraSettingsSheet> {
             Text(
               l10n.cameraSettingsHint,
               style: GoogleFonts.inter(
-                color: AppColors.textSecondary,
+                color: AppColorsOscuros.textSecondary,
                 fontSize: 13,
               ),
             ),
             const SizedBox(height: 18),
 
             if (_loading)
-              const Padding(
+              Padding(
                 padding: EdgeInsets.symmetric(vertical: 40),
                 child: Center(
                   child: VsCargando(
-                    color: AppColors.accent,
+                    color: AppColorsOscuros.accent,
                   ),
                 ),
               )
@@ -2114,7 +2114,7 @@ class _CameraSettingsSheetState extends State<_CameraSettingsSheet> {
                       _credencialesMal
                           ? Icons.lock_outline
                           : Icons.wifi_off_outlined,
-                      color: AppColors.warningAmber,
+                      color: AppColorsOscuros.warningAmber,
                       size: 40,
                     ),
                     const SizedBox(height: 12),
@@ -2124,7 +2124,7 @@ class _CameraSettingsSheetState extends State<_CameraSettingsSheet> {
                           : l10n.cameraSettingsLanOnly,
                       textAlign: TextAlign.center,
                       style: GoogleFonts.inter(
-                        color: AppColors.textSecondary,
+                        color: AppColorsOscuros.textSecondary,
                         fontSize: 13,
                         height: 1.4,
                       ),
@@ -2218,24 +2218,24 @@ class _CameraSettingsSheetState extends State<_CameraSettingsSheet> {
                 child: ElevatedButton(
                   onPressed: _saving ? null : _save,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.accent,
+                    backgroundColor: AppColorsOscuros.accent,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                   child: _saving
-                      ? const SizedBox(
+                      ? SizedBox(
                           width: 20,
                           height: 20,
                           child: VsCargando(
-                            color: Colors.black,
+                            color: AppColorsOscuros.onAccent,
                           ),
                         )
                       : Text(
                           l10n.applyToCamera,
                           style: GoogleFonts.inter(
-                            color: Colors.black,
+                            color: AppColorsOscuros.onAccent,
                             fontWeight: FontWeight.w700,
                             fontSize: 14,
                           ),
@@ -2255,7 +2255,7 @@ class _CameraSettingsSheetState extends State<_CameraSettingsSheet> {
     child: Text(
       t,
       style: GoogleFonts.inter(
-        color: AppColors.accent,
+        color: AppColorsOscuros.accent,
         fontSize: 11,
         fontWeight: FontWeight.w700,
         letterSpacing: 0.8,
@@ -2283,7 +2283,7 @@ class _SliderRow extends StatelessWidget {
           child: Text(
             label,
             style: GoogleFonts.inter(
-              color: AppColors.textPrimary,
+              color: AppColorsOscuros.textPrimary,
               fontSize: 13,
             ),
           ),
@@ -2291,10 +2291,10 @@ class _SliderRow extends StatelessWidget {
         Expanded(
           child: SliderTheme(
             data: SliderTheme.of(context).copyWith(
-              activeTrackColor: AppColors.accent,
-              thumbColor: AppColors.accent,
-              inactiveTrackColor: AppColors.border,
-              overlayColor: AppColors.accent.withAlpha(40),
+              activeTrackColor: AppColorsOscuros.accent,
+              thumbColor: AppColorsOscuros.accent,
+              inactiveTrackColor: AppColorsOscuros.border,
+              overlayColor: AppColorsOscuros.accent.withAlpha(40),
               trackHeight: 3,
             ),
             child: Slider(
@@ -2311,7 +2311,7 @@ class _SliderRow extends StatelessWidget {
             value.round().toString(),
             textAlign: TextAlign.end,
             style: GoogleFonts.robotoMono(
-              color: AppColors.textSecondary,
+              color: AppColorsOscuros.textSecondary,
               fontSize: 12,
             ),
           ),
@@ -2341,7 +2341,7 @@ class _SwitchRow extends StatelessWidget {
             child: Text(
               label,
               style: GoogleFonts.inter(
-                color: AppColors.textPrimary,
+                color: AppColorsOscuros.textPrimary,
                 fontSize: 13,
               ),
             ),
@@ -2349,7 +2349,7 @@ class _SwitchRow extends StatelessWidget {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: AppColors.accent,
+            activeColor: AppColorsOscuros.accent,
           ),
         ],
       ),
@@ -2379,7 +2379,7 @@ class _ChoiceRow extends StatelessWidget {
             child: Text(
               label,
               style: GoogleFonts.inter(
-                color: AppColors.textPrimary,
+                color: AppColorsOscuros.textPrimary,
                 fontSize: 13,
               ),
             ),
@@ -2387,16 +2387,16 @@ class _ChoiceRow extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             decoration: BoxDecoration(
-              color: AppColors.surfaceElevated,
+              color: AppColorsOscuros.surfaceElevated,
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppColors.border),
+              border: Border.all(color: AppColorsOscuros.border),
             ),
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String>(
                 value: options.containsKey(value) ? value : options.keys.first,
-                dropdownColor: AppColors.surfaceElevated,
+                dropdownColor: AppColorsOscuros.surfaceElevated,
                 style: GoogleFonts.inter(
-                  color: AppColors.textPrimary,
+                  color: AppColorsOscuros.textPrimary,
                   fontSize: 13,
                 ),
                 items: options.entries
@@ -2441,7 +2441,7 @@ class _StepRow extends StatelessWidget {
             child: Text(
               label,
               style: GoogleFonts.inter(
-                color: AppColors.textPrimary,
+                color: AppColorsOscuros.textPrimary,
                 fontSize: 13,
               ),
             ),
@@ -2456,7 +2456,7 @@ class _StepRow extends StatelessWidget {
             child: Text(
               '$value $suffix',
               style: GoogleFonts.robotoMono(
-                color: AppColors.textSecondary,
+                color: AppColorsOscuros.textSecondary,
                 fontSize: 12,
               ),
             ),
@@ -2473,11 +2473,11 @@ class _StepRow extends StatelessWidget {
       width: 30,
       height: 30,
       decoration: BoxDecoration(
-        color: AppColors.surfaceElevated,
+        color: AppColorsOscuros.surfaceElevated,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColorsOscuros.border),
       ),
-      child: Icon(icon, color: AppColors.accent, size: 16),
+      child: Icon(icon, color: AppColorsOscuros.accent, size: 16),
     ),
   );
 }
@@ -2657,9 +2657,9 @@ class _AlertBannerState extends State<_AlertBanner>
   }
 
   static Color _colorFor(String risk) => switch (risk) {
-    'Critical' || 'High' => AppColors.alertRed,
-    'Medium' => AppColors.warningAmber,
-    _ => AppColors.safeGreen,
+    'Critical' || 'High' => AppColorsOscuros.alertRed,
+    'Medium' => AppColorsOscuros.warningAmber,
+    _ => AppColorsOscuros.safeGreen,
   };
 
   static IconData _iconFor(String type) => switch (type) {
@@ -2769,11 +2769,11 @@ class _GridCell extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const SizedBox(
+                    SizedBox(
                       width: 22,
                       height: 22,
                       child: VsCargando(
-                        color: AppColors.accent,
+                        color: AppColorsOscuros.accent,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -2837,7 +2837,7 @@ class _GridCell extends StatelessWidget {
                 color: Colors.transparent,
                 child: InkWell(
                   onTap: onTap,
-                  splashColor: AppColors.accent.withAlpha(40),
+                  splashColor: AppColorsOscuros.accent.withAlpha(40),
                   highlightColor: Colors.transparent,
                 ),
               ),
@@ -2892,8 +2892,8 @@ class _ProtocolTag extends StatelessWidget {
   Widget build(BuildContext context) {
     final isRtsp = protocol == 'RTSP';
     final color = isRtsp
-        ? AppColors.safeGreen
-        : (protocol == 'HLS' ? AppColors.warningAmber : AppColors.textMuted);
+        ? AppColorsOscuros.safeGreen
+        : (protocol == 'HLS' ? AppColorsOscuros.warningAmber : AppColorsOscuros.textMuted);
     // El respaldo ya se distingue por el color ambar; el simbolo de aviso
     // rompia la tipografia de la insignia.
     final label = fellBack && !isRtsp ? 'HLS' : protocol;
@@ -2982,16 +2982,16 @@ class _AiStatusBannerState extends State<_AiStatusBanner>
     final alerts =
         (s['alerts'] as List?)?.map((e) => e.toString()).toList() ?? const [];
 
-    final color = suspicious ? AppColors.alertRed : AppColors.safeGreen;
+    final color = suspicious ? AppColorsOscuros.alertRed : AppColorsOscuros.safeGreen;
 
     final chips = <Widget>[
       if (persons > 0)
-        _chip(Icons.person_outline, '$persons', AppColors.accent),
+        _chip(Icons.person_outline, '$persons', AppColorsOscuros.accent),
       for (final o in objects)
         _chip(
           Icons.category_outlined,
           o,
-          _isWeapon(o) ? AppColors.alertRed : AppColors.warningAmber,
+          _isWeapon(o) ? AppColorsOscuros.alertRed : AppColorsOscuros.warningAmber,
         ),
       for (final f in faces)
         _chip(
@@ -3000,8 +3000,8 @@ class _AiStatusBannerState extends State<_AiStatusBanner>
               : Icons.help_outline,
           (f is Map ? (f['name'] ?? '?') : '?').toString(),
           (f is Map && f['known'] == true)
-              ? AppColors.safeGreen
-              : AppColors.alertRed,
+              ? AppColorsOscuros.safeGreen
+              : AppColorsOscuros.alertRed,
         ),
     ];
 
@@ -3065,7 +3065,7 @@ class _AiStatusBannerState extends State<_AiStatusBanner>
                           vertical: 3,
                         ),
                         decoration: BoxDecoration(
-                          color: AppColors.alertRed,
+                          color: AppColorsOscuros.alertRed,
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
@@ -3086,16 +3086,16 @@ class _AiStatusBannerState extends State<_AiStatusBanner>
                         vertical: 3,
                       ),
                       decoration: BoxDecoration(
-                        color: AppColors.safeGreen.withAlpha(40),
+                        color: AppColorsOscuros.safeGreen.withAlpha(40),
                         borderRadius: BorderRadius.circular(6),
                         border: Border.all(
-                          color: AppColors.safeGreen.withAlpha(120),
+                          color: AppColorsOscuros.safeGreen.withAlpha(120),
                         ),
                       ),
                       child: Text(
                         'NORMAL',
                         style: GoogleFonts.inter(
-                          color: AppColors.safeGreen,
+                          color: AppColorsOscuros.safeGreen,
                           fontSize: 9,
                           fontWeight: FontWeight.w800,
                           letterSpacing: 1,
@@ -3124,7 +3124,7 @@ class _AiStatusBannerState extends State<_AiStatusBanner>
                           alerts.length == 1
                               ? alerts.first
                               : '${alerts.length} alertas',
-                          AppColors.warningAmber,
+                          AppColorsOscuros.warningAmber,
                         ),
                     ],
                   ),
@@ -3182,19 +3182,19 @@ class _ActionChip extends StatelessWidget {
     child: Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppColorsOscuros.surface,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColorsOscuros.border),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: AppColors.accent, size: 16),
+          Icon(icon, color: AppColorsOscuros.accent, size: 16),
           const SizedBox(width: 6),
           Text(
             label,
             style: GoogleFonts.inter(
-              color: AppColors.textPrimary,
+              color: AppColorsOscuros.textPrimary,
               fontSize: 13,
               fontWeight: FontWeight.w500,
             ),
@@ -3236,7 +3236,7 @@ class _LiveBadgeState extends State<_LiveBadge>
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
     decoration: BoxDecoration(
-      color: (widget.isLive ? AppColors.alertRed : AppColors.textMuted)
+      color: (widget.isLive ? AppColorsOscuros.alertRed : AppColorsOscuros.textMuted)
           .withAlpha(230),
       borderRadius: BorderRadius.circular(6),
     ),

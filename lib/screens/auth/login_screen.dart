@@ -175,7 +175,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   child: Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.check_circle_outline,
                         color: AppColors.safeGreen,
                         size: 22,
@@ -241,7 +241,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             color: AppColors.accent.withAlpha(77),
                           ),
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.shield_outlined,
                           color: AppColors.accent,
                           size: 22,

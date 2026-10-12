@@ -47,12 +47,12 @@ class _CamerasListScreenState extends State<CamerasListScreen> {
         backgroundColor: AppColors.background,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
-        iconTheme: const IconThemeData(color: AppColors.textPrimary),
+        iconTheme: IconThemeData(color: AppColors.textPrimary),
         actions: [
           if (isPrimary)
             TextButton.icon(
               onPressed: () => _showAddOptions(context),
-              icon: const Icon(Icons.add, color: AppColors.accent, size: 20),
+              icon: Icon(Icons.add, color: AppColors.accent, size: 20),
               label: Text('Agregar',
                   style: GoogleFonts.inter(
                       color: AppColors.accent, fontWeight: FontWeight.w600)),
@@ -61,7 +61,7 @@ class _CamerasListScreenState extends State<CamerasListScreen> {
       ),
       body: Builder(builder: (context) {
         if (provider.isLoading) {
-          return const Center(
+          return Center(
               child: VsCargando(
                   color: AppColors.accent));
         }
@@ -128,7 +128,7 @@ class _CamerasListScreenState extends State<CamerasListScreen> {
       child: Padding(
         padding: const EdgeInsets.all(32),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
-          const Icon(Icons.videocam_off_outlined,
+          Icon(Icons.videocam_off_outlined,
               color: AppColors.textMuted, size: 56),
           const SizedBox(height: 20),
           Text('Sin cámaras',
@@ -157,7 +157,7 @@ class _CamerasListScreenState extends State<CamerasListScreen> {
                 ),
                 child: Text('Agregar cámara',
                     style: GoogleFonts.inter(
-                        color: Colors.black,
+                        color: AppColors.onAccent,
                         fontWeight: FontWeight.w700,
                         fontSize: 14)),
               ),
@@ -322,7 +322,7 @@ class _CameraCard extends StatelessWidget {
                 // Una cámara de teléfono no tiene IP, así que mostrar
                 // "Configurada" no decía nada: se indica de dónde sale el video.
                 if (!cam.isActive)
-                  const _LineaConIcono(
+                  _LineaConIcono(
                     icono: Icons.pause_circle_outline,
                     texto: 'Desactivada: no se analiza',
                     color: AppColors.warningAmber,
@@ -380,7 +380,7 @@ class _CameraCard extends StatelessWidget {
               color: AppColors.alertRed, onTap: onDelete),
         ] else if (isPrimary)
           PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert,
+            icon: Icon(Icons.more_vert,
                 color: AppColors.textSecondary, size: 20),
             tooltip: 'Opciones de la cámara',
             color: AppColors.surfaceElevated,
@@ -395,7 +395,7 @@ class _CameraCard extends StatelessWidget {
               }
             },
             itemBuilder: (_) => [
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'zonas',
                 child: ListTile(
                   dense: true,
@@ -404,7 +404,7 @@ class _CameraCard extends StatelessWidget {
                   title: Text('Zonas de interés'),
                 ),
               ),
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'editar',
                 child: ListTile(
                   dense: true,
@@ -414,7 +414,7 @@ class _CameraCard extends StatelessWidget {
                   title: Text('Editar'),
                 ),
               ),
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'eliminar',
                 child: ListTile(
                   dense: true,
@@ -449,12 +449,12 @@ class _CardAction extends StatelessWidget {
   final IconData icon;
   final String tooltip;
   final VoidCallback? onTap;
-  final Color color;
+  final Color? color;
   const _CardAction({required this.icon, required this.tooltip,
-    required this.onTap, this.color = AppColors.textSecondary});
+    required this.onTap, this.color});
   @override Widget build(BuildContext context) => IconButton(
     tooltip: tooltip, onPressed: onTap,
-    icon: Icon(icon, color: color, size: 18), padding: EdgeInsets.zero,
+    icon: Icon(icon, color: color ?? AppColors.textSecondary, size: 18), padding: EdgeInsets.zero,
     visualDensity: VisualDensity.compact,
     constraints: const BoxConstraints.tightFor(width: 30, height: 34));
 }
@@ -538,7 +538,7 @@ class _EstadoTransmisionLineaState extends State<_EstadoTransmisionLinea> {
     final pub = context.watch<MobileCameraPublisher?>();
     final sinDatos = _enVivo == null && !transmiteEsteTelefono(widget.cam, pub);
     if (sinDatos) {
-      return const _LineaConIcono(
+      return _LineaConIcono(
         icono: Icons.phone_android,
         texto: 'Cámara de este teléfono',
         color: AppColors.textSecondary,
@@ -582,7 +582,7 @@ class _EstadoTransmisionLineaState extends State<_EstadoTransmisionLinea> {
                 ),
                 onPressed: _arrancando ? null : _transmitir,
                 icon: _arrancando
-                    ? const SizedBox(
+                    ? SizedBox(
                         width: 14,
                         height: 14,
                         child: VsCargando(color: AppColors.accent),

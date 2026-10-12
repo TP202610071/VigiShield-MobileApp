@@ -86,7 +86,7 @@ class _AcceptInvitationScreenState extends State<AcceptInvitationScreen> {
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: _cargando
-            ? const Center(
+            ? Center(
                 child: VsCargando(color: AppColors.accent))
             : SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 28),
@@ -102,7 +102,7 @@ class _AcceptInvitationScreenState extends State<AcceptInvitationScreen> {
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(color: AppColors.accent.withValues(alpha: 0.3)),
                         ),
-                        child: const Icon(Icons.shield_outlined,
+                        child: Icon(Icons.shield_outlined,
                             color: AppColors.accent, size: 22),
                       ),
                       const SizedBox(width: 12),

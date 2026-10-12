@@ -41,6 +41,9 @@ class TutorialGuiado {
   static final pedido = ValueNotifier<int>(0);
   static bool _abierto = false;
 
+  /// Si hay un tutorial a la vista (no se abren dos a la vez).
+  static bool get abierto => _abierto;
+
   static Future<bool> visto(String usuario) async {
     try {
       return await _storage.read(key: _clave(usuario)) == '1';

@@ -299,7 +299,7 @@ class _FaceEnrollmentScreenState extends State<FaceEnrollmentScreen>
       body: _error != null
           ? _buildError()
           : _initializing
-              ? const Center(
+              ? Center(
                   child: VsCargando(color: AppColors.accent))
               : _buildScanner(),
     );
@@ -309,7 +309,7 @@ class _FaceEnrollmentScreenState extends State<FaceEnrollmentScreen>
         child: Padding(
           padding: const EdgeInsets.all(28),
           child: Column(mainAxisSize: MainAxisSize.min, children: [
-            const Icon(Icons.error_outline, color: AppColors.alertRed, size: 52),
+            Icon(Icons.error_outline, color: AppColors.alertRed, size: 52),
             const SizedBox(height: 16),
             Text(_error!,
                 textAlign: TextAlign.center,
@@ -398,7 +398,7 @@ class _FaceEnrollmentScreenState extends State<FaceEnrollmentScreen>
           ),
           child: Column(mainAxisSize: MainAxisSize.min, children: [
             if (_uploading) ...[
-              const VsCargando(color: AppColors.accent),
+              VsCargando(color: AppColors.accent),
               const SizedBox(height: 14),
               Text('Registrando rostro…',
                   style: GoogleFonts.inter(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600)),

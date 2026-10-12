@@ -64,13 +64,13 @@ class AvisoSinTransmision extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: cruz,
       children: [
-        Icon(Icons.phonelink_off, color: AppColors.warningAmber, size: apaisado ? 30 : 44),
+        Icon(Icons.phonelink_off, color: AppColorsOscuros.warningAmber, size: apaisado ? 30 : 44),
         SizedBox(height: apaisado ? 8 : 14),
         Text(
           l10n.phoneCamOffTitle,
           textAlign: alineado,
           style: GoogleFonts.inter(
-            color: AppColors.textPrimary,
+            color: AppColorsOscuros.textPrimary,
             fontSize: 16,
             fontWeight: FontWeight.w600,
           ),
@@ -79,7 +79,7 @@ class AvisoSinTransmision extends StatelessWidget {
         Text(
           l10n.phoneCamOffBody,
           textAlign: alineado,
-          style: GoogleFonts.inter(color: AppColors.textSecondary, fontSize: 12.5, height: 1.35),
+          style: GoogleFonts.inter(color: AppColorsOscuros.textSecondary, fontSize: 12.5, height: 1.35),
         ),
       ],
     );
@@ -91,16 +91,16 @@ class AvisoSinTransmision extends StatelessWidget {
           FilledButton.icon(
             key: const Key('transmitir-aqui'),
             style: FilledButton.styleFrom(
-              backgroundColor: AppColors.accent,
-              foregroundColor: Colors.black,
+              backgroundColor: AppColorsOscuros.accent,
+              foregroundColor: AppColorsOscuros.onAccent,
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             ),
             onPressed: arrancando ? null : onTransmitir,
             icon: arrancando
-                ? const SizedBox(
+                ? SizedBox(
                     width: 16,
                     height: 16,
-                    child: VsCargando(color: Colors.black54),
+                    child: VsCargando(color: AppColorsOscuros.onAccent),
                   )
                 : const Icon(Icons.videocam, size: 20),
             label: Text(
@@ -112,36 +112,36 @@ class AvisoSinTransmision extends StatelessWidget {
           Text(
             l10n.phoneCamOtherPhone,
             textAlign: TextAlign.center,
-            style: GoogleFonts.inter(color: AppColors.textSecondary, fontSize: 11.5),
+            style: GoogleFonts.inter(color: AppColorsOscuros.textSecondary, fontSize: 11.5),
           ),
         ] else
           Text(
             l10n.phoneCamAskPrimary,
             textAlign: TextAlign.center,
-            style: GoogleFonts.inter(color: AppColors.textSecondary, fontSize: 12.5),
+            style: GoogleFonts.inter(color: AppColorsOscuros.textSecondary, fontSize: 12.5),
           ),
         if (error != null) ...[
           const SizedBox(height: 10),
           Text(
             error!,
             textAlign: TextAlign.center,
-            style: GoogleFonts.inter(color: AppColors.alertRed, fontSize: 12),
+            style: GoogleFonts.inter(color: AppColorsOscuros.alertRed, fontSize: 12),
           ),
         ],
         const SizedBox(height: 12),
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const SizedBox(
+            SizedBox(
               width: 10,
               height: 10,
-              child: VsCargando(color: AppColors.textSecondary),
+              child: VsCargando(color: AppColorsOscuros.textSecondary),
             ),
             const SizedBox(width: 8),
             Flexible(
               child: Text(
                 l10n.phoneCamWaiting,
-                style: GoogleFonts.inter(color: AppColors.textSecondary, fontSize: 11),
+                style: GoogleFonts.inter(color: AppColorsOscuros.textSecondary, fontSize: 11),
               ),
             ),
           ],

@@ -62,7 +62,7 @@ class _VsButtonState extends State<VsButton> with SingleTickerProviderStateMixin
   Color get _fg {
     if (widget.onPressed == null && !widget.isLoading) return AppColors.textMuted;
     return switch (widget.variant) {
-      VsButtonVariant.primary => Colors.black,
+      VsButtonVariant.primary => AppColors.onAccent,
       VsButtonVariant.secondary => AppColors.accent,
       VsButtonVariant.danger => Colors.white,
     };
