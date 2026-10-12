@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'providers/validation_provider.dart';
@@ -14,6 +15,7 @@ import 'core/network/api_client.dart';
 import 'core/storage/auth_storage.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/tema_provider.dart';
+import 'data/services/notificaciones_push.dart';
 import 'data/services/auth_service.dart';
 import 'data/services/camera_service.dart';
 import 'data/services/event_service.dart';
@@ -117,6 +119,7 @@ class _VigiShieldAppState extends State<VigiShieldApp> {
   late final ServerConfigProvider _serverConfigProvider;
   late final LocaleProvider _localeProvider;
   late final TemaProvider _temaProvider = TemaProvider(_storage, TemaProvider.inicial);
+  late final NotificacionesPush _push = NotificacionesPush(_api);
   late final DevSettingsProvider _devSettingsProvider;
   final UiProvider _uiProvider = UiProvider();
   late final GoRouter _router;
@@ -183,9 +186,34 @@ class _VigiShieldAppState extends State<VigiShieldApp> {
     // no, la siguiente cuenta hereda cámaras, eventos y alertas de la anterior.
     _authProvider.registerSessionScoped(
         [_eventProvider, _systemProvider, _cameraProvider, _validationProvider,
-          _mobilePublisher, _emergencyProvider]);
+          _mobilePublisher, _emergencyProvider, _push]);
     _router = createRouter(_authProvider);
     _initDeepLinks();
+    _push.alAbrirEvento = _abrirEventoPush;
+    _authProvider.addListener(_sincronizarPush);
+    unawaited(_eventoPushInicial());
+  }
+
+  /// Con la sesión iniciada, el teléfono se registra para recibir las alertas.
+  void _sincronizarPush() {
+    if (_authProvider.isAuthenticated) unawaited(_push.activar());
+  }
+
+  /// Tocar una notificación abre el evento. Si la app recién arranca, lo abre
+  /// la pantalla de bienvenida cuando sepa si hay sesión (como un enlace).
+  void _abrirEventoPush(String id) {
+    final ruta = '/history/$id';
+    final actual = _router.routerDelegate.currentConfiguration;
+    if (actual.isEmpty || actual.uri.path == '/splash') {
+      DeepLinks.pendingRoute = ruta;
+    } else {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _router.push(ruta));
+    }
+  }
+
+  Future<void> _eventoPushInicial() async {
+    final id = await _push.eventoInicial();
+    if (id != null) _abrirEventoPush(id);
   }
 
   void _syncValidationCameras() => _validationProvider.updateCameras(_cameraProvider.cameras);
@@ -301,6 +329,7 @@ class _VigiShieldAppState extends State<VigiShieldApp> {
         ChangeNotifierProvider.value(value: _serverConfigProvider),
         ChangeNotifierProvider.value(value: _localeProvider),
         ChangeNotifierProvider.value(value: _temaProvider),
+        ChangeNotifierProvider.value(value: _push),
         ChangeNotifierProvider.value(value: _devSettingsProvider),
         ChangeNotifierProvider.value(value: _uiProvider),
       ],

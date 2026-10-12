@@ -32,6 +32,7 @@ class MainActivity : FlutterFragmentActivity() {
         super.configureFlutterEngine(flutterEngine)
         emergencyChannel(flutterEngine)
         RotacionCamara(this, flutterEngine.dartExecutor.binaryMessenger)
+        PushNativo.conectar(this, flutterEngine.dartExecutor.binaryMessenger)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "vigishield/validation").setMethodCallHandler { call, result ->
             try {
                 when (call.method) {
@@ -204,6 +205,8 @@ class MainActivity : FlutterFragmentActivity() {
         getSystemService(Vibrator::class.java).cancel()
         oldBrightness?.let { saved -> window.attributes = window.attributes.apply { screenBrightness = saved } }; oldBrightness = null
     }
+    /** Se tocó una notificación con la app ya abierta. */
+    override fun onNewIntent(intent: Intent) { super.onNewIntent(intent); PushNativo.alAbrir(intent) }
     override fun onResume() { super.onResume(); callGate.setResumed(true) }
     override fun onPause() { callGate.setResumed(false); stopAlarm(); super.onPause() }
     override fun onStop() { stopAlarm(); callGate.setResumed(false); super.onStop() }

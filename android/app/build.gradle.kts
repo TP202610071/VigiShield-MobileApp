@@ -8,6 +8,12 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+// Notificaciones de Android por FCM. google-services.json no se versiona (el
+// repo es público): sin él la app compila igual y simplemente no recibe push.
+if (file("google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
+}
+
 // Release signing key (not versioned). Locally: android/key.properties;
 // in CI it is written from the KEYSTORE_BASE64 / KEYSTORE_PASSWORD secrets.
 val keystoreProperties = Properties()
@@ -72,6 +78,9 @@ dependencies {
     // Solo para compilar RotacionCamara: la librería la trae flutter_webrtc
     // (misma versión), pero como dependencia interna no la expone a la app.
     compileOnly("io.github.webrtc-sdk:android:150.7871.01")
+    // Solo Android: en iPhone las notificaciones van directo por APNs, sin Firebase.
+    implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
+    implementation("com.google.firebase:firebase-messaging")
 }
 
 flutter {

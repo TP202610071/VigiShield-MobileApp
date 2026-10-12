@@ -20,6 +20,7 @@ import '../../widgets/tutorial/tutorial_camara.dart';
 import '../../widgets/tutorial/tutorial_guiado.dart';
 import '../../widgets/vs_cargando.dart';
 import '../../widgets/selector_tema.dart';
+import '../../widgets/tarjeta_notificaciones.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -165,6 +166,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ],
               _SectionLabel(l10n.sectionPreferences),
               const SizedBox(height: 8),
+              const TarjetaNotificaciones(),
               // De cada teléfono, no del hogar: la ve también un secundario.
               _SettingsTile(
                 icon: Icons.notifications_active_outlined,
