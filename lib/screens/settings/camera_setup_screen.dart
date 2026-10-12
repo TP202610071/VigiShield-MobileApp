@@ -10,6 +10,7 @@ import '../../data/models/camera_config_model.dart';
 import '../../providers/camera_provider.dart';
 import '../../widgets/vs_button.dart';
 import '../../widgets/vs_text_field.dart';
+import '../../widgets/vs_cargando.dart';
 
 class CameraSetupScreen extends StatefulWidget {
   final String? cameraId;
@@ -269,8 +270,7 @@ class _CameraSetupScreenState extends State<CameraSetupScreen> {
                   icon: _scanning
                       ? const SizedBox(
                           width: 16, height: 16,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2, color: AppColors.accent))
+                          child: VsCargando(color: AppColors.accent))
                       : const Icon(Icons.wifi_find),
                   label: Text(_scanning
                       ? 'Buscando cámaras…'

@@ -11,6 +11,7 @@ import '../../data/models/security_event_model.dart';
 import '../../data/services/face_service.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/dev_settings_provider.dart';
+import '../../widgets/vs_cargando.dart';
 
 /// Rostro del evento, en el detalle de un acceso reconocido o de una persona
 /// desconocida.
@@ -199,7 +200,7 @@ class _RostroDelEventoState extends State<RostroDelEvento> {
                 onPressed: _registrando ? null : _registrar,
                 icon: _registrando
                     ? const SizedBox(width: 16, height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.accent))
+                        child: VsCargando(color: AppColors.accent))
                     : const Icon(Icons.person_add_alt_1, color: AppColors.accent, size: 18),
                 label: Text(s.rostroEsConocido,
                     style: GoogleFonts.inter(color: AppColors.accent, fontSize: 13)),

@@ -17,6 +17,7 @@ import '../../widgets/vs_text_field.dart';
 import '../../widgets/sheet_header.dart';
 import '../../core/security/biometric_lock.dart';
 import '../../widgets/tutorial/tutorial_guiado.dart';
+import '../../widgets/vs_cargando.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -568,7 +569,7 @@ class _AlertConfigTileState extends State<_AlertConfigTile> {
             if (config == null)
               const SizedBox(
                   width: 16, height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.accent))
+                  child: VsCargando(color: AppColors.accent))
             else
               const Icon(Icons.chevron_right, color: AppColors.textMuted, size: 18),
           ],

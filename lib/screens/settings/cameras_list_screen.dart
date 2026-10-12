@@ -14,6 +14,7 @@ import '../camera/device_camera_screen.dart';
 import '../../data/services/mobile_camera_publisher.dart';
 import '../../data/services/estado_transmision.dart';
 import '../camera/aviso_sin_transmision.dart';
+import '../../widgets/vs_cargando.dart';
 
 class CamerasListScreen extends StatefulWidget {
   const CamerasListScreen({super.key});
@@ -61,8 +62,8 @@ class _CamerasListScreenState extends State<CamerasListScreen> {
       body: Builder(builder: (context) {
         if (provider.isLoading) {
           return const Center(
-              child: CircularProgressIndicator(
-                  color: AppColors.accent, strokeWidth: 2));
+              child: VsCargando(
+                  color: AppColors.accent));
         }
 
         if (provider.misCamaras.isEmpty) {
@@ -584,7 +585,7 @@ class _EstadoTransmisionLineaState extends State<_EstadoTransmisionLinea> {
                     ? const SizedBox(
                         width: 14,
                         height: 14,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.accent),
+                        child: VsCargando(color: AppColors.accent),
                       )
                     : const Icon(Icons.videocam, size: 16),
                 label: Text(

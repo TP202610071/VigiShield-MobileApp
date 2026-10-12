@@ -11,6 +11,7 @@ import '../../core/theme/app_theme.dart';
 import '../../data/models/camera_config_model.dart';
 import '../../data/models/zone_model.dart';
 import '../../providers/camera_provider.dart';
+import '../../widgets/vs_cargando.dart';
 
 /// Editor de Zonas de Interés (ROI): el usuario dibuja polígonos (puerta, reja,
 /// calle…) sobre un frame real de su cámara. Las coordenadas se guardan
@@ -369,9 +370,8 @@ class _ZoneEditorScreenState extends State<ZoneEditorScreen> {
                     child: SizedBox(
                       width: 18,
                       height: 18,
-                      child: CircularProgressIndicator(
+                      child: VsCargando(
                         color: AppColors.accent,
-                        strokeWidth: 2,
                       ),
                     ),
                   ),
@@ -471,9 +471,8 @@ class _ZoneEditorScreenState extends State<ZoneEditorScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const CircularProgressIndicator(
+                        const VsCargando(
                           color: AppColors.accent,
-                          strokeWidth: 2,
                         ),
                         const SizedBox(height: 10),
                         Text(

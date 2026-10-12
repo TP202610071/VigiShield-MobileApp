@@ -26,6 +26,7 @@ import '../../widgets/servidor_video_caido.dart';
 import '../../data/services/mobile_camera_publisher.dart';
 import '../../data/services/estado_transmision.dart';
 import 'aviso_sin_transmision.dart';
+import '../../widgets/vs_cargando.dart';
 
 enum _ViewMode { single, grid, ai }
 
@@ -1290,9 +1291,8 @@ class _CameraScreenState extends State<CameraScreen>
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const CircularProgressIndicator(
+                  const VsCargando(
                     color: AppColors.accent,
-                    strokeWidth: 2,
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -1408,7 +1408,7 @@ class _CameraScreenState extends State<CameraScreen>
                 icon: provider.isSaving
                     ? const SizedBox(
                         width: 16, height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                        child: VsCargando(color: Colors.white))
                     : const Icon(Icons.power_settings_new, size: 18),
                 label: Text(l10n.aiDisabledAction),
               ),
@@ -1457,7 +1457,7 @@ class _CameraScreenState extends State<CameraScreen>
                     const SizedBox(
                       width: 16,
                       height: 16,
-                      child: CircularProgressIndicator(color: AppColors.accent, strokeWidth: 2),
+                      child: VsCargando(color: AppColors.accent),
                     ),
                     const SizedBox(width: 10),
                     Text(
@@ -1477,9 +1477,8 @@ class _CameraScreenState extends State<CameraScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const CircularProgressIndicator(
+            const VsCargando(
               color: AppColors.accent,
-              strokeWidth: 2,
             ),
             const SizedBox(height: 20),
             Text(
@@ -2101,9 +2100,8 @@ class _CameraSettingsSheetState extends State<_CameraSettingsSheet> {
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 40),
                 child: Center(
-                  child: CircularProgressIndicator(
+                  child: VsCargando(
                     color: AppColors.accent,
-                    strokeWidth: 2,
                   ),
                 ),
               )
@@ -2230,9 +2228,8 @@ class _CameraSettingsSheetState extends State<_CameraSettingsSheet> {
                       ? const SizedBox(
                           width: 20,
                           height: 20,
-                          child: CircularProgressIndicator(
+                          child: VsCargando(
                             color: Colors.black,
-                            strokeWidth: 2,
                           ),
                         )
                       : Text(
@@ -2775,9 +2772,8 @@ class _GridCell extends StatelessWidget {
                     const SizedBox(
                       width: 22,
                       height: 22,
-                      child: CircularProgressIndicator(
+                      child: VsCargando(
                         color: AppColors.accent,
-                        strokeWidth: 2,
                       ),
                     ),
                     const SizedBox(height: 8),

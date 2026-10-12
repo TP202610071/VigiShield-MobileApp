@@ -6,6 +6,7 @@ import '../core/i18n/app_localizations.dart';
 import '../core/theme/app_theme.dart';
 import '../providers/auth_provider.dart';
 import 'texto_terminos.dart';
+import 'vs_cargando.dart';
 
 /// Pide aceptar los Términos y la Política de privacidad a quien tenga la
 /// sesión iniciada sin haberlos aceptado: cuentas creadas antes de que
@@ -78,7 +79,7 @@ class _ConsentimientoGateState extends State<ConsentimientoGate> {
                               ? const SizedBox(
                                   width: 20,
                                   height: 20,
-                                  child: CircularProgressIndicator(strokeWidth: 2))
+                                  child: VsCargando())
                               : Text(l10n.consentAccept),
                         ),
                       ),

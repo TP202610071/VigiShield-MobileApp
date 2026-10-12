@@ -12,6 +12,7 @@ import '../../providers/auth_provider.dart';
 import '../../widgets/user_avatar.dart';
 import '../../widgets/vs_button.dart';
 import '../../widgets/vs_text_field.dart';
+import '../../widgets/vs_cargando.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -191,8 +192,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: _uploading
                           ? const SizedBox(
                               width: 14, height: 14,
-                              child: CircularProgressIndicator(
-                                  strokeWidth: 2, color: Colors.black))
+                              child: VsCargando(color: Colors.black))
                           : const Icon(Icons.photo_camera, size: 14, color: Colors.black),
                     ),
                   ),
@@ -422,7 +422,7 @@ class _DialogoEliminarCuentaState extends State<_DialogoEliminarCuenta> {
           onPressed: _enviando ? null : _confirmar,
           child: _enviando
               ? const SizedBox(width: 16, height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                  child: VsCargando(color: Colors.white))
               : Text(l10n.deleteAccountConfirm),
         ),
       ],

@@ -8,6 +8,7 @@ import '../../core/utils/permiso_camara.dart';
 import '../../data/models/camera_config_model.dart';
 import '../../data/services/estado_transmision.dart';
 import '../../data/services/mobile_camera_publisher.dart';
+import '../../widgets/vs_cargando.dart';
 
 /// Empieza a transmitir [cam] desde este celular, con la lente que usó la
 /// última vez. Devuelve el error para mostrar, o null si quedó transmitiendo.
@@ -99,7 +100,7 @@ class AvisoSinTransmision extends StatelessWidget {
                 ? const SizedBox(
                     width: 16,
                     height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black54),
+                    child: VsCargando(color: Colors.black54),
                   )
                 : const Icon(Icons.videocam, size: 20),
             label: Text(
@@ -134,7 +135,7 @@ class AvisoSinTransmision extends StatelessWidget {
             const SizedBox(
               width: 10,
               height: 10,
-              child: CircularProgressIndicator(strokeWidth: 1.5, color: AppColors.textSecondary),
+              child: VsCargando(color: AppColors.textSecondary),
             ),
             const SizedBox(width: 8),
             Flexible(

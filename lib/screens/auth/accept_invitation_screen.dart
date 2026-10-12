@@ -10,6 +10,7 @@ import '../../data/services/user_service.dart';
 import '../../widgets/password_strength.dart';
 import '../../widgets/vs_button.dart';
 import '../../widgets/vs_text_field.dart';
+import '../../widgets/vs_cargando.dart';
 
 /// Aceptación de una invitación desde el enlace del correo. Es PÚBLICA: quien
 /// llega aquí todavía no tiene cuenta. La misma operación existe como página web
@@ -86,7 +87,7 @@ class _AcceptInvitationScreenState extends State<AcceptInvitationScreen> {
       body: SafeArea(
         child: _cargando
             ? const Center(
-                child: CircularProgressIndicator(color: AppColors.accent, strokeWidth: 2))
+                child: VsCargando(color: AppColors.accent))
             : SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 28),
                 child: Column(

@@ -10,6 +10,7 @@ import '../../core/network/api_client.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/models/face_model.dart';
 import '../../data/services/face_service.dart';
+import '../../widgets/vs_cargando.dart';
 
 /// Manage authorized faces (the people the AI recognizes by name).
 class FacesScreen extends StatefulWidget {
@@ -122,7 +123,7 @@ class _FacesScreenState extends State<FacesScreen> {
 
   Widget _buildBody() {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator(color: AppColors.accent, strokeWidth: 2));
+      return const Center(child: VsCargando(color: AppColors.accent));
     }
     if (_error != null) {
       return ListView(children: [
@@ -391,7 +392,7 @@ class _FacesScreenState extends State<FacesScreen> {
                         child: saving
                             ? const SizedBox(
                                 width: 20, height: 20,
-                                child: CircularProgressIndicator(color: AppColors.accent, strokeWidth: 2))
+                                child: VsCargando(color: AppColors.accent))
                             : Text('Registrar con ${selected.length} foto(s)',
                                 style: GoogleFonts.inter(
                                     color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 14)),

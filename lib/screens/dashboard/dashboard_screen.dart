@@ -15,6 +15,7 @@ import '../../widgets/user_avatar.dart';
 import '../../widgets/inicio_camaras.dart';
 import '../../widgets/tutorial/tutorial_claves.dart';
 import '../../widgets/vs_button.dart';
+import '../../widgets/vs_cargando.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -260,8 +261,7 @@ class _StatusCardState extends State<_StatusCard> with SingleTickerProviderState
                 ? const SizedBox(
                     width: 20,
                     height: 20,
-                    child: CircularProgressIndicator(
-                        strokeWidth: 2, color: AppColors.accent),
+                    child: VsCargando(color: AppColors.accent),
                   )
                 : VsButton(
                     label: isActive ? l10n.pause : l10n.resume,

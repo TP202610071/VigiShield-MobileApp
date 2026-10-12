@@ -12,6 +12,7 @@ import '../../providers/server_config_provider.dart';
 import '../../widgets/vs_button.dart';
 import '../../widgets/vs_text_field.dart';
 import '../../widgets/sheet_header.dart';
+import '../../widgets/vs_cargando.dart';
 
 /// Hidden, admin-only developer tools. Reached by tapping the app version 7×
 /// in Settings → About. Lets a developer preview other roles for demos, point
@@ -128,7 +129,7 @@ class _DeveloperScreenState extends State<DeveloperScreen> {
             const Center(
                 child: Padding(
               padding: EdgeInsets.all(16),
-              child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.accent),
+              child: VsCargando(color: AppColors.accent),
             ))
           else ...[
             ...(_admins ?? []).map((a) => _AdminTile(
@@ -176,8 +177,7 @@ class _DeveloperScreenState extends State<DeveloperScreen> {
             const Center(
                 child: Padding(
                     padding: EdgeInsets.all(12),
-                    child: CircularProgressIndicator(
-                        strokeWidth: 2, color: AppColors.accent)))
+                    child: VsCargando(color: AppColors.accent)))
           else
             ..._households.map((h) => _HouseholdTile(
                   household: h,

@@ -7,6 +7,7 @@ import '../../core/theme/app_theme.dart';
 import '../../providers/camera_provider.dart';
 import '../../providers/event_provider.dart';
 import '../../widgets/event_card.dart';
+import '../../widgets/vs_cargando.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -116,7 +117,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
             const SizedBox(height: 16),
             Expanded(
               child: provider.isLoading
-                  ? const Center(child: CircularProgressIndicator(color: AppColors.accent, strokeWidth: 2))
+                  ? const Center(child: VsCargando(color: AppColors.accent))
                   : provider.error != null && provider.events.isEmpty
                       ? _ErrorView(
                           message: provider.error!,
@@ -145,8 +146,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                     return const Padding(
                                       padding: EdgeInsets.all(16),
                                       child: Center(
-                                        child: CircularProgressIndicator(
-                                          color: AppColors.accent, strokeWidth: 2),
+                                        child: VsCargando(
+                                          color: AppColors.accent),
                                       ),
                                     );
                                   }

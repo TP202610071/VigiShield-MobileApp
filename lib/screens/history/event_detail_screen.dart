@@ -17,6 +17,7 @@ import '../../providers/dev_settings_provider.dart';
 import '../../providers/event_provider.dart';
 import '../../widgets/event_card.dart';
 import 'rostro_del_evento.dart';
+import '../../widgets/vs_cargando.dart';
 
 class EventDetailScreen extends StatefulWidget {
   final String eventId;
@@ -87,7 +88,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         ],
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.accent, strokeWidth: 2))
+          ? const Center(child: VsCargando(color: AppColors.accent))
           : _event == null
               ? Center(
                   child: Text(context.l10n.eventNotFound,
@@ -385,8 +386,8 @@ class _EventPhoto extends StatelessWidget {
                           height: 200,
                           alignment: Alignment.center,
                           color: AppColors.surface,
-                          child: const CircularProgressIndicator(
-                              color: AppColors.accent, strokeWidth: 2),
+                          child: const VsCargando(
+                              color: AppColors.accent),
                         ),
                   errorBuilder: (c, e, s) => Container(
                     height: 200,

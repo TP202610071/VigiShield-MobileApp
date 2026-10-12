@@ -10,6 +10,7 @@ import '../../data/services/user_service.dart';
 import '../../widgets/vs_button.dart';
 import '../../widgets/vs_text_field.dart';
 import '../../widgets/sheet_header.dart';
+import '../../widgets/vs_cargando.dart';
 
 /// Gestión de los residentes secundarios del hogar. Sólo la ve el residente
 /// principal: es quien decide a quién deja ver su vivienda.
@@ -186,7 +187,7 @@ class _UsersScreenState extends State<UsersScreen> {
   Widget _build(AppStrings l10n) {
     if (_cargando) {
       return const Center(
-          child: CircularProgressIndicator(color: AppColors.accent, strokeWidth: 2));
+          child: VsCargando(color: AppColors.accent));
     }
     if (_error != null) {
       return ListView(children: [
