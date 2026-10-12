@@ -11,6 +11,7 @@ import '../../providers/auth_provider.dart';
 import '../../widgets/password_strength.dart';
 import '../../widgets/vs_button.dart';
 import '../../widgets/vs_text_field.dart';
+import '../../widgets/login_externo.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -250,6 +251,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     isLoading: _isLoading,
                     width: double.infinity,
                   ),
+                  const SizedBox(height: 20),
+                  const BotonesLoginExterno(),
                   const SizedBox(height: 20),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,

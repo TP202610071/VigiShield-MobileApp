@@ -49,6 +49,17 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Abre la sesión con lo que devolvió el backend tras «Continuar con Apple».
+  /// Hace lo mismo que [login] después de comprobar la contraseña.
+  Future<void> iniciarSesionExterna(({String token, UserModel user}) resultado) async {
+    _errorMessage = null;
+    await _storage.saveToken(resultado.token);
+    _clearSessionData();
+    _user = resultado.user;
+    _state = AuthState.authenticated;
+    notifyListeners();
+  }
+
   Future<bool> login(String email, String password) async {
     _errorMessage = null;
     try {
@@ -150,6 +161,25 @@ class AuthProvider extends ChangeNotifier {
     _errorMessage = null;
     try {
       await _authService.deleteAccount(password);
+    } on ApiException catch (e) {
+      _errorMessage = e.message;
+      notifyListeners();
+      return false;
+    }
+    await _storage.deleteToken();
+    _user = null;
+    _state = AuthState.unauthenticated;
+    _clearSessionData();
+    notifyListeners();
+    return true;
+  }
+
+  /// Borra la cuenta con otra confirmación (p. ej. volviendo a entrar con
+  /// Apple) y cierra la sesión igual que [deleteAccount].
+  Future<bool> eliminarCuentaCon(Future<void> Function() borrar) async {
+    _errorMessage = null;
+    try {
+      await borrar();
     } on ApiException catch (e) {
       _errorMessage = e.message;
       notifyListeners();

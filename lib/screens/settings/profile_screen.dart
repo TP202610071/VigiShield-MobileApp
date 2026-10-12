@@ -13,6 +13,7 @@ import '../../widgets/user_avatar.dart';
 import '../../widgets/vs_button.dart';
 import '../../widgets/vs_text_field.dart';
 import '../../widgets/vs_cargando.dart';
+import '../../widgets/login_externo.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -408,6 +409,7 @@ class _DialogoEliminarCuentaState extends State<_DialogoEliminarCuenta> {
                 if (_error != null) setState(() => _error = null);
               },
             ),
+            const ConfirmarEliminarConApple(),
           ],
         ),
       ),

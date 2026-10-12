@@ -48,7 +48,7 @@ cd ios && fastlane deliver --skip_screenshots true   # textos y datos de revisi�
 
 ## Publicar en App Store: estado
 
-Versión actual: **1.0.0+33** (App Store Connect: versión `1.0.0`, app id `6819493311`; builds 29, 30 y 33 subidos).
+Versión actual: **1.0.0+34** (App Store Connect: versión `1.0.0`, app id `6819493311`; builds 29, 30 y 33 subidos; el 34 está por subir).
 
 El 2026-10-10 la PC subió por error la versión a 1.1.0 y 1.2.0; se corrigió a `1.0.0+32`. Ningún build con
 esas versiones llegó a App Store Connect (solo se compilaron APK en la PC).
@@ -99,6 +99,64 @@ account" at the bottom. It asks for the password.
 
 The emergency alert works only while the app is open. On iPhone, the call to
 emergency services asks for system confirmation.
+
+Sign in with Apple is on the login screen. An account created with Apple has no
+password: to delete it, Settings > tap your name (Profile) > "Delete account" >
+"Confirm with Apple". "Continue with Google" is disabled and marked "Coming soon".
+```
+
+## Pendiente para la Mac: subir el build 34 (2026-10-11)
+
+Igual que el 33: testers internos **y externos**.
+
+1. `git pull`, `flutter pub get` y **`cd ios && pod install && cd ..`** (hay una dependencia nueva:
+   `sign_in_with_apple`).
+2. **Capacidad «Sign in with Apple».** `ios/Runner/Runner.entitlements` ya trae
+   `com.apple.developer.applesignin`. Con la firma automática, Xcode la agrega al App ID solo. Si
+   `flutter build ipa` falla por el perfil: abrir `ios/Runner.xcworkspace` → Runner → Signing & Capabilities →
+   «+ Capability» → Sign in with Apple, o activarla en developer.apple.com → Identifiers →
+   `com.vigishield.app`. Después, compilar de nuevo.
+3. `flutter analyze` y `flutter test` (en la PC: 128 pruebas en verde).
+4. `flutter build ipa --release`, subirlo con `altool` y agregarlo a los dos grupos (como el 33).
+5. Probar en un iPhone: «Continuar con Apple» crea una cuenta nueva (pide aceptar los términos y entra), y
+   «Eliminar cuenta» ofrece «Confirmar con Apple». Modo claro en Ajustes → Apariencia.
+6. Notas para la revisión: agregar que la app ofrece Sign in with Apple y que «Continuar con Google» está
+   desactivado con «Próximamente». **Si Apple lo objeta (guía 2.1, contenido de relleno),** poner
+   `kMostrarGoogleProximamente = false` en `lib/widgets/login_externo.dart`, subir el `+N` y volver a enviar.
+7. Cuando esté disponible para todos, avisar a Diego para subir `ultimo` a 34 en `app-version.json`.
+
+**Qué cambió desde el build 33** (hecho en la PC):
+- **Iniciar sesión con Apple** (`lib/widgets/login_externo.dart`, `lib/data/services/login_externo_service.dart`;
+  backend `POST /api/auth/apple`). La cuenta nueva no tiene contraseña: para borrarla se confirma con Apple
+  (`POST /api/auth/delete-account/apple`). Al borrarla, el backend revoca el token de Apple cuando tenga la
+  llave de Sign in with Apple configurada (por ahora no la tiene: falta crearla, ver «Pendiente de Diego»).
+- «Continuar con Google» desactivado, con «Próximamente».
+- **Modo claro** (Ajustes → Apariencia: Sistema, Claro u Oscuro; por defecto Oscuro). `AppColors` ya no son
+  constantes: devuelven el color del modo activo. La pestaña Cámara es siempre oscura (`AppColorsOscuros`).
+- Animaciones: entre pestañas, al abrir pantallas, listas escalonadas y la barra inferior.
+- Indicador de carga propio (`VsCargando`): una cámara de vigilancia que gira; en botones, un radar.
+- Tutorial al agregar la primera cámara (celular o IP) y ejemplo animado de cómo se dibuja una zona
+  (`assets/tutorial/entrada_ejemplo.jpg`, foto de stock de Pexels).
+- El inicio pide agregar una cámara aunque haya un video de ejemplo en curso; el aviso de servidor apagado
+  es más corto.
+
+**Pendiente de Diego (no lo puede hacer la Mac por la API):**
+- Llave de Sign in with Apple para revocar tokens: developer.apple.com → Keys → «+» → Sign in with Apple →
+  App ID `com.vigishield.app` → descargar `AuthKey_XXXX.p8` (se descarga una sola vez). Pasarle a la PC el
+  archivo y su Key ID; allí se instala en el Oracle (`Apple__TeamId`, `Apple__KeyId`, `Apple__PrivateKeyPath`).
+- Apple en Android (opcional): un Services ID en Identifiers (p. ej. `app.vigishield.signin`) con Sign in with
+  Apple, dominio `api.vigishield.app` y URL de retorno `https://api.vigishield.app/api/auth/apple/callback`.
+  Con `Apple__ServiceId` en el Oracle, la app de Android muestra el botón sola (no hace falta otro APK).
+
+**Qué probar** (TestFlight, «What to Test»):
+
+```
+ES: Ahora puedes entrar con Apple. Nuevo modo claro en Ajustes > Apariencia. Animaciones entre pestañas y una
+nueva animación de carga. Al agregar tu primera cámara, un tutorial te guía y te muestra cómo dibujar las
+zonas de interés.
+EN: You can now sign in with Apple. New light mode in Settings > Appearance. Animations between tabs and a new
+loading animation. When you add your first camera, a tutorial guides you and shows how to draw the areas of
+interest.
 ```
 
 ## Build 33 en TestFlight (subido desde la Mac el 2026-10-11)
