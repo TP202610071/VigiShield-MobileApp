@@ -68,6 +68,15 @@ void main() {
     expect(find.text(const AppStrings(false).sampleCardTitle), findsOneWidget);
   });
 
+  testWidgets('con solo un video de ejemplo en curso, sigue pidiendo agregar una cámara', (tester) async {
+    final ejemplo = CameraConfigModel.fromJson({'id': 's1', 'name': 'Ejemplo', 'streamMode': 'DirectRtsp', 'isSample': true});
+    await tester.pumpWidget(_app(const TarjetaInicioCamaras(), camaras: [ejemplo]));
+    await tester.pumpAndSettle();
+    expect(find.text('Aún no tienes cámaras'), findsOneWidget);
+    expect(find.text(const AppStrings(false).sampleCardTitle), findsNothing);
+    expect(find.text(const AppStrings(false).sampleRunning), findsNothing);
+  });
+
   test('el servidor de video se deduce de la URL de la cámara', () {
     final cam = CameraConfigModel.fromJson({
       'id': 'c1', 'streamMode': 'DirectRtsp',

@@ -136,11 +136,9 @@ class _ServidorVideoCaidoState extends State<ServidorVideoCaido> {
 extension ServidorVideoStrings on AppStrings {
   String get servidorApagadoTitulo => en ? 'The video server is paused' : 'El servidor de video está en pausa';
   String get servidorApagadoTexto => en
-      ? 'To save costs, the server that receives and analyzes the video is turned off when no tests are '
-          'running. Your cameras, faces and history are still saved. Try again later; this screen will '
-          'update by itself when the server is back.'
-      : 'Para ahorrar costos, el servidor que recibe y analiza el video se apaga cuando no hay pruebas en '
-          'curso. Tus cámaras, rostros e historial siguen guardados. Vuelve a intentarlo más tarde; esta '
-          'pantalla se actualiza sola cuando el servidor vuelva.';
+      ? 'To save costs, the server that streams and analyzes the video in real time is temporarily turned '
+          'off. Please try again later.'
+      : 'Para ahorrar costos, el servidor que transmite y analiza el video en tiempo real se encuentra '
+          'temporalmente apagado. Por favor, vuelve a intentarlo más tarde.';
   String get servidorApagadoReintentar => en ? 'Try again' : 'Reintentar';
 }
