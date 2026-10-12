@@ -19,6 +19,9 @@ account" at the bottom. It asks for the password.
 The emergency alert works only while the app is open. On iPhone, the call to
 emergency services asks for system confirmation.
 
+The app sends push notifications for security alerts (unknown person, intrusion, etc.).
+They are time-sensitive. Settings > Notifications > "Test" sends a sample one.
+
 Sign in with Apple is on the login screen. An account created with Apple has no
 password: to delete it, Settings > tap your name (Profile) > "Delete account" >
 "Confirm with Apple". "Continue with Google" is disabled and marked "Coming soon".

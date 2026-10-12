@@ -55,3 +55,6 @@ ios/fastlane/README.md
 ios/fastlane/Preview.html
 ios/fastlane/test_output
 *.p8
+
+# Firebase (Android, notificaciones). No se versiona: el repo es público.
+android/app/google-services.json

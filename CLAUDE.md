@@ -100,6 +100,9 @@ account" at the bottom. It asks for the password.
 The emergency alert works only while the app is open. On iPhone, the call to
 emergency services asks for system confirmation.
 
+The app sends push notifications for security alerts (unknown person, intrusion, etc.).
+They are time-sensitive. Settings > Notifications > "Test" sends a sample one.
+
 Sign in with Apple is on the login screen. An account created with Apple has no
 password: to delete it, Settings > tap your name (Profile) > "Delete account" >
 "Confirm with Apple". "Continue with Google" is disabled and marked "Coming soon".
@@ -111,21 +114,32 @@ Igual que el 33: testers internos **y externos**.
 
 1. `git pull`, `flutter pub get` y **`cd ios && pod install && cd ..`** (hay una dependencia nueva:
    `sign_in_with_apple`).
-2. **Capacidad «Sign in with Apple».** `ios/Runner/Runner.entitlements` ya trae
-   `com.apple.developer.applesignin`. Con la firma automática, Xcode la agrega al App ID solo. Si
-   `flutter build ipa` falla por el perfil: abrir `ios/Runner.xcworkspace` → Runner → Signing & Capabilities →
-   «+ Capability» → Sign in with Apple, o activarla en developer.apple.com → Identifiers →
-   `com.vigishield.app`. Después, compilar de nuevo.
-3. `flutter analyze` y `flutter test` (en la PC: 128 pruebas en verde).
+2. **Capacidades nuevas: Sign in with Apple, Push Notifications y Time Sensitive Notifications.**
+   `ios/Runner/Runner.entitlements` ya las trae (`com.apple.developer.applesignin`, `aps-environment` y
+   `com.apple.developer.usernotifications.time-sensitive`). Con la firma automática, Xcode las agrega al App
+   ID solo. Si `flutter build ipa` falla por el perfil: abrir `ios/Runner.xcworkspace` → Runner → Signing &
+   Capabilities → «+ Capability» y agregar las tres. Después, compilar de nuevo.
+   **`ios/Runner/AppDelegate.swift` cambió y no se pudo compilar en la PC.** Agrega la clase `PushNativo`
+   (APNs directo, canal `vigishield/push`). Si Swift da error, corregirlo sin cambiar lo que hace. Un punto
+   dudoso es `registrar(forPlugin:) as FlutterPluginRegistrar?`. El `aps-environment` queda en `development`:
+   al exportar para la tienda, Xcode lo pasa a producción.
+3. `flutter analyze` y `flutter test` (en la PC: 133 pruebas en verde).
 4. `flutter build ipa --release`, subirlo con `altool` y agregarlo a los dos grupos (como el 33).
-5. Probar en un iPhone: «Continuar con Apple» crea una cuenta nueva (pide aceptar los términos y entra), y
-   «Eliminar cuenta» ofrece «Confirmar con Apple». Modo claro en Ajustes → Apariencia.
+5. Probar en un iPhone:
+   - «Continuar con Apple» crea una cuenta nueva (pide aceptar los términos y entra), y «Eliminar cuenta»
+     ofrece «Confirmar con Apple».
+   - Modo claro en Ajustes → Apariencia.
+   - Al entrar, la app pide permiso de notificaciones. Ajustes → Notificaciones → «Probar» envía una. Solo
+     llega si el Oracle tiene la llave de APNs; sin ella, avisa «El servidor aún no tiene configuradas…».
 6. Notas para la revisión: agregar que la app ofrece Sign in with Apple y que «Continuar con Google» está
    desactivado con «Próximamente». **Si Apple lo objeta (guía 2.1, contenido de relleno),** poner
    `kMostrarGoogleProximamente = false` en `lib/widgets/login_externo.dart`, subir el `+N` y volver a enviar.
 7. Cuando esté disponible para todos, avisar a Diego para subir `ultimo` a 34 en `app-version.json`.
 
 **Qué cambió desde el build 33** (hecho en la PC):
+- **Notificaciones push**: en iPhone por APNs directo, sin Firebase (`PushNativo` en `AppDelegate.swift`); en
+  Android por FCM. Se registran en `POST /api/push/dispositivos`. Las alertas llegan con la app cerrada y
+  tocarlas abre el evento. Ajustes → Notificaciones muestra el estado y envía una de prueba.
 - **Iniciar sesión con Apple** (`lib/widgets/login_externo.dart`, `lib/data/services/login_externo_service.dart`;
   backend `POST /api/auth/apple`). La cuenta nueva no tiene contraseña: para borrarla se confirma con Apple
   (`POST /api/auth/delete-account/apple`). Al borrarla, el backend revoca el token de Apple cuando tenga la
@@ -141,9 +155,14 @@ Igual que el 33: testers internos **y externos**.
   es más corto.
 
 **Pendiente de Diego (no lo puede hacer la Mac por la API):**
-- Llave de Sign in with Apple para revocar tokens: developer.apple.com → Keys → «+» → Sign in with Apple →
-  App ID `com.vigishield.app` → descargar `AuthKey_XXXX.p8` (se descarga una sola vez). Pasarle a la PC el
-  archivo y su Key ID; allí se instala en el Oracle (`Apple__TeamId`, `Apple__KeyId`, `Apple__PrivateKeyPath`).
+- **Una llave de Apple con dos servicios** (developer.apple.com → Keys → «+»):
+  - **Apple Push Notifications service (APNs)**, con entorno «Sandbox & Production»;
+  - **Sign in with Apple**, con App ID `com.vigishield.app`.
+  Descargar `AuthKey_XXXX.p8` (se descarga una sola vez) y pasarle a la PC el archivo y su Key ID. La PC la
+  instala en el Oracle: `Apns__TeamId`, `Apns__KeyId` y `Apns__PrivateKeyPath` para las notificaciones, y
+  `Apple__TeamId`, `Apple__KeyId` y `Apple__PrivateKeyPath` para revocar los tokens de Apple.
+- Firebase, solo para Android (FCM): proyecto, `google-services.json` (no se versiona) y la cuenta de
+  servicio en el Oracle (`Fcm__ProjectId`, `Fcm__ServiceAccountPath`).
 - Apple en Android (opcional): un Services ID en Identifiers (p. ej. `app.vigishield.signin`) con Sign in with
   Apple, dominio `api.vigishield.app` y URL de retorno `https://api.vigishield.app/api/auth/apple/callback`.
   Con `Apple__ServiceId` en el Oracle, la app de Android muestra el botón sola (no hace falta otro APK).
@@ -151,10 +170,10 @@ Igual que el 33: testers internos **y externos**.
 **Qué probar** (TestFlight, «What to Test»):
 
 ```
-ES: Ahora puedes entrar con Apple. Nuevo modo claro en Ajustes > Apariencia. Animaciones entre pestañas y una
+ES: Ahora las alertas llegan como notificación (pruébalo en Ajustes > Notificaciones). Puedes entrar con Apple. Nuevo modo claro en Ajustes > Apariencia. Animaciones entre pestañas y una
 nueva animación de carga. Al agregar tu primera cámara, un tutorial te guía y te muestra cómo dibujar las
 zonas de interés.
-EN: You can now sign in with Apple. New light mode in Settings > Appearance. Animations between tabs and a new
+EN: Alerts now arrive as notifications (try it in Settings > Notifications). You can sign in with Apple. New light mode in Settings > Appearance. Animations between tabs and a new
 loading animation. When you add your first camera, a tutorial guides you and shows how to draw the areas of
 interest.
 ```
