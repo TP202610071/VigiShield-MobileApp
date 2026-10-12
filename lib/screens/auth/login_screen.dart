@@ -8,6 +8,7 @@ import '../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/vs_button.dart';
 import '../../widgets/vs_text_field.dart';
+import '../../widgets/login_externo.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -175,7 +176,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   child: Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.check_circle_outline,
                         color: AppColors.safeGreen,
                         size: 22,
@@ -241,7 +242,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             color: AppColors.accent.withAlpha(77),
                           ),
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.shield_outlined,
                           color: AppColors.accent,
                           size: 22,
@@ -331,6 +332,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     isLoading: _isLoading,
                     width: double.infinity,
                   ),
+                  const SizedBox(height: 24),
+                  const BotonesLoginExterno(),
                   const SizedBox(height: 24),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,

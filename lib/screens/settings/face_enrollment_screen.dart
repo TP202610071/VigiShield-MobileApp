@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 import '../../core/network/api_client.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/services/face_service.dart';
+import '../../widgets/vs_cargando.dart';
 
 /// One guided pose the user must hold for a moment before we capture it.
 class _PoseStep {
@@ -298,8 +299,8 @@ class _FaceEnrollmentScreenState extends State<FaceEnrollmentScreen>
       body: _error != null
           ? _buildError()
           : _initializing
-              ? const Center(
-                  child: CircularProgressIndicator(color: AppColors.accent, strokeWidth: 2))
+              ? Center(
+                  child: VsCargando(color: AppColors.accent))
               : _buildScanner(),
     );
   }
@@ -308,7 +309,7 @@ class _FaceEnrollmentScreenState extends State<FaceEnrollmentScreen>
         child: Padding(
           padding: const EdgeInsets.all(28),
           child: Column(mainAxisSize: MainAxisSize.min, children: [
-            const Icon(Icons.error_outline, color: AppColors.alertRed, size: 52),
+            Icon(Icons.error_outline, color: AppColors.alertRed, size: 52),
             const SizedBox(height: 16),
             Text(_error!,
                 textAlign: TextAlign.center,
@@ -397,7 +398,7 @@ class _FaceEnrollmentScreenState extends State<FaceEnrollmentScreen>
           ),
           child: Column(mainAxisSize: MainAxisSize.min, children: [
             if (_uploading) ...[
-              const CircularProgressIndicator(color: AppColors.accent, strokeWidth: 2),
+              VsCargando(color: AppColors.accent),
               const SizedBox(height: 14),
               Text('Registrando rostro…',
                   style: GoogleFonts.inter(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600)),

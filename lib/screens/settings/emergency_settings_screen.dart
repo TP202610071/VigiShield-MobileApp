@@ -56,13 +56,13 @@ class _EmergencySettingsScreenState extends State<EmergencySettingsScreen> {
 
     Widget label(String text) => Padding(
           padding: const EdgeInsets.only(top: 20, bottom: 6),
-          child: Text(text, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+          child: Text(text, style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
         );
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.emergencyAlert)),
       body: ListView(padding: const EdgeInsets.fromLTRB(16, 8, 16, 32), children: [
-        Text(l10n.emergencyAlertHint, style: const TextStyle(color: AppColors.textSecondary)),
+        Text(l10n.emergencyAlertHint, style: TextStyle(color: AppColors.textSecondary)),
         const SizedBox(height: 12),
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
@@ -96,7 +96,7 @@ class _EmergencySettingsScreenState extends State<EmergencySettingsScreen> {
         ),
         label(l10n.emergencyVolume),
         Row(children: [
-          const Icon(Icons.volume_mute, color: AppColors.textSecondary),
+          Icon(Icons.volume_mute, color: AppColors.textSecondary),
           Expanded(
             child: Slider(
               value: _volume ?? s.volume,
@@ -109,7 +109,7 @@ class _EmergencySettingsScreenState extends State<EmergencySettingsScreen> {
               },
             ),
           ),
-          const Icon(Icons.volume_up, color: AppColors.textSecondary),
+          Icon(Icons.volume_up, color: AppColors.textSecondary),
         ]),
         label(l10n.emergencySustain),
         _Options(
@@ -140,7 +140,7 @@ class _EmergencySettingsScreenState extends State<EmergencySettingsScreen> {
         ),
         const SizedBox(height: 6),
         Text(l10n.emergencyTestHint,
-            style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
       ]),
     );
   }

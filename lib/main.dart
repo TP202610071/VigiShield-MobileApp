@@ -13,6 +13,7 @@ import 'core/i18n/app_localizations.dart';
 import 'core/network/api_client.dart';
 import 'core/storage/auth_storage.dart';
 import 'core/theme/app_theme.dart';
+import 'core/theme/tema_provider.dart';
 import 'data/services/auth_service.dart';
 import 'data/services/camera_service.dart';
 import 'data/services/event_service.dart';
@@ -74,6 +75,8 @@ void main() async {
     initialPreviewRole = null;
   }
 
+  await TemaProvider.prepararInicio(storage);
+
   runApp(VigiShieldApp(
     initialServerUrl: initialUrl,
     initialLocale: initialLocale,
@@ -113,6 +116,7 @@ class _VigiShieldAppState extends State<VigiShieldApp> {
   final Dio _validationDio = Dio(BaseOptions(connectTimeout: const Duration(seconds: 3), receiveTimeout: const Duration(seconds: 3)));
   late final ServerConfigProvider _serverConfigProvider;
   late final LocaleProvider _localeProvider;
+  late final TemaProvider _temaProvider = TemaProvider(_storage, TemaProvider.inicial);
   late final DevSettingsProvider _devSettingsProvider;
   final UiProvider _uiProvider = UiProvider();
   late final GoRouter _router;
@@ -296,6 +300,7 @@ class _VigiShieldAppState extends State<VigiShieldApp> {
         ChangeNotifierProvider.value(value: _emergencyProvider),
         ChangeNotifierProvider.value(value: _serverConfigProvider),
         ChangeNotifierProvider.value(value: _localeProvider),
+        ChangeNotifierProvider.value(value: _temaProvider),
         ChangeNotifierProvider.value(value: _devSettingsProvider),
         ChangeNotifierProvider.value(value: _uiProvider),
       ],
@@ -303,10 +308,11 @@ class _VigiShieldAppState extends State<VigiShieldApp> {
         builder: (context) {
           final router = _router;
           final locale = context.watch<LocaleProvider>().flutterLocale;
+          context.watch<TemaProvider>();
           return MaterialApp.router(
             title: 'VigiShield',
             debugShowCheckedModeBanner: false,
-            theme: AppTheme.dark,
+            theme: AppTheme.actual,
             locale: locale,
             supportedLocales: const [Locale('es'), Locale('en')],
             localizationsDelegates: const [

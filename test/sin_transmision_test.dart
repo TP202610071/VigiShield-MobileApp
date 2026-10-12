@@ -21,6 +21,7 @@ import 'package:vigishield_mobile_app/data/services/mobile_camera_publisher.dart
 import 'package:vigishield_mobile_app/providers/auth_provider.dart';
 import 'package:vigishield_mobile_app/providers/camera_provider.dart';
 import 'package:vigishield_mobile_app/screens/camera/aviso_sin_transmision.dart';
+import 'package:vigishield_mobile_app/widgets/vs_cargando.dart';
 import 'package:vigishield_mobile_app/screens/settings/cameras_list_screen.dart';
 
 CameraConfigModel _camara({String modo = 'MobileWebRtc'}) => CameraConfigModel.fromJson({
@@ -166,7 +167,7 @@ void main() {
       expect(find.textContaining('Al salir de la app'), findsOneWidget);
       await tester.tap(find.byKey(const Key('transmitir-aqui')));
       expect(pulsado, 1);
-      expect(find.byType(CircularProgressIndicator), findsOneWidget); // solo el de «esperando»
+      expect(find.byType(VsCargando), findsOneWidget); // solo el de «esperando»
     });
 
     testWidgets('mientras arranca, el botón queda deshabilitado', (tester) async {

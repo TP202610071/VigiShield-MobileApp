@@ -10,6 +10,8 @@ import '../../data/models/camera_config_model.dart';
 import '../../providers/camera_provider.dart';
 import '../../widgets/vs_button.dart';
 import '../../widgets/vs_text_field.dart';
+import '../../widgets/tutorial/tutorial_camara.dart';
+import '../../widgets/vs_cargando.dart';
 
 class CameraSetupScreen extends StatefulWidget {
   final String? cameraId;
@@ -47,6 +49,10 @@ class _CameraSetupScreenState extends State<CameraSetupScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadExisting());
+    // Primera cámara: tutorial con el nombre, la búsqueda en la red y la IP.
+    if (!widget.isEditing) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => TutorialPrimeraCamara.camaraIp(context));
+    }
   }
 
   void _loadExisting() {
@@ -209,7 +215,7 @@ class _CameraSetupScreenState extends State<CameraSetupScreen> {
         backgroundColor: AppColors.background,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
-        iconTheme: const IconThemeData(color: AppColors.textPrimary),
+        iconTheme: IconThemeData(color: AppColors.textPrimary),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -222,6 +228,7 @@ class _CameraSetupScreenState extends State<CameraSetupScreen> {
               _SectionHeader('Nombre'),
               const SizedBox(height: 10),
               VsTextField(
+                key: TutorialCamaraClaves.nombreIp,
                 controller: _nameCtrl,
                 label: 'Nombre de la cámara',
                 hint: 'Ej: Entrada, Jardín, Garaje…',
@@ -263,21 +270,21 @@ class _CameraSetupScreenState extends State<CameraSetupScreen> {
 
               // Primary path: auto-detect cameras on the local network.
               SizedBox(
+                key: TutorialCamaraClaves.escanear,
                 width: double.infinity,
                 child: OutlinedButton.icon(
                   onPressed: _scanning ? null : _scanNetwork,
                   icon: _scanning
-                      ? const SizedBox(
+                      ? SizedBox(
                           width: 16, height: 16,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2, color: AppColors.accent))
+                          child: VsCargando(color: AppColors.accent))
                       : const Icon(Icons.wifi_find),
                   label: Text(_scanning
                       ? 'Buscando cámaras…'
                       : 'Escanear mi red en busca de cámaras'),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.accent,
-                    side: const BorderSide(color: AppColors.accent),
+                    side: BorderSide(color: AppColors.accent),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
                 ),
@@ -291,6 +298,7 @@ class _CameraSetupScreenState extends State<CameraSetupScreen> {
               const SizedBox(height: 16),
 
               VsTextField(
+                key: TutorialCamaraClaves.ip,
                 controller: _ipCtrl,
                 label: 'Dirección IP',
                 hint: 'Ej: 192.168.1.82',
@@ -341,7 +349,7 @@ class _CameraSetupScreenState extends State<CameraSetupScreen> {
                     value: _clearPassword,
                     onChanged: (v) => setState(() => _clearPassword = v!),
                     activeColor: AppColors.alertRed,
-                    side: const BorderSide(color: AppColors.textMuted),
+                    side: BorderSide(color: AppColors.textMuted),
                   ),
                   GestureDetector(
                     onTap: () =>
@@ -446,7 +454,7 @@ class _CameraSetupScreenState extends State<CameraSetupScreen> {
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
-          const Icon(Icons.check_circle_outline,
+          Icon(Icons.check_circle_outline,
               color: AppColors.safeGreen, size: 18),
           const SizedBox(width: 8),
           Text('Cámara configurada',
@@ -582,7 +590,7 @@ class _ModeCard extends StatelessWidget {
               color: selected ? AppColors.accent : Colors.transparent,
             ),
             child: selected
-                ? const Icon(Icons.check, color: Colors.black, size: 13)
+                ? Icon(Icons.check, color: AppColors.onAccent, size: 13)
                 : null,
           ),
         ]),
@@ -649,7 +657,7 @@ class _CopyRow extends StatelessWidget {
                   overflow: TextOverflow.ellipsis),
             ),
             const SizedBox(width: 8),
-            const Icon(Icons.copy_outlined,
+            Icon(Icons.copy_outlined,
                 color: AppColors.textSecondary, size: 16),
           ]),
         ),
@@ -696,7 +704,7 @@ class _CopyBox extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10)),
               ));
             },
-            child: const Icon(Icons.copy_outlined,
+            child: Icon(Icons.copy_outlined,
                 color: AppColors.textSecondary, size: 18),
           ),
         ]),
@@ -721,7 +729,7 @@ class _ScanResultsSheet extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(children: [
-              const Icon(Icons.wifi_find, color: AppColors.accent, size: 20),
+              Icon(Icons.wifi_find, color: AppColors.accent, size: 20),
               const SizedBox(width: 8),
               Text(
                 cameras.isEmpty
@@ -744,7 +752,7 @@ class _ScanResultsSheet extends StatelessWidget {
             else
               ...cameras.map((c) => ListTile(
                     contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.videocam_outlined,
+                    leading: Icon(Icons.videocam_outlined,
                         color: AppColors.accent),
                     title: Text(c.ip,
                         style: GoogleFonts.robotoMono(
@@ -753,7 +761,7 @@ class _ScanResultsSheet extends StatelessWidget {
                         c.hasWebUi ? 'RTSP 554 · interfaz web 80' : 'RTSP 554',
                         style: GoogleFonts.inter(
                             color: AppColors.textMuted, fontSize: 12)),
-                    trailing: const Icon(Icons.add_circle_outline,
+                    trailing: Icon(Icons.add_circle_outline,
                         color: AppColors.accent),
                     onTap: () => onPick(c.ip),
                   )),

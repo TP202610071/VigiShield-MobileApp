@@ -70,7 +70,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: AppColors.accent.withValues(alpha: 0.3)),
                   ),
-                  child: const Icon(Icons.shield_outlined, color: AppColors.accent, size: 22),
+                  child: Icon(Icons.shield_outlined, color: AppColors.accent, size: 22),
                 ),
                 const SizedBox(width: 12),
                 Text('VigiShield',

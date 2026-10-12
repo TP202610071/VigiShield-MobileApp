@@ -118,7 +118,7 @@ class EventCard extends StatelessWidget {
                                   ),
                                   if (event.isNighttime) ...[
                                     const SizedBox(width: 6),
-                                    const Icon(Icons.nightlight_round, size: 11, color: AppColors.warningAmber),
+                                    Icon(Icons.nightlight_round, size: 11, color: AppColors.warningAmber),
                                   ],
                                 ],
                               ),
@@ -137,7 +137,7 @@ class EventCard extends StatelessWidget {
                                 const SizedBox(height: 3),
                                 Row(
                                   children: [
-                                    const Icon(Icons.videocam_outlined, size: 10, color: AppColors.textMuted),
+                                    Icon(Icons.videocam_outlined, size: 10, color: AppColors.textMuted),
                                     const SizedBox(width: 3),
                                     Text(
                                       event.cameraName!,
@@ -155,7 +155,7 @@ class EventCard extends StatelessWidget {
                         const SizedBox(width: 8),
                         _RiskBadge(riskLevel: event.riskLevel),
                         const SizedBox(width: 4),
-                        const Icon(Icons.chevron_right, color: AppColors.textMuted, size: 18),
+                        Icon(Icons.chevron_right, color: AppColors.textMuted, size: 18),
                       ],
                     ),
                   ),

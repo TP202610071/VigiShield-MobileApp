@@ -3,6 +3,7 @@ import '../core/orientation/orientacion_app.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../providers/ui_provider.dart';
+import '../widgets/animaciones.dart';
 import '../widgets/vs_bottom_nav.dart';
 import '../widgets/tutorial/tutorial_claves.dart';
 import '../widgets/tutorial/tutorial_inicio.dart';
@@ -56,13 +57,14 @@ class _MainShellState extends State<MainShell> {
     return Scaffold(
       body: TutorialInicial(
         pestanaActual: () => widget.navigationShell.currentIndex,
-        child: widget.navigationShell,
+        child: TransicionPestanas(indice: widget.navigationShell.currentIndex, child: widget.navigationShell),
       ),
       bottomNavigationBar: fullscreen
           ? null
           : VsBottomNav(
               key: TutorialClaves.navegacion,
               currentIndex: widget.navigationShell.currentIndex,
+              oscura: widget.navigationShell.currentIndex == _cameraTabIndex,
               onTap: (index) {
                 // Gira en el mismo toque, sin esperar al redibujado.
                 OrientacionApp.instance.setPestanaCamara(index == _cameraTabIndex);

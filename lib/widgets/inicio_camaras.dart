@@ -16,9 +16,9 @@ import 'video_ejemplo.dart';
 ///
 /// En las pruebas con usuarios, muchos tocaban «Ver video de ejemplo» apenas
 /// entraban y ya no agregaban una cámara. Ahora, mientras el hogar no tenga
-/// cámaras propias, el inicio muestra ese aviso con el botón para agregar una;
-/// la tarjeta del video de ejemplo aparece cuando ya hay al menos una (o si hay
-/// un video de ejemplo en curso, para poder verlo o cerrarlo).
+/// cámaras propias, el inicio muestra ese aviso con el botón para agregar una
+/// (aunque haya un video de ejemplo en curso: ese se ve en la pestaña Cámara);
+/// la tarjeta del video de ejemplo aparece cuando ya hay al menos una.
 class TarjetaInicioCamaras extends StatefulWidget {
   const TarjetaInicioCamaras({super.key});
 
@@ -37,7 +37,7 @@ class _TarjetaInicioCamarasState extends State<TarjetaInicioCamaras> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
       final p = context.read<CameraProvider>();
-      if (p.cameras.isEmpty) await p.fetchCameras();
+      await p.fetchCameras();
       if (mounted && p.error == null) setState(() => _consultado = true);
     });
   }
@@ -45,7 +45,7 @@ class _TarjetaInicioCamarasState extends State<TarjetaInicioCamaras> {
   @override
   Widget build(BuildContext context) {
     final camaras = context.watch<CameraProvider>();
-    if (camaras.misCamaras.isNotEmpty || camaras.ejemplo != null) {
+    if (camaras.misCamaras.isNotEmpty) {
       return KeyedSubtree(key: TutorialClaves.tarjetaCamaras, child: const TarjetaVideoEjemplo());
     }
     if (!_consultado) return const SizedBox.shrink();
@@ -69,7 +69,7 @@ class _TarjetaInicioCamarasState extends State<TarjetaInicioCamaras> {
               color: AppColors.accent.withAlpha(31),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Icon(Icons.videocam_off_outlined, color: AppColors.accent, size: 20),
+            child: Icon(Icons.videocam_off_outlined, color: AppColors.accent, size: 20),
           ),
           const SizedBox(width: 12),
           Expanded(

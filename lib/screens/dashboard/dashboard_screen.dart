@@ -15,6 +15,8 @@ import '../../widgets/user_avatar.dart';
 import '../../widgets/inicio_camaras.dart';
 import '../../widgets/tutorial/tutorial_claves.dart';
 import '../../widgets/vs_button.dart';
+import '../../widgets/animaciones.dart';
+import '../../widgets/vs_cargando.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -107,11 +109,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
                   const SizedBox(height: 8),
-                  KeyedSubtree(key: TutorialClaves.estado, child: _StatusCard(system: system)),
+                  Aparecer(child: KeyedSubtree(key: TutorialClaves.estado, child: _StatusCard(system: system))),
                   const SizedBox(height: 16),
-                  _StatsRow(system: system),
+                  Aparecer(orden: 1, child: _StatsRow(system: system)),
                   const SizedBox(height: 16),
-                  const TarjetaInicioCamaras(),
+                  const Aparecer(orden: 2, child: TarjetaInicioCamaras()),
                   const SizedBox(height: 24),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -141,9 +143,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   else
                     ...events.events
                         .take(5)
-                        .map((e) => EventCard(
-                              event: e,
-                              onTap: () => context.push('/history/${e.id}'),
+                        .indexed
+                        .map((p) => Aparecer(
+                              key: ValueKey(p.$2.id),
+                              orden: 3 + p.$1,
+                              child: EventCard(
+                                event: p.$2,
+                                onTap: () => context.push('/history/${p.$2.id}'),
+                              ),
                             )),
                   const SizedBox(height: 24),
                 ]),
@@ -257,11 +264,10 @@ class _StatusCardState extends State<_StatusCard> with SingleTickerProviderState
           const SizedBox(width: 12),
           if (canControl)
             widget.system.isUpdating
-                ? const SizedBox(
+                ? SizedBox(
                     width: 20,
                     height: 20,
-                    child: CircularProgressIndicator(
-                        strokeWidth: 2, color: AppColors.accent),
+                    child: VsCargando(color: AppColors.accent),
                   )
                 : VsButton(
                     label: isActive ? l10n.pause : l10n.resume,
@@ -395,7 +401,7 @@ class _EmptyEvents extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 40),
       child: Column(
         children: [
-          const Icon(Icons.check_circle_outline, color: AppColors.safeGreen, size: 48),
+          Icon(Icons.check_circle_outline, color: AppColors.safeGreen, size: 48),
           const SizedBox(height: 12),
           Text(
             context.l10n.noRecentEvents,

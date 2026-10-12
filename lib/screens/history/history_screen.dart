@@ -7,6 +7,8 @@ import '../../core/theme/app_theme.dart';
 import '../../providers/camera_provider.dart';
 import '../../providers/event_provider.dart';
 import '../../widgets/event_card.dart';
+import '../../widgets/animaciones.dart';
+import '../../widgets/vs_cargando.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -116,7 +118,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
             const SizedBox(height: 16),
             Expanded(
               child: provider.isLoading
-                  ? const Center(child: CircularProgressIndicator(color: AppColors.accent, strokeWidth: 2))
+                  ? Center(child: VsCargando(color: AppColors.accent))
                   : provider.error != null && provider.events.isEmpty
                       ? _ErrorView(
                           message: provider.error!,
@@ -142,18 +144,22 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                 itemCount: provider.events.length + (provider.isLoadingMore ? 1 : 0),
                                 itemBuilder: (context, i) {
                                   if (i >= provider.events.length) {
-                                    return const Padding(
+                                    return Padding(
                                       padding: EdgeInsets.all(16),
                                       child: Center(
-                                        child: CircularProgressIndicator(
-                                          color: AppColors.accent, strokeWidth: 2),
+                                        child: VsCargando(
+                                          color: AppColors.accent),
                                       ),
                                     );
                                   }
                                   final event = provider.events[i];
-                                  return EventCard(
-                                    event: event,
-                                    onTap: () => context.push('/history/${event.id}'),
+                                  return Aparecer(
+                                    key: ValueKey(event.id),
+                                    orden: i < 10 ? i : 0,
+                                    child: EventCard(
+                                      event: event,
+                                      onTap: () => context.push('/history/${event.id}'),
+                                    ),
                                   );
                                 },
                               ),
@@ -224,7 +230,7 @@ class _ChipRow extends StatelessWidget {
                   if (icon != null && value != null) ...[
                     Icon(icon,
                         size: 14,
-                        color: isActive ? Colors.black : AppColors.textSecondary),
+                        color: isActive ? AppColors.onAccent : AppColors.textSecondary),
                     const SizedBox(width: 6),
                   ],
                   Text(
@@ -232,7 +238,7 @@ class _ChipRow extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 13,
                       fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
-                      color: isActive ? Colors.black : AppColors.textSecondary,
+                      color: isActive ? AppColors.onAccent : AppColors.textSecondary,
                     ),
                   ),
                 ],
@@ -252,7 +258,7 @@ class _EmptyView extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.history, color: AppColors.textMuted, size: 56),
+          Icon(Icons.history, color: AppColors.textMuted, size: 56),
           const SizedBox(height: 16),
           Text(
             context.l10n.noEventsLogged,
@@ -282,7 +288,7 @@ class _ErrorView extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.wifi_off_outlined, color: AppColors.textSecondary, size: 48),
+          Icon(Icons.wifi_off_outlined, color: AppColors.textSecondary, size: 48),
           const SizedBox(height: 12),
           Text(message,
               style: GoogleFonts.inter(fontSize: 14, color: AppColors.textSecondary),

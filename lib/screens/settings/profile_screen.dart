@@ -12,6 +12,8 @@ import '../../providers/auth_provider.dart';
 import '../../widgets/user_avatar.dart';
 import '../../widgets/vs_button.dart';
 import '../../widgets/vs_text_field.dart';
+import '../../widgets/vs_cargando.dart';
+import '../../widgets/login_externo.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -42,13 +44,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             const SizedBox(height: 8),
             ListTile(
-              leading: const Icon(Icons.photo_library_outlined, color: AppColors.accent),
+              leading: Icon(Icons.photo_library_outlined, color: AppColors.accent),
               title: Text(l10n.fromGallery,
                   style: GoogleFonts.inter(color: AppColors.textPrimary)),
               onTap: () => Navigator.pop(ctx, ImageSource.gallery),
             ),
             ListTile(
-              leading: const Icon(Icons.photo_camera_outlined, color: AppColors.accent),
+              leading: Icon(Icons.photo_camera_outlined, color: AppColors.accent),
               title: Text(l10n.fromCamera,
                   style: GoogleFonts.inter(color: AppColors.textPrimary)),
               onTap: () => Navigator.pop(ctx, ImageSource.camera),
@@ -189,11 +191,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         border: Border.all(color: AppColors.background, width: 2),
                       ),
                       child: _uploading
-                          ? const SizedBox(
+                          ? SizedBox(
                               width: 14, height: 14,
-                              child: CircularProgressIndicator(
-                                  strokeWidth: 2, color: Colors.black))
-                          : const Icon(Icons.photo_camera, size: 14, color: Colors.black),
+                              child: VsCargando(color: AppColors.onAccent))
+                          : Icon(Icons.photo_camera, size: 14, color: AppColors.onAccent),
                     ),
                   ),
                 ],
@@ -245,7 +246,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: TextButton.icon(
               key: const Key('eliminar-cuenta'),
               onPressed: _eliminarCuenta,
-              icon: const Icon(Icons.delete_forever_outlined, color: AppColors.alertRed),
+              icon: Icon(Icons.delete_forever_outlined, color: AppColors.alertRed),
               label: Text(l10n.deleteAccount,
                   style: GoogleFonts.inter(color: AppColors.alertRed, fontWeight: FontWeight.w600)),
             ),
@@ -408,6 +409,7 @@ class _DialogoEliminarCuentaState extends State<_DialogoEliminarCuenta> {
                 if (_error != null) setState(() => _error = null);
               },
             ),
+            const ConfirmarEliminarConApple(),
           ],
         ),
       ),
@@ -422,7 +424,7 @@ class _DialogoEliminarCuentaState extends State<_DialogoEliminarCuenta> {
           onPressed: _enviando ? null : _confirmar,
           child: _enviando
               ? const SizedBox(width: 16, height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                  child: VsCargando(color: Colors.white))
               : Text(l10n.deleteAccountConfirm),
         ),
       ],

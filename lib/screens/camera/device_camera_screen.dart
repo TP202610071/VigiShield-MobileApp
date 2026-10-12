@@ -8,6 +8,7 @@ import '../../data/models/camera_config_model.dart';
 import '../../data/services/camera_service.dart';
 import '../../data/services/mobile_camera_publisher.dart';
 import '../../providers/camera_provider.dart';
+import '../../widgets/tutorial/tutorial_camara.dart';
 
 class DeviceCameraScreen extends StatefulWidget {
   final CameraConfigModel? camera;
@@ -93,8 +94,12 @@ class _DeviceCameraScreenState extends State<DeviceCameraScreen> with WidgetsBin
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _restorePreview();
       // Se pide al entrar, con su explicación: es el momento en que el usuario
-      // eligió usar este teléfono como cámara.
-      if (!(_publisher?.isPublishing ?? false)) asegurarPermisoCamara(context);
+      // eligió usar este teléfono como cámara. Con la primera cámara va antes el
+      // tutorial, y entonces el permiso lo pide «Iniciar transmisión».
+      unawaited(() async {
+        final tutorial = _camera == null && await TutorialPrimeraCamara.celular(context);
+        if (!tutorial && mounted && !(_publisher?.isPublishing ?? false)) asegurarPermisoCamara(context);
+      }());
     });
   }
 
@@ -207,9 +212,10 @@ class _DeviceCameraScreenState extends State<DeviceCameraScreen> with WidgetsBin
     return Scaffold(
       appBar: AppBar(title: const Text('Cámara de este dispositivo')),
       bottomNavigationBar: SafeArea(child: Padding(padding: const EdgeInsets.all(16),
-        child: FilledButton.icon(onPressed: _busy ? null : active ? _stop : _start,
-          icon: Icon(active ? Icons.stop : Icons.play_arrow),
-          label: Text(active ? 'Detener transmisión' : 'Iniciar transmisión')))),
+        child: KeyedSubtree(key: TutorialCamaraClaves.iniciar,
+          child: FilledButton.icon(onPressed: _busy ? null : active ? _stop : _start,
+            icon: Icon(active ? Icons.stop : Icons.play_arrow),
+            label: Text(active ? 'Detener transmisión' : 'Iniciar transmisión'))))),
       body: ListView(padding: const EdgeInsets.all(20), children: [
         Text(active
             ? 'Este teléfono está transmitiendo. Puedes salir de esta pantalla: la transmisión sigue mientras VigiShield esté abierta en primer plano.'
@@ -219,7 +225,7 @@ class _DeviceCameraScreenState extends State<DeviceCameraScreen> with WidgetsBin
         const SizedBox(height: 16),
         // El nombre se puede cambiar también después de crearla: renombrar no
         // toca la clave de transmisión, así que no corta el video.
-        TextField(
+        KeyedSubtree(key: TutorialCamaraClaves.nombre, child: TextField(
           controller: _name,
           enabled: !_busy,
           textInputAction: TextInputAction.done,
@@ -235,12 +241,12 @@ class _DeviceCameraScreenState extends State<DeviceCameraScreen> with WidgetsBin
                     onPressed: _busy ? null : _guardarNombre)
                 : null,
           ),
-        ),
+        )),
         const SizedBox(height: 16),
-        SegmentedButton<bool>(segments: const [
+        KeyedSubtree(key: TutorialCamaraClaves.lente, child: SegmentedButton<bool>(segments: const [
           ButtonSegment(value: false, label: Text('Trasera'), icon: Icon(Icons.camera_rear)),
           ButtonSegment(value: true, label: Text('Frontal'), icon: Icon(Icons.camera_front)),
-        ], selected: {_front}, onSelectionChanged: _busy ? null : (values) => _switchLens(values.single)),
+        ], selected: {_front}, onSelectionChanged: _busy ? null : (values) => _switchLens(values.single))),
         if (_linternaDisponible) ...[
           const SizedBox(height: 8),
           SwitchListTile(

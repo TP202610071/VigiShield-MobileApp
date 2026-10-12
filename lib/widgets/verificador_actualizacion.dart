@@ -266,7 +266,7 @@ class _PantallaObligatoria extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.system_update_rounded, color: AppColors.accent, size: 44),
+                  Icon(Icons.system_update_rounded, color: AppColors.accent, size: 44),
                   const SizedBox(height: 16),
                   Text(s.actualizacionObligatoriaTitulo,
                       style: GoogleFonts.inter(
@@ -290,7 +290,7 @@ class _PantallaObligatoria extends StatelessWidget {
                     child: TextButton(
                       onPressed: alRevisar,
                       child: Text(s.actualizacionRevisar,
-                          style: const TextStyle(color: AppColors.textSecondary)),
+                          style: TextStyle(color: AppColors.textSecondary)),
                     ),
                   ),
                 ],
@@ -333,7 +333,7 @@ class _AvisoOpcional extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Row(children: [
-                  const Icon(Icons.system_update_rounded, color: AppColors.accent, size: 22),
+                  Icon(Icons.system_update_rounded, color: AppColors.accent, size: 22),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(s.actualizacionOpcionalTitulo,
@@ -354,11 +354,11 @@ class _AvisoOpcional extends StatelessWidget {
                 Row(mainAxisAlignment: MainAxisAlignment.end, children: [
                   TextButton(
                     onPressed: alCerrar,
-                    child: Text(s.actualizacionAhoraNo, style: const TextStyle(color: AppColors.textSecondary)),
+                    child: Text(s.actualizacionAhoraNo, style: TextStyle(color: AppColors.textSecondary)),
                   ),
                   TextButton(
                     onPressed: alActualizar,
-                    child: Text(s.actualizacionBoton, style: const TextStyle(color: AppColors.accent)),
+                    child: Text(s.actualizacionBoton, style: TextStyle(color: AppColors.accent)),
                   ),
                 ]),
               ],

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../core/theme/app_theme.dart';
+import 'vs_cargando.dart';
 
 enum VsButtonVariant { primary, secondary, danger }
 
@@ -61,7 +62,7 @@ class _VsButtonState extends State<VsButton> with SingleTickerProviderStateMixin
   Color get _fg {
     if (widget.onPressed == null && !widget.isLoading) return AppColors.textMuted;
     return switch (widget.variant) {
-      VsButtonVariant.primary => Colors.black,
+      VsButtonVariant.primary => AppColors.onAccent,
       VsButtonVariant.secondary => AppColors.accent,
       VsButtonVariant.danger => Colors.white,
     };
@@ -97,8 +98,7 @@ class _VsButtonState extends State<VsButton> with SingleTickerProviderStateMixin
                 ? SizedBox(
                     width: 20,
                     height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
+                    child: VsCargando(
                       color: _fg,
                     ),
                   )

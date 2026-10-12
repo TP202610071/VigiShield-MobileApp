@@ -12,6 +12,7 @@ import '../../providers/server_config_provider.dart';
 import '../../widgets/vs_button.dart';
 import '../../widgets/vs_text_field.dart';
 import '../../widgets/sheet_header.dart';
+import '../../widgets/vs_cargando.dart';
 
 /// Hidden, admin-only developer tools. Reached by tapping the app version 7×
 /// in Settings → About. Lets a developer preview other roles for demos, point
@@ -82,7 +83,7 @@ class _DeveloperScreenState extends State<DeveloperScreen> {
                 border: Border.all(color: AppColors.warningAmber.withOpacity(0.4)),
               ),
               child: Row(children: [
-                const Icon(Icons.visibility_outlined, size: 16, color: AppColors.warningAmber),
+                Icon(Icons.visibility_outlined, size: 16, color: AppColors.warningAmber),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
@@ -113,7 +114,7 @@ class _DeveloperScreenState extends State<DeveloperScreen> {
               icon: Icons.dns_outlined,
               title: l10n.serverUrlField,
               subtitle: server.displayUrl,
-              trailing: const Icon(Icons.edit_outlined, color: AppColors.textMuted, size: 18),
+              trailing: Icon(Icons.edit_outlined, color: AppColors.textMuted, size: 18),
             ),
           ),
           const SizedBox(height: 28),
@@ -125,10 +126,10 @@ class _DeveloperScreenState extends State<DeveloperScreen> {
               style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary, height: 1.4)),
           const SizedBox(height: 12),
           if (_loadingAdmins)
-            const Center(
+            Center(
                 child: Padding(
               padding: EdgeInsets.all(16),
-              child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.accent),
+              child: VsCargando(color: AppColors.accent),
             ))
           else ...[
             ...(_admins ?? []).map((a) => _AdminTile(
@@ -173,11 +174,10 @@ class _DeveloperScreenState extends State<DeveloperScreen> {
           ]),
           const SizedBox(height: 10),
           if (_searchingHouseholds)
-            const Center(
+            Center(
                 child: Padding(
                     padding: EdgeInsets.all(12),
-                    child: CircularProgressIndicator(
-                        strokeWidth: 2, color: AppColors.accent)))
+                    child: VsCargando(color: AppColors.accent)))
           else
             ..._households.map((h) => _HouseholdTile(
                   household: h,
@@ -236,7 +236,7 @@ class _DeveloperScreenState extends State<DeveloperScreen> {
             child: SheetHeader(titulo: 'Disparar alerta para ${h.name}'),
           ),
           ...options.entries.map((e) => ListTile(
-                leading: const Icon(Icons.notifications_active_outlined,
+                leading: Icon(Icons.notifications_active_outlined,
                     color: AppColors.accent),
                 title: Text(e.value,
                     style: GoogleFonts.inter(color: AppColors.textPrimary)),
@@ -408,7 +408,7 @@ class _RoleSelector extends StatelessWidget {
                   style: GoogleFonts.inter(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: selected ? Colors.black : AppColors.textSecondary,
+                    color: selected ? AppColors.onAccent : AppColors.textSecondary,
                   ),
                 ),
               ),
@@ -437,7 +437,7 @@ class _AdminTile extends StatelessWidget {
         border: Border.all(color: AppColors.border),
       ),
       child: Row(children: [
-        const Icon(Icons.code, color: AppColors.warningAmber, size: 18),
+        Icon(Icons.code, color: AppColors.warningAmber, size: 18),
         const SizedBox(width: 12),
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -461,7 +461,7 @@ class _AdminTile extends StatelessWidget {
         ),
         if (!isSelf)
           IconButton(
-            icon: const Icon(Icons.remove_circle_outline, color: AppColors.alertRed, size: 20),
+            icon: Icon(Icons.remove_circle_outline, color: AppColors.alertRed, size: 20),
             onPressed: onRemove,
           ),
       ]),
@@ -485,7 +485,7 @@ class _HouseholdTile extends StatelessWidget {
         border: Border.all(color: AppColors.border),
       ),
       child: Row(children: [
-        const Icon(Icons.home_outlined, color: AppColors.accent, size: 18),
+        Icon(Icons.home_outlined, color: AppColors.accent, size: 18),
         const SizedBox(width: 12),
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -500,7 +500,7 @@ class _HouseholdTile extends StatelessWidget {
         ),
         TextButton.icon(
           onPressed: onTrigger,
-          icon: const Icon(Icons.notifications_active_outlined, size: 18, color: AppColors.accent),
+          icon: Icon(Icons.notifications_active_outlined, size: 18, color: AppColors.accent),
           label: Text('Disparar',
               style: GoogleFonts.inter(color: AppColors.accent, fontSize: 13)),
         ),

@@ -133,7 +133,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
         icon: const Icon(Icons.fingerprint, size: 18),
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.accent,
-          side: const BorderSide(color: AppColors.accent),
+          side: BorderSide(color: AppColors.accent),
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
@@ -178,7 +178,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                         ),
                       ],
                     ),
-                    child: const Icon(Icons.shield_outlined, color: AppColors.accent, size: 42),
+                    child: Icon(Icons.shield_outlined, color: AppColors.accent, size: 42),
                   ),
                 ),
                 const SizedBox(height: 28),

@@ -7,10 +7,15 @@ class VsBottomNav extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
 
+  /// Oscura aunque la app esté en modo claro: bajo la pestaña Cámara, que
+  /// siempre es oscura, una barra blanca se ve cortada.
+  final bool oscura;
+
   const VsBottomNav({
     super.key,
     required this.currentIndex,
     required this.onTap,
+    this.oscura = false,
   });
 
   static const _items = [
@@ -30,10 +35,15 @@ class VsBottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
-        border: Border(top: BorderSide(color: AppColors.border, width: 1)),
+    final fondo = oscura ? AppColorsOscuros.surface : AppColors.surface;
+    final borde = oscura ? AppColorsOscuros.border : AppColors.border;
+    final acento = oscura ? AppColorsOscuros.accent : AppColors.accent;
+    final apagado = oscura ? AppColorsOscuros.textSecondary : AppColors.textSecondary;
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 250),
+      decoration: BoxDecoration(
+        color: fondo,
+        border: Border(top: BorderSide(color: borde, width: 1)),
       ),
       child: SafeArea(
         top: false,
@@ -58,18 +68,23 @@ class VsBottomNav extends StatelessWidget {
                           width: isActive ? 32 : 0,
                           height: 2,
                           decoration: BoxDecoration(
-                            color: AppColors.accent,
+                            color: acento,
                             borderRadius: BorderRadius.circular(1),
                           ),
                         ),
                         const SizedBox(height: 6),
-                        AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 200),
-                          child: Icon(
-                            isActive ? item.activeIcon : item.icon,
-                            key: ValueKey(isActive),
-                            color: isActive ? AppColors.accent : AppColors.textSecondary,
-                            size: 22,
+                        AnimatedScale(
+                          scale: isActive ? 1.12 : 1,
+                          duration: const Duration(milliseconds: 320),
+                          curve: Curves.easeOutBack,
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 200),
+                            child: Icon(
+                              isActive ? item.activeIcon : item.icon,
+                              key: ValueKey(isActive),
+                              color: isActive ? acento : apagado,
+                              size: 22,
+                            ),
                           ),
                         ),
                         const SizedBox(height: 3),
@@ -78,7 +93,7 @@ class VsBottomNav extends StatelessWidget {
                           style: GoogleFonts.inter(
                             fontSize: 10,
                             fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
-                            color: isActive ? AppColors.accent : AppColors.textSecondary,
+                            color: isActive ? acento : apagado,
                           ),
                         ),
                       ],

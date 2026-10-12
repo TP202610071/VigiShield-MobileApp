@@ -16,7 +16,10 @@ import '../../widgets/vs_button.dart';
 import '../../widgets/vs_text_field.dart';
 import '../../widgets/sheet_header.dart';
 import '../../core/security/biometric_lock.dart';
+import '../../widgets/tutorial/tutorial_camara.dart';
 import '../../widgets/tutorial/tutorial_guiado.dart';
+import '../../widgets/vs_cargando.dart';
+import '../../widgets/selector_tema.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -112,7 +115,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ],
                         ),
                       ),
-                      const Icon(Icons.chevron_right, color: AppColors.textMuted, size: 20),
+                      Icon(Icons.chevron_right, color: AppColors.textMuted, size: 20),
                     ],
                   ),
                 ),
@@ -175,6 +178,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 onTap: () async {
                   final id = context.read<AuthProvider>().user?.id;
                   if (id != null) await TutorialGuiado.olvidar(id);
+                  if (id != null) await TutorialPrimeraCamara.olvidar(id);
                   if (!context.mounted) return;
                   context.go('/dashboard');
                   TutorialGuiado.pedido.value++;
@@ -182,6 +186,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               const SizedBox(height: 16),
               _LanguageTile(),
+              const SizedBox(height: 10),
+              const SelectorTema(),
               const SizedBox(height: 24),
 
               if (showDevTile) ...[
@@ -209,7 +215,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.shield_outlined, color: AppColors.accent, size: 18),
+                      Icon(Icons.shield_outlined, color: AppColors.accent, size: 18),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
@@ -413,7 +419,7 @@ class _SettingsTile extends StatelessWidget {
               child: Text(label,
                   style: GoogleFonts.inter(fontSize: 14, color: AppColors.textPrimary)),
             ),
-            const Icon(Icons.chevron_right, color: AppColors.textMuted, size: 18),
+            Icon(Icons.chevron_right, color: AppColors.textMuted, size: 18),
           ],
         ),
       ),
@@ -440,7 +446,7 @@ class _LanguageTile extends StatelessWidget {
           border: Border.all(color: AppColors.border),
         ),
         child: Row(children: [
-          const Icon(Icons.translate, color: AppColors.textSecondary, size: 18),
+          Icon(Icons.translate, color: AppColors.textSecondary, size: 18),
           const SizedBox(width: 12),
           Expanded(
             child: Text(l10n.language,
@@ -448,7 +454,7 @@ class _LanguageTile extends StatelessWidget {
           ),
           Text(current, style: GoogleFonts.inter(fontSize: 13, color: AppColors.accent)),
           const SizedBox(width: 4),
-          const Icon(Icons.chevron_right, color: AppColors.textMuted, size: 18),
+          Icon(Icons.chevron_right, color: AppColors.textMuted, size: 18),
         ]),
       ),
     );
@@ -521,7 +527,7 @@ class _LangOption extends StatelessWidget {
                 letterSpacing: 0.5)),
       ),
       title: Text(label, style: GoogleFonts.inter(color: AppColors.textPrimary)),
-      trailing: selected ? const Icon(Icons.check, color: AppColors.accent) : null,
+      trailing: selected ? Icon(Icons.check, color: AppColors.accent) : null,
       onTap: onTap,
     );
   }
@@ -559,18 +565,18 @@ class _AlertConfigTileState extends State<_AlertConfigTile> {
         ),
         child: Row(
           children: [
-            const Icon(Icons.notifications_outlined, color: AppColors.textSecondary, size: 18),
+            Icon(Icons.notifications_outlined, color: AppColors.textSecondary, size: 18),
             const SizedBox(width: 12),
             Expanded(
               child: Text(l10n.configureAlerts,
                   style: GoogleFonts.inter(fontSize: 14, color: AppColors.textPrimary)),
             ),
             if (config == null)
-              const SizedBox(
+              SizedBox(
                   width: 16, height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.accent))
+                  child: VsCargando(color: AppColors.accent))
             else
-              const Icon(Icons.chevron_right, color: AppColors.textMuted, size: 18),
+              Icon(Icons.chevron_right, color: AppColors.textMuted, size: 18),
           ],
         ),
       ),
