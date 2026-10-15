@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Color del escudo en las notificaciones (el mismo acento de la app). -->
+    <color name="vigishield_acento">#00C2FF</color>
+</resources>

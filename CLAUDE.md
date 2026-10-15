@@ -46,6 +46,27 @@ cd ios && fastlane deliver --skip_screenshots true   # textos y datos de revisi�
 - El build de release es el de tienda: las herramientas de validación (OE4) no
   se incluyen (`kValidationTools`) y la sesión de validación solo existe en Android.
 
+## Llaves y accesos (carpeta `Cloud`)
+
+Las llaves **nunca van en el repo** (es público). Están en la carpeta `Cloud/`:
+
+- en la raíz del proyecto, al lado de los repos: desde este repo, `../../Cloud/` (PC: `G:\Codigo\VigilShield\Cloud`);
+- en iCloud Drive → `Cloud/`, que las sincroniza entre la PC y la Mac.
+
+El detalle con servidores, usuarios y comandos exactos está en **`Cloud/LEEME.md`**. En la Mac, las llaves SSH
+necesitan `chmod 600 ../../Cloud/*.key ../../Cloud/*.pem`.
+
+| Archivo en `Cloud/` | Para qué | Cómo se usa |
+|---|---|---|
+| `oracle-ssh-key-2026-06-11.key` | SSH al servidor del backend (Oracle Cloud): API, web y panel | `ssh -i ../../Cloud/oracle-ssh-key-2026-06-11.key ubuntu@vigishield.app` (no por `api.vigishield.app`, que pasa por Cloudflare) |
+| `vigishield-ai-key.pem` | SSH a la VM de IA y video (Azure) | `ssh -i ../../Cloud/vigishield-ai-key.pem vigishield@api-ai.vigishield.app`. Suele estar apagada: ver `LEEME.md`. |
+| `oracle-vigishield.env` | Copia de las variables del backend: Supabase, JWT, clave interna, Cloudflare R2, WhatsApp, Gmail y Firebase | Solo de respaldo; la fuente de verdad es `/etc/vigishield/vigishield.env` en el servidor |
+| `scripts/desplegar_backend.sh`, `scripts/aplicar_sql.sh` | Desplegar el backend y aplicar migraciones en Supabase sin imprimir la conexión | Ver `LEEME.md` |
+| `vigishield-app-firebase-adminsdk-fbsvc-*.json` | Cuenta de servicio de Firebase (`vigishield-app`): el backend envía las notificaciones de Android | Ya instalada en el servidor (`/etc/vigishield/firebase-servicio.json`) |
+| `google-services.json` | Firebase de la app Android | Copiar a `android/app/google-services.json` antes de `flutter build apk` (está en `.gitignore`; sin él la app compila, pero Android no recibe push). En iOS no se usa: allí las notificaciones van por APNs directo. |
+| `AuthKey_XXXXXXXXXX.p8` (por crear) | Llave de Apple con APNs y Sign in with Apple | Va en el servidor con `Apns__*` y `Apple__*` (ver `LEEME.md`) |
+| `AuthKey_5RPFG6VXG9.p8` y `vigishield_review.json` | API de App Store Connect y datos del revisor | Viven en la Mac, en `~/.appstoreconnect/`. **La Mac debe copiar ambos a iCloud Drive → `Cloud/`.** |
+
 ## Publicar en App Store: estado
 
 Versión actual: **1.0.0+34** (App Store Connect: versión `1.0.0`, app id `6819493311`; builds 29, 30 y 33 subidos; el 34 está por subir).
@@ -155,14 +176,17 @@ Igual que el 33: testers internos **y externos**.
   es más corto.
 
 **Pendiente de Diego (no lo puede hacer la Mac por la API):**
+- **Primero, activar las capacidades en el App ID** (si no, al crear la llave sale «There are no identifiers
+  that can be associated with the key»): developer.apple.com → Identifiers → `com.vigishield.app` → marcar
+  **Sign In with Apple** («Enable as a primary App ID»), **Push Notifications** y **Time Sensitive
+  Notifications** → Save. Compilar el build 34 en la Mac con firma automática también las activa.
 - **Una llave de Apple con dos servicios** (developer.apple.com → Keys → «+»):
   - **Apple Push Notifications service (APNs)**, con entorno «Sandbox & Production»;
   - **Sign in with Apple**, con App ID `com.vigishield.app`.
   Descargar `AuthKey_XXXX.p8` (se descarga una sola vez) y pasarle a la PC el archivo y su Key ID. La PC la
   instala en el Oracle: `Apns__TeamId`, `Apns__KeyId` y `Apns__PrivateKeyPath` para las notificaciones, y
   `Apple__TeamId`, `Apple__KeyId` y `Apple__PrivateKeyPath` para revocar los tokens de Apple.
-- Firebase, solo para Android (FCM): proyecto, `google-services.json` (no se versiona) y la cuenta de
-  servicio en el Oracle (`Fcm__ProjectId`, `Fcm__ServiceAccountPath`).
+- ~~Firebase para Android~~: hecho el 2026-10-15 (proyecto `vigishield-app`; push probado en el Samsung).
 - Apple en Android (opcional): un Services ID en Identifiers (p. ej. `app.vigishield.signin`) con Sign in with
   Apple, dominio `api.vigishield.app` y URL de retorno `https://api.vigishield.app/api/auth/apple/callback`.
   Con `Apple__ServiceId` en el Oracle, la app de Android muestra el botón sola (no hace falta otro APK).
