@@ -51,7 +51,7 @@ cd ios && fastlane deliver --skip_screenshots true   # textos y datos de revisi�
 Las llaves **nunca van en el repo** (es público). Están en la carpeta `Cloud/`:
 
 - en la raíz del proyecto, al lado de los repos: desde este repo, `../../Cloud/` (PC: `G:\Codigo\VigilShield\Cloud`);
-- en iCloud Drive → `Cloud/`, que las sincroniza entre la PC y la Mac.
+- en iCloud Drive → `Tesis/Cloud/`, que las sincroniza entre la PC y la Mac (PC: `G:\iCloudDrive\Tesis\Cloud`).
 
 El detalle con servidores, usuarios y comandos exactos está en **`Cloud/LEEME.md`**. En la Mac, las llaves SSH
 necesitan `chmod 600 ../../Cloud/*.key ../../Cloud/*.pem`.
@@ -64,8 +64,8 @@ necesitan `chmod 600 ../../Cloud/*.key ../../Cloud/*.pem`.
 | `scripts/desplegar_backend.sh`, `scripts/aplicar_sql.sh` | Desplegar el backend y aplicar migraciones en Supabase sin imprimir la conexión | Ver `LEEME.md` |
 | `vigishield-app-firebase-adminsdk-fbsvc-*.json` | Cuenta de servicio de Firebase (`vigishield-app`): el backend envía las notificaciones de Android | Ya instalada en el servidor (`/etc/vigishield/firebase-servicio.json`) |
 | `google-services.json` | Firebase de la app Android | Copiar a `android/app/google-services.json` antes de `flutter build apk` (está en `.gitignore`; sin él la app compila, pero Android no recibe push). En iOS no se usa: allí las notificaciones van por APNs directo. |
-| `AuthKey_XXXXXXXXXX.p8` (por crear) | Llave de Apple con APNs y Sign in with Apple | Va en el servidor con `Apns__*` y `Apple__*` (ver `LEEME.md`) |
-| `AuthKey_5RPFG6VXG9.p8` y `vigishield_review.json` | API de App Store Connect y datos del revisor | Viven en la Mac, en `~/.appstoreconnect/`. **La Mac debe copiar ambos a iCloud Drive → `Cloud/`.** |
+| `AuthKey_J63C7PQC59.p8` | Llave de Apple (Key ID `J63C7PQC59`) con APNs y Sign in with Apple | Ya instalada en el servidor (`/etc/vigishield/apple-authkey.p8`, con `Apns__*` y `Apple__*`) |
+| `AuthKey_5RPFG6VXG9.p8` y `vigishield_review.json` | API de App Store Connect y datos del revisor | Viven en la Mac, en `~/.appstoreconnect/`. **La Mac debe copiar ambos a iCloud Drive → `Tesis/Cloud/`.** |
 
 ## Publicar en App Store: estado
 
@@ -129,67 +129,90 @@ password: to delete it, Settings > tap your name (Profile) > "Delete account" >
 "Confirm with Apple". "Continue with Google" is disabled and marked "Coming soon".
 ```
 
-## Pendiente para la Mac: subir el build 34 (2026-10-11)
+## Pendiente para la Mac: subir el build 34 (actualizado 2026-10-16)
 
-Igual que el 33: testers internos **y externos**.
+**El servidor ya está listo y probado:**
+- llave de Apple (Key ID `J63C7PQC59`) para APNs y Sign in with Apple, instalada en el Oracle;
+- Firebase para Android (el push ya funciona en el Samsung).
 
-1. `git pull`, `flutter pub get` y **`cd ios && pod install && cd ..`** (hay una dependencia nueva:
-   `sign_in_with_apple`).
-2. **Capacidades nuevas: Sign in with Apple, Push Notifications y Time Sensitive Notifications.**
-   `ios/Runner/Runner.entitlements` ya las trae (`com.apple.developer.applesignin`, `aps-environment` y
-   `com.apple.developer.usernotifications.time-sensitive`). Con la firma automática, Xcode las agrega al App
-   ID solo. Si `flutter build ipa` falla por el perfil: abrir `ios/Runner.xcworkspace` → Runner → Signing &
-   Capabilities → «+ Capability» y agregar las tres. Después, compilar de nuevo.
-   **`ios/Runner/AppDelegate.swift` cambió y no se pudo compilar en la PC.** Agrega la clase `PushNativo`
-   (APNs directo, canal `vigishield/push`). Si Swift da error, corregirlo sin cambiar lo que hace. Un punto
-   dudoso es `registrar(forPlugin:) as FlutterPluginRegistrar?`. El `aps-environment` queda en `development`:
-   al exportar para la tienda, Xcode lo pasa a producción.
-3. `flutter analyze` y `flutter test` (en la PC: 133 pruebas en verde).
-4. `flutter build ipa --release`, subirlo con `altool` y agregarlo a los dos grupos (como el 33).
-5. Probar en un iPhone:
-   - «Continuar con Apple» crea una cuenta nueva (pide aceptar los términos y entra), y «Eliminar cuenta»
-     ofrece «Confirmar con Apple».
-   - Modo claro en Ajustes → Apariencia.
-   - Al entrar, la app pide permiso de notificaciones. Ajustes → Notificaciones → «Probar» envía una. Solo
-     llega si el Oracle tiene la llave de APNs; sin ella, avisa «El servidor aún no tiene configuradas…».
-6. Notas para la revisión: agregar que la app ofrece Sign in with Apple y que «Continuar con Google» está
-   desactivado con «Próximamente». **Si Apple lo objeta (guía 2.1, contenido de relleno),** poner
-   `kMostrarGoogleProximamente = false` en `lib/widgets/login_externo.dart`, subir el `+N` y volver a enviar.
-7. Cuando esté disponible para todos, avisar a Diego para subir `ultimo` a 34 en `app-version.json`.
+Falta compilar, subir y probar en un iPhone. Igual que el 33: testers internos **y externos**.
+
+0. **Antes de traer los cambios:** `git status`. Si hay cambios locales, guardarlos con `git stash` y
+   reaplicarlos después con `git stash pop`. El historial no se reescribió desde el 2026-10-10: `git pull`
+   avanza directo desde el último commit de la Mac (`067cdc9`), sin conflictos.
+1. `git pull`, `flutter pub get` y **`cd ios && pod install && cd ..`**. Hay una dependencia nueva,
+   `sign_in_with_apple`, así que `Podfile.lock` cambia: se commitea.
+2. **Capacidades.** Diego ya las activó en el App ID `com.vigishield.app`, y `ios/Runner/Runner.entitlements`
+   las trae: `com.apple.developer.applesignin`, `aps-environment` y
+   `com.apple.developer.usernotifications.time-sensitive`.
+   - Abrir `ios/Runner.xcworkspace` una vez → Runner → **Signing & Capabilities**. Deben aparecer **Sign in
+     with Apple**, **Push Notifications** y **Time Sensitive Notifications**; si falta una, «+ Capability».
+   - Con la firma automática, Xcode regenera el perfil. Si avisa que el perfil no incluye una capacidad,
+     «Try Again».
+   - `aps-environment` queda en `development`: al exportar para TestFlight, Xcode lo pasa a producción.
+3. **`ios/Runner/AppDelegate.swift` cambió y nunca se compiló** (se escribió en la PC). Agrega la clase
+   `PushNativo`: APNs directo, canal `vigishield/push`. Si Swift da error, corregirlo sin cambiar lo que hace.
+   Puntos dudosos:
+   - `registrar(forPlugin:) as FlutterPluginRegistrar?`: si sobra el `as`, quitarlo;
+   - la conformidad repetida a `UNUserNotificationCenterDelegate` (`FlutterPlugin` ya la incluye): si da
+     aviso, quitarla.
+
+   Lo que debe seguir pasando:
+   - el delegado de `UNUserNotificationCenter` se asigna en `didFinishLaunching`, para no perder el toque que
+     abrió la app;
+   - el token llega por `registrar.addApplicationDelegate`;
+   - al tocar una notificación, se envía `abrirEvento(id)` a Dart.
+4. `flutter analyze` y `flutter test` (en la PC: 133 pruebas en verde).
+5. `flutter build ipa --release`, subirlo con `altool`, agregarlo a los dos grupos y mandar «Qué probar»
+   (abajo).
+6. **Probar en un iPhone con el build de TestFlight.** TestFlight usa APNs de producción; desde Xcode, sandbox.
+   El backend sirve para los dos.
+   - **Notificaciones.** Al entrar, la app pide permiso. Ajustes → Notificaciones debe decir «Este teléfono
+     recibe las alertas», y «Probar» debe hacer llegar una en segundos. Con la app cerrada, una alerta real
+     también llega, y tocarla abre el evento.
+   - **Apple.** «Continuar con Apple» crea una cuenta nueva (pide aceptar los términos) o entra en una
+     existente con el mismo correo. «Eliminar cuenta» ofrece «Confirmar con Apple».
+   - **Modo claro:** Ajustes → Apariencia.
+   - **Tutoriales:** el del inicio (Ajustes → «Ver el tutorial») y el de la primera cámara, con una cuenta sin
+     cámaras. El editor de zonas muestra el ejemplo animado.
+   - Si «Probar» no llega, revisar el log del backend:
+     `ssh -i ../../Cloud/oracle-ssh-key-2026-06-11.key ubuntu@vigishield.app` y, ahí,
+     `sudo journalctl -u vigishield --since "10 min ago" | grep -i apns`.
+7. **Copiar las llaves de la Mac a la carpeta compartida.** `~/.appstoreconnect/private_keys/AuthKey_5RPFG6VXG9.p8`
+   y `~/.appstoreconnect/vigishield_review.json` van a iCloud Drive → `Tesis/Cloud/` y a la carpeta `Cloud`
+   local.
+8. Notas para la revisión: ya mencionan push, Sign in with Apple y Google «Próximamente». **Si Apple objeta
+   el botón de Google (guía 2.1, contenido de relleno),** poner `kMostrarGoogleProximamente = false` en
+   `lib/widgets/login_externo.dart`, subir el `+N` y volver a enviar.
+9. Commits solo a nombre de Diego y **sin** `Co-Authored-By` (ver «Reglas del proyecto»). Actualizar este
+   archivo con lo que pasó.
+10. Cuando el 34 esté disponible para todos, avisar a Diego para subir `ultimo` a 34 en `app-version.json`.
 
 **Qué cambió desde el build 33** (hecho en la PC):
-- **Notificaciones push**: en iPhone por APNs directo, sin Firebase (`PushNativo` en `AppDelegate.swift`); en
-  Android por FCM. Se registran en `POST /api/push/dispositivos`. Las alertas llegan con la app cerrada y
-  tocarlas abre el evento. Ajustes → Notificaciones muestra el estado y envía una de prueba.
+- **Notificaciones push.**
+  - En iPhone, por APNs directo, sin Firebase (`PushNativo` en `AppDelegate.swift`); en Android, por FCM.
+  - Los teléfonos se registran en `POST /api/push/dispositivos`. Las alertas llegan con la app cerrada y
+    tocarlas abre el evento.
+  - Ajustes → Notificaciones muestra el estado y envía una de prueba.
 - **Iniciar sesión con Apple** (`lib/widgets/login_externo.dart`, `lib/data/services/login_externo_service.dart`;
   backend `POST /api/auth/apple`). La cuenta nueva no tiene contraseña: para borrarla se confirma con Apple
-  (`POST /api/auth/delete-account/apple`). Al borrarla, el backend revoca el token de Apple cuando tenga la
-  llave de Sign in with Apple configurada (por ahora no la tiene: falta crearla, ver «Pendiente de Diego»).
+  (`POST /api/auth/delete-account/apple`), y el backend revoca el token de Apple.
 - «Continuar con Google» desactivado, con «Próximamente».
-- **Modo claro** (Ajustes → Apariencia: Sistema, Claro u Oscuro; por defecto Oscuro). `AppColors` ya no son
-  constantes: devuelven el color del modo activo. La pestaña Cámara es siempre oscura (`AppColorsOscuros`).
-- Animaciones: entre pestañas, al abrir pantallas, listas escalonadas y la barra inferior.
-- Indicador de carga propio (`VsCargando`): una cámara de vigilancia que gira; en botones, un radar.
-- Tutorial al agregar la primera cámara (celular o IP) y ejemplo animado de cómo se dibuja una zona
+- **Modo claro** (Ajustes → Apariencia: Sistema, Claro u Oscuro; por defecto, Oscuro). `AppColors` ya no son
+  constantes: devuelven el color del modo activo. La pestaña Cámara siempre es oscura (`AppColorsOscuros`).
+- **Animaciones:** entre pestañas, al abrir pantallas, listas escalonadas y la barra inferior.
+- **Indicador de carga propio** (`VsCargando`): una cámara de vigilancia que gira; en los botones, un radar.
+- **Tutorial al agregar la primera cámara** (celular o IP) y ejemplo animado de cómo se dibuja una zona
   (`assets/tutorial/entrada_ejemplo.jpg`, foto de stock de Pexels).
-- El inicio pide agregar una cámara aunque haya un video de ejemplo en curso; el aviso de servidor apagado
-  es más corto.
+- El inicio pide agregar una cámara aunque haya un video de ejemplo en curso. El aviso de servidor apagado es
+  más corto.
 
-**Pendiente de Diego (no lo puede hacer la Mac por la API):**
-- **Primero, activar las capacidades en el App ID** (si no, al crear la llave sale «There are no identifiers
-  that can be associated with the key»): developer.apple.com → Identifiers → `com.vigishield.app` → marcar
-  **Sign In with Apple** («Enable as a primary App ID»), **Push Notifications** y **Time Sensitive
-  Notifications** → Save. Compilar el build 34 en la Mac con firma automática también las activa.
-- **Una llave de Apple con dos servicios** (developer.apple.com → Keys → «+»):
-  - **Apple Push Notifications service (APNs)**, con entorno «Sandbox & Production»;
-  - **Sign in with Apple**, con App ID `com.vigishield.app`.
-  Descargar `AuthKey_XXXX.p8` (se descarga una sola vez) y pasarle a la PC el archivo y su Key ID. La PC la
-  instala en el Oracle: `Apns__TeamId`, `Apns__KeyId` y `Apns__PrivateKeyPath` para las notificaciones, y
-  `Apple__TeamId`, `Apple__KeyId` y `Apple__PrivateKeyPath` para revocar los tokens de Apple.
-- ~~Firebase para Android~~: hecho el 2026-10-15 (proyecto `vigishield-app`; push probado en el Samsung).
-- Apple en Android (opcional): un Services ID en Identifiers (p. ej. `app.vigishield.signin`) con Sign in with
+**Pendiente de Diego (opcional):**
+- **Apple en Android.** Crear un Services ID en Identifiers (p. ej. `app.vigishield.signin`) con Sign in with
   Apple, dominio `api.vigishield.app` y URL de retorno `https://api.vigishield.app/api/auth/apple/callback`.
-  Con `Apple__ServiceId` en el Oracle, la app de Android muestra el botón sola (no hace falta otro APK).
+  Con `Apple__ServiceId` en el Oracle, la app de Android muestra el botón sola, sin otro APK.
+- **Google login.** Activar el proveedor Google en Firebase Authentication (`vigishield-app`) y registrar el
+  SHA-1 de la llave de firma de Android.
 
 **Qué probar** (TestFlight, «What to Test»):
 
