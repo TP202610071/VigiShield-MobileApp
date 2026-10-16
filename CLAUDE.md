@@ -67,6 +67,92 @@ necesitan `chmod 600 ../../Cloud/*.key ../../Cloud/*.pem`.
 | `AuthKey_J63C7PQC59.p8` | Llave de Apple (Key ID `J63C7PQC59`) con APNs y Sign in with Apple | Ya instalada en el servidor (`/etc/vigishield/apple-authkey.p8`, con `Apns__*` y `Apple__*`) |
 | `AuthKey_5RPFG6VXG9.p8` y `vigishield_review.json` | API de App Store Connect y datos del revisor | Viven en la Mac, en `~/.appstoreconnect/`. **La Mac debe copiar ambos a iCloud Drive → `Tesis/Cloud/`.** |
 
+## Pendiente para la Mac: subir el build 35 (2026-10-16)
+
+1. **Primero, subir lo que la Mac tenga sin subir del build 34:** `Podfile.lock`, este archivo y cualquier
+   arreglo de `AppDelegate.swift`. Commit a nombre de Diego, sin `Co-Authored-By`, y `git push`. Después,
+   `git pull`.
+   - Este lote **no toca `ios/`**, así que no debería haber conflictos.
+   - Si `CLAUDE.md` da conflicto, quedarse con los dos textos.
+2. `flutter pub get`, `cd ios && pod install && cd ..` (no hay dependencias nuevas), `flutter analyze` y
+   `flutter test` (en la PC: 138 pruebas en verde).
+3. `flutter build ipa --release` (1.0.0+35), subirlo con `altool`, agregarlo a los dos grupos y mandar «Qué
+   probar» (abajo).
+4. **Probar en el iPhone** desde el panel (`https://vigishield.app/admin` → 🔔 Notificaciones): enviar a la
+   propia cuenta con emojis, subtítulo, nivel «Urgente» y «Al tocarla abre: Historial». Debe llegar con la app
+   cerrada, y tocarla abre el historial.
+
+   La llave de APNs ya está en el servidor, y el iPhone de Diego ya quedó registrado con el build 34.
+5. **Opcional, la imagen en las notificaciones de iPhone.** iOS solo la muestra con una *Notification Service
+   Extension*; Android ya la muestra.
+   - Xcode → File → New → Target → **Notification Service Extension**, nombre `NotificacionesConImagen`,
+     iOS 15.5, el mismo equipo (`ZUXS3B846T`).
+   - Reemplazar su `NotificationService.swift` por esto. El backend manda la URL en `imagen` con
+     `mutable-content: 1`.
+
+   ```swift
+   import UserNotifications
+
+   class NotificationService: UNNotificationServiceExtension {
+     var listo: ((UNNotificationContent) -> Void)?
+     var contenido: UNMutableNotificationContent?
+
+     override func didReceive(_ request: UNNotificationRequest,
+                              withContentHandler contentHandler: @escaping (UNNotificationContent) -> Void) {
+       listo = contentHandler
+       contenido = request.content.mutableCopy() as? UNMutableNotificationContent
+       guard let contenido, let texto = request.content.userInfo["imagen"] as? String,
+             let url = URL(string: texto), url.scheme == "https" else {
+         contentHandler(request.content); return
+       }
+       URLSession.shared.downloadTask(with: url) { archivo, respuesta, _ in
+         defer { contentHandler(contenido) }
+         guard let archivo else { return }
+         let tipo = (respuesta?.mimeType == "image/png") ? "png" : "jpg"
+         let destino = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("\(UUID().uuidString).\(tipo)")
+         try? FileManager.default.moveItem(at: archivo, to: destino)
+         if let adjunto = try? UNNotificationAttachment(identifier: "imagen", url: destino) {
+           contenido.attachments = [adjunto]
+         }
+       }.resume()
+     }
+
+     override func serviceExtensionTimeWillExpire() {
+       if let listo, let contenido { listo(contenido) }
+     }
+   }
+   ```
+6. **Opcional, borrar el número del ícono al abrir la app.** El panel puede poner una insignia. En
+   `PushNativo.alArrancar()` de `AppDelegate.swift`, agregar un observador de
+   `UIApplication.didBecomeActiveNotification` que llame a `UNUserNotificationCenter.current().setBadgeCount(0)`.
+   Ese método es de iOS 16 o superior; para iOS 15, `UIApplication.shared.applicationIconBadgeNumber = 0`.
+7. Actualizar este archivo con lo que pasó y avisar a Diego para subir `ultimo` a 35 en `app-version.json`
+   cuando esté disponible para todos.
+
+**Qué cambió desde el build 34** (hecho en la PC):
+- «Continuar con Apple» tiene la misma letra que «Iniciar sesión». Es un botón propio (`BotonApple`), porque
+  el del paquete usaba el 43 % de la altura (22 pt).
+- «Agregar cámara» abre una pantalla para elegir «Cámara IP» o «Este celular como cámara»
+  (`lib/screens/settings/elegir_camara_screen.dart`, ruta `/settings/cameras/nueva`). Antes era una hoja
+  inferior. El botón del inicio y el paso del tutorial también llevan ahí.
+- **Notificaciones desde el panel de administración**, a una cuenta o a un hogar, en iPhone y Android:
+  - emojis, subtítulo e imagen (Android; en iPhone, con la extensión del paso 5);
+  - importancia: urgente, normal o silenciosa;
+  - sonido, número en el ícono y qué abre al tocarla.
+
+  La app recibe el destino en `eventId`: un id de evento o una ruta permitida
+  (`NotificacionesPush.rutaDeDestino`). Android tiene dos canales nuevos, `avisos` y `silenciosas`.
+
+**Qué probar** (TestFlight, «What to Test»):
+
+```
+ES: «Continuar con Apple» con el tamaño de letra correcto. «Agregar cámara» ahora abre una pantalla para elegir
+cámara IP o este celular. Las notificaciones del equipo de VigiShield pueden traer emojis y abrir una sección
+de la app.
+EN: "Continue with Apple" now has the right font size. "Add camera" opens a screen to choose an IP camera or
+this phone. Notifications from the VigiShield team can include emojis and open a section of the app.
+```
+
 ## Publicar en App Store: estado
 
 Versión actual: **1.0.0+34** (App Store Connect: versión `1.0.0`, app id `6819493311`; builds 29, 30 y 33 subidos; el 34 está por subir).

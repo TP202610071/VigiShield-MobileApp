@@ -109,12 +109,10 @@ class _BotonesLoginExternoState extends State<BotonesLoginExterno> {
           width: double.infinity,
           child: _cargando
               ? Center(child: VsCargando(size: 28, color: AppColors.accent))
-              : SignInWithAppleButton(
+              : BotonApple(
                   key: const Key('boton-apple'),
-                  text: s.loginConApple,
-                  height: 52,
-                  style: AppColors.esClaro ? SignInWithAppleButtonStyle.black : SignInWithAppleButtonStyle.white,
-                  borderRadius: const BorderRadius.all(Radius.circular(14)),
+                  texto: s.loginConApple,
+                  alto: 52,
                   onPressed: _conApple,
                 ),
         ),
@@ -175,6 +173,52 @@ class _GoogleProximamente extends StatelessWidget {
             ),
           ),
         ]),
+      ),
+    );
+  }
+}
+
+/// «Continuar con Apple» con el mismo tamaño de letra que el resto de botones.
+///
+/// El botón del paquete calcula la letra como el 43 % de la altura (22 pt con
+/// 52 de alto) y se veía más grande que «Iniciar sesión». Apple permite botones
+/// propios si llevan su logo, su texto y el estilo negro o blanco: negro en el
+/// modo claro, blanco en el oscuro.
+class BotonApple extends StatelessWidget {
+  final String texto;
+  final VoidCallback? onPressed;
+  final double alto;
+  final double radio;
+
+  const BotonApple({super.key, required this.texto, required this.onPressed, this.alto = 52, this.radio = 14});
+
+  @override
+  Widget build(BuildContext context) {
+    final fondo = AppColors.esClaro ? Colors.black : Colors.white;
+    final tinta = AppColors.esClaro ? Colors.white : Colors.black;
+    return SizedBox(
+      height: alto,
+      width: double.infinity,
+      child: Material(
+        color: fondo,
+        borderRadius: BorderRadius.circular(radio),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onPressed,
+          child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+            SizedBox(
+              width: 15,
+              height: 18,
+              child: CustomPaint(painter: AppleLogoPainter(color: tinta)),
+            ),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(texto,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600, color: tinta, letterSpacing: 0.2)),
+            ),
+          ]),
+        ),
       ),
     );
   }
@@ -272,12 +316,11 @@ class _ConfirmarEliminarConAppleState extends State<ConfirmarEliminarConApple> {
           width: double.infinity,
           child: _enviando
               ? Center(child: VsCargando(size: 24, color: AppColors.alertRed))
-              : SignInWithAppleButton(
+              : BotonApple(
                   key: const Key('eliminar-con-apple'),
-                  text: s.eliminarConApple,
-                  height: 46,
-                  style: AppColors.esClaro ? SignInWithAppleButtonStyle.black : SignInWithAppleButtonStyle.white,
-                  borderRadius: const BorderRadius.all(Radius.circular(12)),
+                  texto: s.eliminarConApple,
+                  alto: 46,
+                  radio: 12,
                   onPressed: _confirmar,
                 ),
         ),

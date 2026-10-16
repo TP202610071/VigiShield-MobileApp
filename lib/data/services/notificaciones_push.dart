@@ -46,6 +46,18 @@ class NotificacionesPush extends ChangeNotifier implements SessionScoped {
   String? _ultimoAbierto;
   DateTime? _ultimoAbiertoEn;
 
+  /// Pestañas que una notificación del panel puede abrir.
+  static const rutasPermitidas = {'/dashboard', '/camera', '/history', '/settings'};
+
+  /// A dónde lleva una notificación. Llega en "eventId": el id de un evento
+  /// (alertas) o una ruta que empieza con «/» (avisos del panel). Cualquier
+  /// otra cosa se ignora.
+  static String? rutaDeDestino(String destino) {
+    if (destino.startsWith('/')) return rutasPermitidas.contains(destino) ? destino : null;
+    final esId = RegExp(r'^[0-9a-fA-F-]{32,36}$').hasMatch(destino);
+    return esId ? '/history/$destino' : null;
+  }
+
   static bool get soportado =>
       !kIsWeb && (defaultTargetPlatform == TargetPlatform.android || defaultTargetPlatform == TargetPlatform.iOS);
   static bool get _esIos => defaultTargetPlatform == TargetPlatform.iOS;

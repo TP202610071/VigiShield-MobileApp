@@ -10,6 +10,7 @@ import '../providers/camera_provider.dart';
 import '../providers/dev_settings_provider.dart';
 import 'tutorial/tutorial_claves.dart';
 import 'video_ejemplo.dart';
+import '../screens/settings/elegir_camara_screen.dart';
 
 /// Tarjeta del inicio: primero, que agregue su cámara; el video de ejemplo,
 /// después.
@@ -87,7 +88,7 @@ class _TarjetaInicioCamarasState extends State<TarjetaInicioCamaras> {
             width: double.infinity,
             child: ElevatedButton.icon(
               key: TutorialClaves.agregarCamara,
-              onPressed: () => context.push('/settings/cameras/add'),
+              onPressed: () => context.push(ElegirCamaraScreen.ruta),
               icon: const Icon(Icons.add_circle_outline, size: 18),
               label: Text(s.sinCamarasBoton,
                   style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14)),

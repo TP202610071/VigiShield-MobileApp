@@ -15,6 +15,7 @@ import '../../data/services/mobile_camera_publisher.dart';
 import '../../data/services/estado_transmision.dart';
 import '../camera/aviso_sin_transmision.dart';
 import '../../widgets/vs_cargando.dart';
+import 'elegir_camara_screen.dart';
 
 class CamerasListScreen extends StatefulWidget {
   const CamerasListScreen({super.key});
@@ -112,16 +113,9 @@ class _CamerasListScreenState extends State<CamerasListScreen> {
     if (id != null) await context.push('/settings/cameras/$id/zones?intro=1');
   }
 
-  void _showAddOptions(BuildContext context) {
-    showModalBottomSheet<void>(context: context, builder: (sheetContext) => SafeArea(
-      child: Column(mainAxisSize: MainAxisSize.min, children: [
-        ListTile(leading: const Icon(Icons.lan_outlined), title: const Text('Agregar cámara IP'),
-          onTap: () { Navigator.pop(sheetContext); context.push('/settings/cameras/add'); }),
-        ListTile(leading: const Icon(Icons.phone_android), title: const Text('Usar este dispositivo como cámara'),
-          onTap: () { Navigator.pop(sheetContext); _openDevice(context); }),
-      ]),
-    ));
-  }
+  /// «Agregar cámara» abre la pantalla para elegir el tipo (antes era una
+  /// hoja inferior con las dos opciones).
+  void _showAddOptions(BuildContext context) => context.push(ElegirCamaraScreen.ruta);
 
   Widget _buildEmpty(BuildContext context, bool isPrimary) {
     return Center(

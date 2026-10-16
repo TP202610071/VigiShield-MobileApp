@@ -11,6 +11,9 @@ import 'package:vigishield_mobile_app/data/services/camera_service.dart';
 import 'package:vigishield_mobile_app/providers/auth_provider.dart';
 import 'package:vigishield_mobile_app/providers/camera_provider.dart';
 import 'package:vigishield_mobile_app/screens/settings/cameras_list_screen.dart';
+import 'package:vigishield_mobile_app/screens/settings/elegir_camara_screen.dart';
+import 'package:vigishield_mobile_app/core/i18n/app_localizations.dart';
+import 'package:go_router/go_router.dart';
 class TestAuth extends AuthProvider {
   final String role;
   TestAuth(this.role):super(AuthService(ApiClient(AuthStorage())), AuthStorage());
@@ -28,7 +31,11 @@ void main() {
       await tester.pumpWidget(MultiProvider(providers: [
         ChangeNotifierProvider<AuthProvider>(create: (_) => TestAuth(role)),
         ChangeNotifierProvider<CameraProvider>(create: (_) => TestCameras()),
-      ], child: const MaterialApp(home: CamerasListScreen())));
+        ChangeNotifierProvider(create: (_) => LocaleProvider(AuthStorage(), AppLocale.es)),
+      ], child: MaterialApp.router(routerConfig: GoRouter(routes: [
+        GoRoute(path: '/', builder: (_, __) => const CamerasListScreen()),
+        GoRoute(path: ElegirCamaraScreen.ruta, builder: (_, __) => const ElegirCamaraScreen()),
+      ]))));
       await tester.pumpAndSettle();
       // Dos interruptores por camara: "Activa" (si la IA la procesa, que es
       // lo unico que ahorra recursos) y "Notificaciones".
@@ -42,11 +49,13 @@ void main() {
       expect(find.text('Cámara de este teléfono'), findsOneWidget);
       expect(find.byIcon(Icons.phone_android), findsWidgets);
       if (role != 'Secondary') {
+        // «Agregar» abre la pantalla para elegir el tipo de cámara.
         await tester.tap(find.text('Agregar'));
         await tester.pumpAndSettle();
-        expect(find.text('Usar este dispositivo como cámara'), findsOneWidget);
-        expect(find.text('Agregar cámara IP'), findsOneWidget);
-        await tester.tapAt(const Offset(10, 10));
+        expect(find.text('¿Qué cámara quieres agregar?'), findsOneWidget);
+        expect(find.byKey(const Key('opcion-camara-ip')), findsOneWidget);
+        expect(find.byKey(const Key('opcion-este-celular')), findsOneWidget);
+        await tester.pageBack();
         await tester.pumpAndSettle();
         expect(find.byIcon(Icons.crop_free), findsOneWidget);
         expect(find.byIcon(Icons.edit_outlined), findsOneWidget);

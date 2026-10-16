@@ -40,6 +40,7 @@ object PushNativo {
     fun conectar(activity: Activity, messenger: BinaryMessenger) {
         contexto = activity.applicationContext
         crearCanalDeAlertas(activity)
+        crearCanalesDeAvisos(activity)
         tomarEvento(activity.intent)
         canal = MethodChannel(messenger, "vigishield/push").apply {
             setMethodCallHandler { call, result ->
@@ -100,6 +101,72 @@ object PushNativo {
                 description = "Personas desconocidas, merodeo, intrusión y otros eventos de tus cámaras."
                 enableVibration(true)
             })
+    }
+
+    /**
+     * Canales de los avisos del panel de administración: "avisos" (suena, sin
+     * aparecer encima) y "silenciosas" (sin sonido). Las alertas de la IA van
+     * por "alertas".
+     */
+    fun crearCanalesDeAvisos(context: Context) {
+        val nm = context.getSystemService(NotificationManager::class.java)
+        if (nm.getNotificationChannel("avisos") == null) {
+            nm.createNotificationChannel(
+                NotificationChannel("avisos", "Avisos de VigiShield", NotificationManager.IMPORTANCE_DEFAULT).apply {
+                    description = "Mensajes del equipo de VigiShield."
+                })
+        }
+        if (nm.getNotificationChannel("silenciosas") == null) {
+            nm.createNotificationChannel(
+                NotificationChannel("silenciosas", "Avisos silenciosos", NotificationManager.IMPORTANCE_LOW).apply {
+                    description = "Mensajes sin sonido."
+                    setSound(null, null)
+                })
+        }
+    }
+
+    /**
+     * Con la app abierta, un aviso del panel se muestra en su canal y con su
+     * imagen grande (se descarga aquí; FCM llama en un hilo de fondo).
+     */
+    fun mostrarMensaje(context: Context, titulo: String?, cuerpo: String?, datos: Map<String, String>, imagen: String?) {
+        if (Build.VERSION.SDK_INT >= 33 &&
+            context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) return
+        crearCanalDeAlertas(context)
+        crearCanalesDeAvisos(context)
+        val canal = datos["canal"] ?: CANAL_ALERTAS
+        val destino = datos[EXTRA_EVENTO]
+        val abrir = Intent(context, MainActivity::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            if (destino != null) putExtra(EXTRA_EVENTO, destino)
+        }
+        val clave = (destino ?: titulo ?: "vigishield").hashCode()
+        val pendiente = PendingIntent.getActivity(context, clave, abrir,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        val constructor = Notification.Builder(context, canal)
+            .setSmallIcon(R.drawable.ic_notificacion)
+            .setColor(0xFF00C2FF.toInt())
+            .setContentTitle(titulo)
+            .setContentText(cuerpo)
+            .setStyle(Notification.BigTextStyle().bigText(cuerpo))
+            .setAutoCancel(true)
+            .setContentIntent(pendiente)
+        descargarImagen(imagen)?.let { foto ->
+            constructor.setLargeIcon(foto).setStyle(Notification.BigPictureStyle().bigPicture(foto).setSummaryText(cuerpo))
+        }
+        context.getSystemService(NotificationManager::class.java).notify(clave, constructor.build())
+    }
+
+    private fun descargarImagen(url: String?): android.graphics.Bitmap? {
+        if (url.isNullOrBlank() || !url.startsWith("https://")) return null
+        return try {
+            val conexion = java.net.URL(url).openConnection() as java.net.HttpURLConnection
+            conexion.connectTimeout = 4000
+            conexion.readTimeout = 6000
+            conexion.inputStream.use { android.graphics.BitmapFactory.decodeStream(it) }
+        } catch (e: Exception) {
+            null
+        }
     }
 
     /**
