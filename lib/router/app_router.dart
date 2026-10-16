@@ -16,6 +16,7 @@ import '../screens/settings/profile_screen.dart';
 import '../screens/settings/developer_screen.dart';
 import '../screens/settings/cameras_list_screen.dart';
 import '../screens/settings/camera_setup_screen.dart';
+import '../screens/settings/elegir_camara_screen.dart';
 import '../screens/settings/zone_editor_screen.dart';
 import '../screens/settings/faces_screen.dart';
 import '../screens/settings/face_enrollment_screen.dart';
@@ -81,6 +82,11 @@ GoRouter createRouter(AuthProvider authProvider) => GoRouter(
         GoRoute(
           path: '/settings/cameras/add',
           builder: (ctx, st) => const CameraSetupScreen(),
+        ),
+        // Elegir qué cámara agregar (IP o este celular). Antes de '/:id'.
+        GoRoute(
+          path: ElegirCamaraScreen.ruta,
+          builder: (ctx, st) => const ElegirCamaraScreen(),
         ),
         GoRoute(
           path: '/settings/cameras/:id',

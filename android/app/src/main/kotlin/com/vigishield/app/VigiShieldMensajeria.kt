@@ -14,6 +14,12 @@ class VigiShieldMensajeria : FirebaseMessagingService() {
 
     override fun onMessageReceived(message: RemoteMessage) {
         val n = message.notification ?: return
-        PushNativo.mostrar(this, n.title, n.body, message.data["eventId"])
+        // Los avisos del panel traen su canal (e imagen); las alertas de la IA, no.
+        if (message.data["canal"] != null) {
+            PushNativo.mostrarMensaje(this, n.title, n.body, message.data,
+                n.imageUrl?.toString() ?: message.data["imagen"])
+        } else {
+            PushNativo.mostrar(this, n.title, n.body, message.data["eventId"])
+        }
     }
 }

@@ -202,10 +202,25 @@ class _VigiShieldAppState extends State<VigiShieldApp> {
   /// Tocar una notificación abre el evento. Si la app recién arranca, lo abre
   /// la pantalla de bienvenida cuando sepa si hay sesión (como un enlace).
   void _abrirEventoPush(String id) {
-    final ruta = '/history/$id';
+    // Un evento (alertas) o una pestaña (avisos del panel de administración).
+    final ruta = NotificacionesPush.rutaDeDestino(id);
+    if (ruta == null) return;
     final actual = _router.routerDelegate.currentConfiguration;
-    if (actual.isEmpty || actual.uri.path == '/splash') {
+    final esPestana = NotificacionesPush.rutasPermitidas.contains(ruta);
+    if ((actual.isEmpty || actual.uri.path == '/splash') && !esPestana) {
       DeepLinks.pendingRoute = ruta;
+    } else if (actual.isEmpty || actual.uri.path == '/splash') {
+      // Una pestaña: se cambia cuando la bienvenida termine de resolver la sesión.
+      late final VoidCallback alSalir;
+      alSalir = () {
+        final p = _router.routerDelegate.currentConfiguration;
+        if (p.isEmpty || p.uri.path == '/splash') return;
+        _router.routerDelegate.removeListener(alSalir);
+        if (_authProvider.isAuthenticated && p.uri.path != ruta) _router.go(ruta);
+      };
+      _router.routerDelegate.addListener(alSalir);
+    } else if (esPestana) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _router.go(ruta));
     } else {
       WidgetsBinding.instance.addPostFrameCallback((_) => _router.push(ruta));
     }
