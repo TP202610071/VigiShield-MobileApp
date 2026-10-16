@@ -74,13 +74,10 @@ necesitan `chmod 600 ../../Cloud/*.key ../../Cloud/*.pem`.
 
 ## Pendiente para la Mac: subir el build 35 (2026-10-16)
 
-1. **Primero, subir lo que la Mac tenga sin subir del build 34:** `Podfile.lock`, este archivo y cualquier
-   arreglo de `AppDelegate.swift`. Commit a nombre de Diego, sin `Co-Authored-By`, y `git push`. Después,
-   `git pull`.
-   - Este lote **no toca `ios/`**, así que no debería haber conflictos.
-   - Si `CLAUDE.md` da conflicto, quedarse con los dos textos.
-2. `flutter pub get`, `cd ios && pod install && cd ..` (no hay dependencias nuevas), `flutter analyze` y
-   `flutter test` (en la PC: 138 pruebas en verde).
+1. `git pull`. Lo del build 34 ya se subió desde la Mac (`51dc8b0`) y está mezclado aquí. Este lote **no toca
+   `ios/`**, así que no hay conflictos.
+2. `flutter pub get` (no hay dependencias nuevas; los plugins entran por Swift Package Manager), `flutter analyze`
+   y `flutter test` (en la PC: 138 pruebas en verde).
 3. `flutter build ipa --release` (1.0.0+35), subirlo con `altool`, agregarlo a los dos grupos y mandar «Qué
    probar» (abajo).
 4. **Probar en el iPhone** desde el panel (`https://vigishield.app/admin` → 🔔 Notificaciones): enviar a la
