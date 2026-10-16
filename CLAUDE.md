@@ -32,7 +32,12 @@ cd ios && fastlane deliver --skip_screenshots true   # textos y datos de revisi�
 - Ficha de tienda en `ios/fastlane/` (`Deliverfile`, `metadata/es-MX` y `en-US`,
   `review_notes.txt`, `age_rating.json`, `screenshots/`). Los datos de contacto y la
   contraseña del revisor se leen de `~/.appstoreconnect/vigishield_review.json`.
-- TestFlight: grupo interno «Equipo VigiShield» con acceso a todos los builds.
+- TestFlight: grupo interno «Equipo VigiShield» con acceso a todos los builds. Para los externos, con el
+  build ya procesado: `ruby ~/.appstoreconnect/testflight.rb <build> "<qué probar ES>" "<what to test EN>"`
+  (pone «Qué probar», lo agrega a «VigiShield Testers» y lo manda a la revisión beta).
+- En la Mac, Flutter integra los plugins por Swift Package Manager (paquete generado en
+  `ios/Flutter/ephemeral`, fuera de git). Los que lo soportan, como `sign_in_with_apple`, no pasan por
+  CocoaPods: un plugin nuevo no siempre cambia `Podfile.lock`.
 - Bundle ID `com.vigishield.app`, equipo `ZUXS3B846T`, iOS mínimo 15.5, solo iPhone (`TARGETED_DEVICE_FAMILY = 1`).
 - ATS: sin excepciones de HTTP; solo `NSAllowsLocalNetworking` (control de la cámara IP en el wifi de casa).
 - El `Podfile` define `PERMISSION_CAMERA=1` (permission_handler). Sin eso, el permiso de cámara no se pide.
@@ -42,7 +47,7 @@ cd ios && fastlane deliver --skip_screenshots true   # textos y datos de revisi�
   **Cada subida a App Store Connect necesita un número de build (`+N`) mayor.**
   La versión (`x.y.z`) debe coincidir con la que está en preparación en App Store
   Connect (hoy `1.0.0`). Hasta publicarla, las tandas nuevas solo suben el `+N`.
-  Los builds 29 y 30 corresponden a 1.0.0.
+  Los builds 29, 30, 33 y 34 corresponden a 1.0.0.
 - El build de release es el de tienda: las herramientas de validación (OE4) no
   se incluyen (`kValidationTools`) y la sesión de validación solo existe en Android.
 
@@ -65,11 +70,11 @@ necesitan `chmod 600 ../../Cloud/*.key ../../Cloud/*.pem`.
 | `vigishield-app-firebase-adminsdk-fbsvc-*.json` | Cuenta de servicio de Firebase (`vigishield-app`): el backend envía las notificaciones de Android | Ya instalada en el servidor (`/etc/vigishield/firebase-servicio.json`) |
 | `google-services.json` | Firebase de la app Android | Copiar a `android/app/google-services.json` antes de `flutter build apk` (está en `.gitignore`; sin él la app compila, pero Android no recibe push). En iOS no se usa: allí las notificaciones van por APNs directo. |
 | `AuthKey_J63C7PQC59.p8` | Llave de Apple (Key ID `J63C7PQC59`) con APNs y Sign in with Apple | Ya instalada en el servidor (`/etc/vigishield/apple-authkey.p8`, con `Apns__*` y `Apple__*`) |
-| `AuthKey_5RPFG6VXG9.p8` y `vigishield_review.json` | API de App Store Connect y datos del revisor | Viven en la Mac, en `~/.appstoreconnect/`. **La Mac debe copiar ambos a iCloud Drive → `Tesis/Cloud/`.** |
+| `AuthKey_5RPFG6VXG9.p8` y `vigishield_review.json` | API de App Store Connect y datos del revisor | Viven en la Mac, en `~/.appstoreconnect/`, y hay copia en iCloud Drive → `Tesis/Cloud/` (2026-10-15). `vigishield_review.json` ya está completo (contacto, copyright y contraseña del revisor). |
 
 ## Publicar en App Store: estado
 
-Versión actual: **1.0.0+34** (App Store Connect: versión `1.0.0`, app id `6819493311`; builds 29, 30 y 33 subidos; el 34 está por subir).
+Versión actual: **1.0.0+34** (App Store Connect: versión `1.0.0`, app id `6819493311`; builds 29, 30, 33 y 34 subidos).
 
 El 2026-10-10 la PC subió por error la versión a 1.1.0 y 1.2.0; se corrigió a `1.0.0+32`. Ningún build con
 esas versiones llegó a App Store Connect (solo se compilaron APK en la PC).
@@ -88,8 +93,7 @@ Hecho:
 - Se dejó solo iPhone. Para volver a iPad: `TARGETED_DEVICE_FAMILY = "1,2"` y capturas de iPad 13".
 
 Falta:
-- Probar en TestFlight el último build (33): video de ejemplo, cámara del teléfono, eventos y borrar una cuenta de prueba.
-- Completar `~/.appstoreconnect/vigishield_review.json` (contacto, copyright, contraseña del revisor).
+- Probar en TestFlight el último build (34): video de ejemplo, cámara del teléfono, eventos y borrar una cuenta de prueba.
 - Capturas de iPhone 6.9" (1320×2868) en `ios/fastlane/screenshots/es-MX` y `en-US`.
 - En la web (la API no lo permite): App Privacy, precio y disponibilidad, estado de comerciante (DSA).
 - App Privacy (etiquetas): nombre, correo y teléfono (opcional); fotos y video (cámaras, rostros autorizados; los rasgos faciales son dato sensible); ID de usuario. Todo vinculado a la cuenta y nada de rastreo.
@@ -129,64 +133,37 @@ password: to delete it, Settings > tap your name (Profile) > "Delete account" >
 "Confirm with Apple". "Continue with Google" is disabled and marked "Coming soon".
 ```
 
-## Pendiente para la Mac: subir el build 34 (actualizado 2026-10-16)
+## Build 34 en TestFlight (subido desde la Mac el 2026-10-15)
 
-**El servidor ya está listo y probado:**
-- llave de Apple (Key ID `J63C7PQC59`) para APNs y Sign in with Apple, instalada en el Oracle;
-- Firebase para Android (el push ya funciona en el Samsung).
+Hecho desde la Mac:
+- `pod install` sin cambios en `Podfile.lock`: `sign_in_with_apple` entra por Swift Package Manager (ver
+  «Compilar para iOS»). No hubo nada que commitear.
+- Capacidades: las tres configuraciones usan `Runner.entitlements`, y el App ID tiene Push Notifications,
+  Time Sensitive Notifications y Sign in with Apple. El IPA firmado lleva `aps-environment = production`.
+- `AppDelegate.swift` compiló sin cambios (el `as FlutterPluginRegistrar?` y la conformidad repetida no dan
+  error).
+- `flutter analyze` sin errores; 133 pruebas en verde.
+- Subido y procesado. Internos: disponible. Externos: agregado a «VigiShield Testers», revisión beta
+  aprobada al momento, con «Qué probar» en es-MX y en-US.
 
-Falta compilar, subir y probar en un iPhone. Igual que el 33: testers internos **y externos**.
-
-0. **Antes de traer los cambios:** `git status`. Si hay cambios locales, guardarlos con `git stash` y
-   reaplicarlos después con `git stash pop`. El historial no se reescribió desde el 2026-10-10: `git pull`
-   avanza directo desde el último commit de la Mac (`067cdc9`), sin conflictos.
-1. `git pull`, `flutter pub get` y **`cd ios && pod install && cd ..`**. Hay una dependencia nueva,
-   `sign_in_with_apple`, así que `Podfile.lock` cambia: se commitea.
-2. **Capacidades.** Diego ya las activó en el App ID `com.vigishield.app`, y `ios/Runner/Runner.entitlements`
-   las trae: `com.apple.developer.applesignin`, `aps-environment` y
-   `com.apple.developer.usernotifications.time-sensitive`.
-   - Abrir `ios/Runner.xcworkspace` una vez → Runner → **Signing & Capabilities**. Deben aparecer **Sign in
-     with Apple**, **Push Notifications** y **Time Sensitive Notifications**; si falta una, «+ Capability».
-   - Con la firma automática, Xcode regenera el perfil. Si avisa que el perfil no incluye una capacidad,
-     «Try Again».
-   - `aps-environment` queda en `development`: al exportar para TestFlight, Xcode lo pasa a producción.
-3. **`ios/Runner/AppDelegate.swift` cambió y nunca se compiló** (se escribió en la PC). Agrega la clase
-   `PushNativo`: APNs directo, canal `vigishield/push`. Si Swift da error, corregirlo sin cambiar lo que hace.
-   Puntos dudosos:
-   - `registrar(forPlugin:) as FlutterPluginRegistrar?`: si sobra el `as`, quitarlo;
-   - la conformidad repetida a `UNUserNotificationCenterDelegate` (`FlutterPlugin` ya la incluye): si da
-     aviso, quitarla.
-
-   Lo que debe seguir pasando:
-   - el delegado de `UNUserNotificationCenter` se asigna en `didFinishLaunching`, para no perder el toque que
-     abrió la app;
-   - el token llega por `registrar.addApplicationDelegate`;
-   - al tocar una notificación, se envía `abrirEvento(id)` a Dart.
-4. `flutter analyze` y `flutter test` (en la PC: 133 pruebas en verde).
-5. `flutter build ipa --release`, subirlo con `altool`, agregarlo a los dos grupos y mandar «Qué probar»
-   (abajo).
-6. **Probar en un iPhone con el build de TestFlight.** TestFlight usa APNs de producción; desde Xcode, sandbox.
-   El backend sirve para los dos.
-   - **Notificaciones.** Al entrar, la app pide permiso. Ajustes → Notificaciones debe decir «Este teléfono
-     recibe las alertas», y «Probar» debe hacer llegar una en segundos. Con la app cerrada, una alerta real
-     también llega, y tocarla abre el evento.
-   - **Apple.** «Continuar con Apple» crea una cuenta nueva (pide aceptar los términos) o entra en una
-     existente con el mismo correo. «Eliminar cuenta» ofrece «Confirmar con Apple».
-   - **Modo claro:** Ajustes → Apariencia.
-   - **Tutoriales:** el del inicio (Ajustes → «Ver el tutorial») y el de la primera cámara, con una cuenta sin
-     cámaras. El editor de zonas muestra el ejemplo animado.
-   - Si «Probar» no llega, revisar el log del backend:
-     `ssh -i ../../Cloud/oracle-ssh-key-2026-06-11.key ubuntu@vigishield.app` y, ahí,
-     `sudo journalctl -u vigishield --since "10 min ago" | grep -i apns`.
-7. **Copiar las llaves de la Mac a la carpeta compartida.** `~/.appstoreconnect/private_keys/AuthKey_5RPFG6VXG9.p8`
-   y `~/.appstoreconnect/vigishield_review.json` van a iCloud Drive → `Tesis/Cloud/` y a la carpeta `Cloud`
-   local.
-8. Notas para la revisión: ya mencionan push, Sign in with Apple y Google «Próximamente». **Si Apple objeta
-   el botón de Google (guía 2.1, contenido de relleno),** poner `kMostrarGoogleProximamente = false` en
-   `lib/widgets/login_externo.dart`, subir el `+N` y volver a enviar.
-9. Commits solo a nombre de Diego y **sin** `Co-Authored-By` (ver «Reglas del proyecto»). Actualizar este
-   archivo con lo que pasó.
-10. Cuando el 34 esté disponible para todos, avisar a Diego para subir `ultimo` a 34 en `app-version.json`.
+Falta:
+- **Probar en un iPhone con el build de TestFlight.** TestFlight usa APNs de producción; desde Xcode, sandbox.
+  El backend sirve para los dos.
+  - **Notificaciones.** Al entrar, la app pide permiso. Ajustes → Notificaciones debe decir «Este teléfono
+    recibe las alertas», y «Probar» debe hacer llegar una en segundos. Con la app cerrada, una alerta real
+    también llega, y tocarla abre el evento.
+  - **Apple.** «Continuar con Apple» crea una cuenta nueva (pide aceptar los términos) o entra en una
+    existente con el mismo correo. «Eliminar cuenta» ofrece «Confirmar con Apple».
+  - **Modo claro:** Ajustes → Apariencia.
+  - **Tutoriales:** el del inicio (Ajustes → «Ver el tutorial») y el de la primera cámara, con una cuenta sin
+    cámaras. El editor de zonas muestra el ejemplo animado.
+  - Si «Probar» no llega, revisar el log del backend:
+    `ssh -i ../../Cloud/oracle-ssh-key-2026-06-11.key ubuntu@vigishield.app` y, ahí,
+    `sudo journalctl -u vigishield --since "10 min ago" | grep -i apns`.
+- Diego sube `ultimo` a 34 en `app-version.json` (el 34 ya está disponible para todos).
+- Notas para la revisión: ya mencionan push, Sign in with Apple y Google «Próximamente». **Si Apple objeta
+  el botón de Google (guía 2.1, contenido de relleno),** poner `kMostrarGoogleProximamente = false` en
+  `lib/widgets/login_externo.dart`, subir el `+N` y volver a enviar.
 
 **Qué cambió desde el build 33** (hecho en la PC):
 - **Notificaciones push.**
@@ -230,8 +207,6 @@ interest.
 - Subido y procesado. Internos («Equipo VigiShield»): disponible ya, el grupo recibe todos los builds.
 - Externos («VigiShield Testers»): agregado y enviado a la revisión beta con «Qué probar» en es-MX y en-US.
   El build 30 ya tenía la revisión beta aprobada.
-- **Falta:** cuando la revisión beta apruebe el 33 y esté disponible para los externos, Diego sube `ultimo`
-  (y `minimo` si hace falta) a 33 en `app-version.json`. No antes (ver «Actualizaciones en iOS»).
 - La Mac llama a la API de App Store Connect con `ruby ~/.appstoreconnect/asc.rb <ruta> [MÉTODO] [json]`
   (fuera del repo). Los builds nuevos van a externos con agregar al grupo + `POST /v1/betaAppReviewSubmissions`.
 
