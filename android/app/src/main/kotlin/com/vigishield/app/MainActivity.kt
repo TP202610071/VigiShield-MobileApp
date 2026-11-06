@@ -33,6 +33,7 @@ class MainActivity : FlutterFragmentActivity() {
         emergencyChannel(flutterEngine)
         RotacionCamara(this, flutterEngine.dartExecutor.binaryMessenger)
         PushNativo.conectar(this, flutterEngine.dartExecutor.binaryMessenger)
+        IdDispositivo.conectar(applicationContext, flutterEngine.dartExecutor.binaryMessenger)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "vigishield/validation").setMethodCallHandler { call, result ->
             try {
                 when (call.method) {

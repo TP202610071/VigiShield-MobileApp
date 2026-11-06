@@ -14,7 +14,7 @@ import '../screens/history/event_detail_screen.dart';
 import '../screens/settings/settings_screen.dart';
 import '../screens/settings/profile_screen.dart';
 import '../screens/settings/developer_screen.dart';
-import '../screens/settings/cameras_list_screen.dart';
+import '../screens/settings/mis_camaras_screen.dart';
 import '../screens/settings/camera_setup_screen.dart';
 import '../screens/settings/elegir_camara_screen.dart';
 import '../screens/settings/zone_editor_screen.dart';
@@ -77,7 +77,7 @@ GoRouter createRouter(AuthProvider authProvider) => GoRouter(
         // Camera management (outside shell so the app bar works independently)
         GoRoute(
           path: '/settings/cameras',
-          builder: (ctx, st) => const CamerasListScreen(),
+          builder: (ctx, st) => const MisCamarasScreen(), // antes: CamerasListScreen
         ),
         GoRoute(
           path: '/settings/cameras/add',

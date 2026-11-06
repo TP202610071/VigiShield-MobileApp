@@ -26,6 +26,7 @@ import '../../widgets/servidor_video_caido.dart';
 import '../../data/services/mobile_camera_publisher.dart';
 import '../../data/services/estado_transmision.dart';
 import 'aviso_sin_transmision.dart';
+import 'guardia_cupo.dart';
 import '../../widgets/vs_cargando.dart';
 
 enum _ViewMode { single, grid, ai }
@@ -1159,6 +1160,26 @@ class _CameraScreenState extends State<CameraScreen>
   }
 
   /// Cámara seleccionada ahora mismo (puede ser null si aún no hay ninguna).
+  /// Cupo del servidor (beta): si la cámara está en cola o la bloqueó el
+  /// administrador, se tapa el video y se detiene el reproductor.
+  Widget _conCupo(Widget contenido) {
+    final cam = context.watch<CameraProvider>().selectedCamera;
+    if (cam == null) return contenido;
+    return GuardiaCupo(
+      cam: cam,
+      alCambiar: (tapado) {
+        if (!mounted) return;
+        if (tapado) {
+          _cancelRecoveryTimers();
+          unawaited(_player?.stop());
+        } else if (_isActive && _viewMode == _ViewMode.single) {
+          _openStream();
+        }
+      },
+      child: contenido,
+    );
+  }
+
   CameraConfigModel? get camSeleccionada =>
       context.read<CameraProvider>().selectedCamera;
 
@@ -1232,7 +1253,7 @@ class _CameraScreenState extends State<CameraScreen>
     return Stack(
       fit: StackFit.expand,
       children: [
-        _buildSingleContent(),
+        _conCupo(_buildSingleContent()),
         ServidorVideoCaido(camara: camSeleccionada),
         if (!_immersive) _buildTopBar(isLandscape),
         if (!_immersive) _buildBottomBar(isLandscape),
@@ -1316,7 +1337,7 @@ class _CameraScreenState extends State<CameraScreen>
     return Stack(
       fit: StackFit.expand,
       children: [
-        _buildAiContent(),
+        _conCupo(_buildAiContent()),
         ServidorVideoCaido(camara: camSeleccionada),
         if (!_immersive) _buildTopBar(isLandscape, aiMode: true),
         // Live detection status banner (activity + suspicious flag + chips).

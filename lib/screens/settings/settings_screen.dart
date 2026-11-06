@@ -167,6 +167,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _SectionLabel(l10n.sectionPreferences),
               const SizedBox(height: 8),
               const TarjetaNotificaciones(),
+              const SizedBox(height: 8), // + 8 del margen de la tarjeta = 16, como el resto
               // De cada teléfono, no del hogar: la ve también un secundario.
               _SettingsTile(
                 icon: Icons.notifications_active_outlined,
@@ -174,6 +175,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 onTap: () => Navigator.of(context, rootNavigator: true).push(
                     MaterialPageRoute<void>(builder: (_) => const EmergencySettingsScreen())),
               ),
+              const SizedBox(height: 16),
               _SettingsTile(
                 icon: Icons.school_outlined,
                 label: l10n.tutorialVerDeNuevo,
@@ -188,7 +190,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               const SizedBox(height: 16),
               _LanguageTile(),
-              const SizedBox(height: 10),
+              const SizedBox(height: 16),
               const SelectorTema(),
               const SizedBox(height: 24),
 

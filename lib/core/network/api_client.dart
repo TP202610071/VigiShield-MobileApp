@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import '../constants/app_constants.dart';
+import '../security/id_dispositivo.dart';
 import '../storage/auth_storage.dart';
 
 class ApiClient {
@@ -20,6 +21,11 @@ class ApiClient {
           final token = await _storage.getToken();
           if (token != null) {
             options.headers['Authorization'] = 'Bearer $token';
+          }
+          final idTelefono = await IdDispositivo.obtener();
+          if (idTelefono != null) {
+            options.headers['X-Device-Id'] = idTelefono;
+            options.headers['X-Device-Platform'] = IdDispositivo.plataforma;
           }
           handler.next(options);
         },
