@@ -12,6 +12,7 @@ import '../../widgets/password_strength.dart';
 import '../../widgets/vs_button.dart';
 import '../../widgets/vs_text_field.dart';
 import '../../widgets/login_externo.dart';
+import '../../data/models/emergency_settings.dart' show normalizePhone;
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -24,6 +25,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
+  final _telefonoCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
   final _addressCtrl = TextEditingController();
   bool _isLoading = false;
@@ -33,6 +35,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   void dispose() {
     _nameCtrl.dispose();
     _emailCtrl.dispose();
+    _telefonoCtrl.dispose();
     _passwordCtrl.dispose();
     _addressCtrl.dispose();
     super.dispose();
@@ -48,6 +51,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
       householdAddress: _addressCtrl.text.trim(),
       termsVersion: kVersionTerminos,
     );
+    if (success && mounted) {
+      // El teléfono va en el perfil (el registro no lo recibe): con él llegan
+      // WhatsApp y, si está verificado en Twilio, la llamada de emergencia.
+      await context.read<AuthProvider>().updateProfile(
+          name: _nameCtrl.text.trim(), whatsAppNumber: normalizePhone(_telefonoCtrl.text));
+    }
     if (success) {
       // Cierra el contexto de autocompletado para que el sistema ofrezca
       // guardar la contrasena de la cuenta recien creada.
@@ -143,6 +152,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       if (!v.contains('@')) return l10n.invalidEmail;
                       return null;
                     },
+                  ),
+                  const SizedBox(height: 18),
+                  VsTextField(
+                    label: l10n.rtTelefono,
+                    hint: '987 654 321',
+                    controller: _telefonoCtrl,
+                    keyboardType: TextInputType.phone,
+                    autofillHints: const [AutofillHints.telephoneNumber],
+                    textInputAction: TextInputAction.next,
+                    validator: (v) => normalizePhone(v ?? '') == null ? l10n.rtTelefonoInvalido : null,
                   ),
                   const SizedBox(height: 18),
                   VsTextField(
@@ -286,4 +305,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ),
     );
   }
+}
+
+extension RegistroTelefonoStrings on AppStrings {
+  String get rtTelefono => en ? 'Phone number' : 'Número de teléfono';
+  String get rtTelefonoInvalido => en ? 'Enter a valid phone number' : 'Ingresa un número de teléfono válido';
 }

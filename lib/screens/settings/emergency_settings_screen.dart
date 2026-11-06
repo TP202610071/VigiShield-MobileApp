@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../widgets/tarjeta_llamada_voz.dart';
+
 import '../../core/i18n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/models/emergency_settings.dart';
@@ -64,6 +66,7 @@ class _EmergencySettingsScreenState extends State<EmergencySettingsScreen> {
       body: ListView(padding: const EdgeInsets.fromLTRB(16, 8, 16, 32), children: [
         Text(l10n.emergencyAlertHint, style: TextStyle(color: AppColors.textSecondary)),
         const SizedBox(height: 12),
+        const TarjetaLlamadaVoz(), // llamada de voz por el servidor (Twilio)
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
           title: Text(l10n.emergencyEnabled),
